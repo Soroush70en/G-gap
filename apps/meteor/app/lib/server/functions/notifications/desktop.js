@@ -16,7 +16,6 @@ import { settings } from '../../../../settings/server';
  */
 export function notifyDesktopUser({ userId, user, message, room, duration, notificationMessage }) {
 	const { title, text } = roomCoordinator.getRoomDirectives(room.t)?.getNotificationDetails(room, user, notificationMessage, userId);
-
 	const payload = {
 		title,
 		text,
@@ -24,6 +23,7 @@ export function notifyDesktopUser({ userId, user, message, room, duration, notif
 		payload: {
 			_id: message._id,
 			rid: message.rid,
+			callId: message.blocks?.length > 0 ? message.blocks[0]?.callId : '',
 			tmid: message.tmid,
 			sender: message.u,
 			type: room.t,
