@@ -6,14 +6,42 @@ import { Session } from 'meteor/session';
 import { Tracker } from 'meteor/tracker';
 import moment from 'moment';
 
+import 'hljs9/styles/github.css';
 import { hasPermission } from '../../app/authorization/client';
 import { register } from '../../app/markdown/lib/hljs';
 import { settings } from '../../app/settings/client';
 import { getUserPreference, t } from '../../app/utils/client';
-import 'hljs9/styles/github.css';
 import * as banners from '../lib/banners';
-import { synchronizeUserData, removeLocalUserData } from '../lib/userData';
+import { setIncomingCall } from '../lib/incomingCallStore';
+import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
+
+
+const originalLivedataHandler = Meteor.connection._livedata_data;
+
+Meteor.connection._livedata_data = function (message) {
+  try {	
+
+	if((message as any)?.fields?.args[0]?.payload?.message?.t === "videoconf" &&
+		(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId()){
+		console.log('Session:');
+		console.log(Meteor.userId());
+		setIncomingCall({
+
+			callerName: (message as any)?.fields?.args[0]?.payload?.sender?.name ?? 'ناشناس',
+			callId: (message as any)?.fields?.args[0]?.payload?.callId,
+			username: (message as any)?.fields?.args[0]?.payload?.sender?.username,	
+		  });
+	}
+    
+  } catch (e) {
+	console.error(e);
+  }
+
+  // اجرای handler اصلی تا Meteor دچار اختلال نشه
+  return originalLivedataHandler.call(this, message);
+};
+
 
 Meteor.startup(() => {
 	fireGlobalEvent('startup', true);
