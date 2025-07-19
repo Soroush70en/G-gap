@@ -17,11 +17,33 @@ import { isMessageFirstUnread } from './lib/isMessageFirstUnread';
 import { isMessageNewDay } from './lib/isMessageNewDay';
 import { isMessageSequential } from './lib/isMessageSequential';
 import MessageListProvider from './providers/MessageListProvider';
+import { usePersianDate } from './hooks/usePersianDate';
+
+
 
 type MessageListProps = {
 	rid: IRoom['_id'];
 	scrollMessageList: ComponentProps<typeof MessageListProvider>['scrollMessageList'];
 };
+
+// const weekDaysFa = ['یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه', 'شنبه'];
+// const monthNamesFa = [
+// 	'فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور',
+// 	'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'
+// ];
+
+// export function toPersianDate(date: Date, verbose = false): string {
+// 	const { jy, jm, jd } = toJalaali(date);
+// 	const pad = (n: number) => n.toString().padStart(2, '0');
+
+// 	if (verbose) {
+// 		const dayName = weekDaysFa[date.getDay()];
+// 		const monthName = monthNamesFa[jm - 1];
+// 		return `${dayName} ${jd} ${monthName} ${jy}`; // مثل: شنبه ۲۸ تیر ۱۴۰۴
+// 	}
+
+// 	return `${jy}/${pad(jm)}/${pad(jd)}`; // مثل: ۱۴۰۴/۰۴/۲۸
+// }
 
 export const MessageList = ({ rid, scrollMessageList }: MessageListProps): ReactElement => {
 	const t = useTranslation();
@@ -49,13 +71,14 @@ export const MessageList = ({ rid, scrollMessageList }: MessageListProps): React
 					const mention = Boolean(subscription?.tunreadUser?.includes(message._id));
 					const all = Boolean(subscription?.tunreadGroup?.includes(message._id));
 					const ignoredUser = Boolean(subscription?.ignored?.includes(message.u._id));
-
 					return (
+						
 						<Fragment key={message._id}>
 							{showDivider && (
 								<MessageDivider unreadLabel={firstUnread ? t('Unread_Messages').toLowerCase() : undefined}>
-									{newDay && formatDate(message.ts)}
+									{newDay && usePersianDate(new Date(message.ts),true)}
 								</MessageDivider>
+
 							)}
 
 							{visible && (
