@@ -5,6 +5,7 @@ import { HTTP } from 'meteor/http';
 import _ from 'underscore';
 
 import { initAPN, sendAPN } from './apn';
+import { sendFCM } from './gcm';
 import { sendGCM } from './gcm';
 import { logger } from './logger';
 import { settings } from '../../settings/server';
@@ -92,7 +93,7 @@ export class PushClass {
 			// We do support multiple here - so we should construct an array
 			// and send it bulk - Investigate limit count of id's
 			if (this.options.gcm && this.options.gcm.apiKey) {
-				sendGCM({
+				sendFCM({
 					userTokens: app.token.gcm,
 					notification,
 					_replaceToken: this._replaceToken,

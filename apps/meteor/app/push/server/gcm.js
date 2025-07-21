@@ -1,7 +1,7 @@
-import gcm from 'node-gcm';
+import admin from 'firebase-admin';
 import { EJSON } from 'meteor/ejson';
-
 import { logger } from './logger';
+import gcm from 'node-gcm';
 
 export const sendGCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
 	if (typeof notification.gcm === 'object') {
@@ -123,5 +123,96 @@ export const sendGCM = function ({ userTokens, notification, _replaceToken, _rem
 				logger.error({ msg: 'Error removing token', err });
 			}
 		}
+	});
+};
+
+// Initialize Firebase Admin SDK
+const serviceAccount = require('./firebase-service-account.json'); // مسیر به فایل serviceAccount
+if (!admin.apps.length) {
+	admin.initializeApp({
+		credential: admin.credential.cert(serviceAccount),
+	});
+}
+
+export const sendFCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
+	if (typeof notification.fcm === 'object') {
+		notification = Object.assign({}, notification, notification.fcm);
+	}
+
+	// Make sure userTokens are an array of strings
+	if (typeof userTokens === 'string') {
+		userTokens = [userTokens];
+	}
+
+	// Check if any tokens in there to send
+	if (!userTokens.length) {
+		console.log('sendFCM no push tokens found');
+		return;
+	}
+
+	console.log('sendFCM', userTokens, notification);
+
+	// Allow user to set payload
+	const data = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
+
+	data.title = notification.title;
+	data.message = notification.text;
+
+	// Set image
+	if (notification.image != null) {
+		data.image = notification.image;
+	}
+
+	// Set extra details
+	if (notification.badge != null) {
+		data.msgcnt = notification.badge;
+	}
+	if (notification.sound != null) {
+		data.soundname = notification.sound;
+	}
+	if (notification.notId != null) {
+		data.notId = notification.notId;
+	}
+	if (notification.style != null) {
+		data.style = notification.style;
+	}
+	if (notification.summaryText != null) {
+		data.summaryText = notification.summaryText;
+	}
+	if (notification.picture != null) {
+		data.picture = notification.picture;
+	}
+
+	// Action Buttons
+	if (notification.actions != null) {
+		data.actions = notification.actions;
+	}
+
+	// Force Start
+	if (notification.forceStart != null) {
+		data['force-start'] = notification.forceStart;
+	}
+
+	if (notification.contentAvailable != null) {
+		data['content-available'] = notification.contentAvailable;
+	}
+
+	userTokens.forEach((userToken) => {
+		const message = {
+			notification,
+			token: userToken,
+			data,
+		};
+		console.log('message ============================================================');
+		console.log(message);
+		admin
+			.messaging()
+			.send(message)
+			.then((response) => {
+				console.log('FCM message sent successfully:', response);
+			})
+			.catch((error) => {
+				console.error('Error sending FCM message:', error);
+			});
 	});
 };
