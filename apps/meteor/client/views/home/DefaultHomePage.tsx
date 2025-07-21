@@ -10,10 +10,6 @@ import HomepageGridItem from './HomepageGridItem';
 import AddUsersCard from './cards/AddUsersCard';
 import CreateChannelsCard from './cards/CreateChannelsCard';
 import CustomContentCard from './cards/CustomContentCard';
-import DesktopAppsCard from './cards/DesktopAppsCard';
-import DocumentationCard from './cards/DocumentationCard';
-import JoinRoomsCard from './cards/JoinRoomsCard';
-import MobileAppsCard from './cards/MobileAppsCard';
 
 const CREATE_CHANNEL_PERMISSIONS = ['create-c', 'create-p'];
 
@@ -33,9 +29,9 @@ const DefaultHomePage = (): ReactElement => {
 				<Box is='h2' fontScale='h1' mb='x20' role='heading' data-qa-id='homepage-welcome-text'>
 					{t('Welcome_to', { Site_Name: workspaceName || 'Rocket.Chat' })}
 				</Box>
-				<Box is='h3' fontScale='h3' mb='x16'>
+				{/* <Box is='h3' fontScale='h3' mb='x16'>
 					{t('Some_ideas_to_get_you_started')}
-				</Box>
+				</Box> */}
 				<Grid margin='neg-x8'>
 					{canAddUsers && (
 						<HomepageGridItem>
@@ -47,7 +43,7 @@ const DefaultHomePage = (): ReactElement => {
 							<CreateChannelsCard />
 						</HomepageGridItem>
 					)}
-					<HomepageGridItem>
+					{/* <HomepageGridItem>
 						<JoinRoomsCard />
 					</HomepageGridItem>
 					<HomepageGridItem>
@@ -58,7 +54,7 @@ const DefaultHomePage = (): ReactElement => {
 					</HomepageGridItem>
 					<HomepageGridItem>
 						<DocumentationCard />
-					</HomepageGridItem>
+					</HomepageGridItem> */}
 				</Grid>
 				{(isAdmin || (isCustomContentVisible && !isCustomContentBodyEmpty)) && (
 					<Box pbs='x16' mbe='x32'>
