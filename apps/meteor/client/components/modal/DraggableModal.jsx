@@ -12,14 +12,14 @@ const DraggableModal = ({
 	const [isOpen, setIsOpen] = useState(isInitiallyOpen);
 	const [isMinimized, setIsMinimized] = useState(false);
 	const [isMaximized, setIsMaximized] = useState(false);
-	const [position, setPosition] = useState({
-		x: window.innerWidth / 2 - 450 / 2, // Center the modal horizontally
-		y: window.innerHeight / 2 - 350 / 2, // Center the modal vertically
-	});
-	const [size, setSize] = useState({
-		width: 600, // Increased default width
-		height: 500, // Increased default height
-	});
+	const [position, setPosition] = useState(() => ({
+		x: Math.max(20, window.innerWidth / 2 - 300), // Responsive center with min margin
+		y: Math.max(20, window.innerHeight / 2 - 250), // Responsive center with min margin
+	}));
+	const [size, setSize] = useState(() => ({
+		width: Math.min(600, window.innerWidth - 40), // Max width with 20px margin on each side
+		height: Math.min(500, window.innerHeight - 40), // Max height with 20px margin on each side
+	}));
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
@@ -68,6 +68,30 @@ const DraggableModal = ({
 			window.removeEventListener('message', handleIframeMessage);
 		};
 	}, [onClose]);
+
+	useEffect(() => {
+		const handleResize = () => {
+			if (!isMaximized && !isMinimized) {
+				const newWidth = Math.min(600, window.innerWidth - 40); // Restore to preferred size or constrain
+				const newHeight = Math.min(500, window.innerHeight - 40);
+
+				// Update size - allow growth back to original dimensions
+				setSize((prev) => ({
+					width: Math.max(newWidth, Math.min(prev.width, window.innerWidth - 40)),
+					height: Math.max(newHeight, Math.min(prev.height, window.innerHeight - 40)),
+				}));
+
+				// Adjust position if modal goes off screen
+				setPosition((prev) => ({
+					x: Math.max(0, Math.min(prev.x, window.innerWidth - newWidth - 20)),
+					y: Math.max(0, Math.min(prev.y, window.innerHeight - newHeight - 20)),
+				}));
+			}
+		};
+
+		window.addEventListener('resize', handleResize);
+		return () => window.removeEventListener('resize', handleResize);
+	}, [isMaximized, isMinimized]);
 
 	const handleMouseDown = (e) => {
 		if (isMaximized) return;
@@ -132,7 +156,7 @@ const DraggableModal = ({
 				position: 'fixed',
 				bottom: '20px',
 				right: '20px',
-				width: '200px',
+				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width
 				height: '40px',
 				zIndex: 1000,
 				backgroundColor: 'white',
@@ -144,8 +168,8 @@ const DraggableModal = ({
 
 		return {
 			position: 'fixed',
-			left: position.x,
-			top: position.y,
+			left: Math.max(0, Math.min(position.x, window.innerWidth - size.width)),
+			top: Math.max(0, Math.min(position.y, window.innerHeight - size.height)),
 			width: size.width,
 			height: size.height,
 			zIndex: 1000,
@@ -214,7 +238,7 @@ const DraggableModal = ({
 						display: 'flex',
 						alignItems: 'center',
 						justifyContent: 'space-between',
-						padding: '12px',
+						padding: window.innerWidth < 768 ? '8px' : '12px', // Responsive padding
 						backgroundColor: '#f3f4f6',
 						borderBottom: '1px solid #d1d5db',
 						userSelect: 'none',
@@ -226,7 +250,7 @@ const DraggableModal = ({
 				>
 					<h3
 						style={{
-							fontSize: '18px',
+							fontSize: window.innerWidth < 768 ? '16px' : '18px', // Responsive font size
 							fontWeight: '600',
 							color: '#1f2937',
 							margin: 0,
@@ -236,13 +260,13 @@ const DraggableModal = ({
 					</h3>
 
 					{!isMinimized && (
-						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+						<div style={{ display: 'flex', alignItems: 'center', gap: window.innerWidth < 768 ? '4px' : '8px' }}>
 							{/* Minimize Button */}
 							<button
 								onClick={toggleMinimize}
 								style={{
-									width: '24px',
-									height: '24px',
+									width: window.innerWidth < 768 ? '20px' : '24px', // Responsive button size
+									height: window.innerWidth < 768 ? '20px' : '24px',
 									backgroundColor: '#eab308',
 									border: 'none',
 									borderRadius: '50%',
@@ -250,7 +274,7 @@ const DraggableModal = ({
 									alignItems: 'center',
 									justifyContent: 'center',
 									color: 'white',
-									fontSize: '12px',
+									fontSize: window.innerWidth < 768 ? '10px' : '12px',
 									cursor: 'pointer',
 									transition: 'background-color 0.2s ease',
 								}}
@@ -265,8 +289,8 @@ const DraggableModal = ({
 							<button
 								onClick={toggleMaximize}
 								style={{
-									width: '24px',
-									height: '24px',
+									width: window.innerWidth < 768 ? '20px' : '24px',
+									height: window.innerWidth < 768 ? '20px' : '24px',
 									backgroundColor: '#22c55e',
 									border: 'none',
 									borderRadius: '50%',
@@ -274,7 +298,7 @@ const DraggableModal = ({
 									alignItems: 'center',
 									justifyContent: 'center',
 									color: 'white',
-									fontSize: '12px',
+									fontSize: window.innerWidth < 768 ? '10px' : '12px',
 									cursor: 'pointer',
 									transition: 'background-color 0.2s ease',
 								}}
@@ -283,30 +307,6 @@ const DraggableModal = ({
 								title={isMaximized ? 'Restore' : 'Maximize'}
 							>
 								{isMaximized ? '⧉' : '□'}
-							</button>
-
-							{/* Close Button */}
-							<button
-								onClick={closeModal}
-								style={{
-									width: '24px',
-									height: '24px',
-									backgroundColor: '#ef4444',
-									border: 'none',
-									borderRadius: '50%',
-									display: 'flex',
-									alignItems: 'center',
-									justifyContent: 'center',
-									color: 'white',
-									fontSize: '12px',
-									cursor: 'pointer',
-									transition: 'background-color 0.2s ease',
-								}}
-								onMouseEnter={(e) => (e.target.style.backgroundColor = '#dc2626')}
-								onMouseLeave={(e) => (e.target.style.backgroundColor = '#ef4444')}
-								title='Close'
-							>
-								×
 							</button>
 						</div>
 					)}

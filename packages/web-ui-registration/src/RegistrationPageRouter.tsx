@@ -1,10 +1,9 @@
 import type { ReactElement } from 'react';
-
-import { LoginForm } from './LoginForm';
 import ResetPasswordForm from './ResetPasswordForm';
 import { useLoginRouter } from './hooks/useLoginRouter';
 import RegisterSecretPageRouter from './RegisterSecretPageRouter';
 import RegisterTemplate from './RegisterTemplate';
+import CustomLoginForm from './CustomLoginForm';
 
 export const RegistrationPageRouter = ({
 	defaultRoute = 'login',
@@ -15,9 +14,11 @@ export const RegistrationPageRouter = ({
 
 	if (route === 'login') {
 		return (
-			<RegisterTemplate>
-				<LoginForm setLoginRoute={setLoginRoute} />
-			</RegisterTemplate>
+			<CustomLoginForm setLoginRoute={setLoginRoute} />
+			// <RegisterTemplate>
+			// 	<LoginForm setLoginRoute={setLoginRoute} />
+			// 	{/* <CustomLoginForm /> */}
+			// </RegisterTemplate>
 		);
 	}
 
