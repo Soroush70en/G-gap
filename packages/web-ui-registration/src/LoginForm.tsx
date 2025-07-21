@@ -37,7 +37,7 @@ export const LoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLoginRoute
 	}>({
 		mode: 'onChange',
 	});
-
+	debugger;
 	const { t } = useTranslation();
 	const formLabelId = useUniqueId();
 	const [errorOnSubmit, setErrorOnSubmit] = useState<LoginErrors | undefined>(undefined);
@@ -123,7 +123,7 @@ export const LoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLoginRoute
 							</Field>
 
 							<Field>
-								<Field.Label htmlFor='password'>{t('registration.component.form.password')}</Field.Label>
+								<Field.Label htmlFor='password'>{'رمززززززز'}</Field.Label>
 								<Field.Row>
 									<PasswordInput
 										{...register('password', {
