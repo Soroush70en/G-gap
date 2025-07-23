@@ -17,7 +17,7 @@ const DraggableModal = ({
 		y: Math.max(20, window.innerHeight / 2 - 250), // Responsive center with min margin
 	}));
 	const [size, setSize] = useState(() => ({
-		width: Math.min(600, window.innerWidth - 40), // Max width with 20px margin on each side
+		width: Math.min(750, window.innerWidth - 40), // Max width with 20px margin on each side
 		height: Math.min(500, window.innerHeight - 40), // Max height with 20px margin on each side
 	}));
 	const [isDragging, setIsDragging] = useState(false);

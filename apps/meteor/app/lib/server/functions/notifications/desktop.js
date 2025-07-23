@@ -3,6 +3,7 @@ import { api } from '@rocket.chat/core-services';
 import { roomCoordinator } from '../../../../../server/lib/rooms/roomCoordinator';
 import { metrics } from '../../../../metrics/server';
 import { settings } from '../../../../settings/server';
+import { PushClass } from '../../../../push/server/push';
 
 /**
  * Send notification to user
@@ -20,6 +21,7 @@ export function notifyDesktopUser({ userId, user, message, room, duration, notif
 		title,
 		text,
 		duration,
+		userId,
 		payload: {
 			_id: message._id,
 			rid: message.rid,
@@ -36,7 +38,10 @@ export function notifyDesktopUser({ userId, user, message, room, duration, notif
 	};
 
 	metrics.notificationsSent.inc({ notification_type: 'desktop' });
-
+	console.log('===========================================PAYLOAD===========================================');
+	console.log(payload);
+	var push = new PushClass();
+	var response = push.sendNotification(payload);
 	api.broadcast('notify.desktop', userId, payload);
 }
 
@@ -53,22 +58,22 @@ export function shouldNotifyDesktop({
 	roomType,
 	isThread,
 }) {
-	if (disableAllMessageNotifications && desktopNotifications == null && !isHighlighted && !hasMentionToUser && !hasReplyToThread) {
-		return false;
-	}
+	// if (disableAllMessageNotifications && desktopNotifications == null && !isHighlighted && !hasMentionToUser && !hasReplyToThread) {
+	// 	return false;
+	// }
 
-	if (statusConnection === 'offline' || status === 'busy' || desktopNotifications === 'nothing') {
-		return false;
-	}
+	// if (statusConnection === 'offline' || status === 'busy' || desktopNotifications === 'nothing') {
+	// 	return false;
+	// }
 
-	if (!desktopNotifications) {
-		if (settings.get('Accounts_Default_User_Preferences_desktopNotifications') === 'all' && (!isThread || hasReplyToThread)) {
-			return true;
-		}
-		if (settings.get('Accounts_Default_User_Preferences_desktopNotifications') === 'nothing') {
-			return false;
-		}
-	}
+	// if (!desktopNotifications) {
+	// 	if (settings.get('Accounts_Default_User_Preferences_desktopNotifications') === 'all' && (!isThread || hasReplyToThread)) {
+	// 		return true;
+	// 	}
+	// 	if (settings.get('Accounts_Default_User_Preferences_desktopNotifications') === 'nothing') {
+	// 		return false;
+	// 	}
+	// }
 
 	return (
 		(roomType === 'd' ||

@@ -35,7 +35,7 @@ interface LoginFormStyles {
 	loginButtonHover: CSSProperties;
 }
 
-export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLoginRouter }): ReactElement => {
+export const CustomLoginForm = ({}: { setLoginRoute: DispatchLoginRouter }): ReactElement => {
 	const {
 		register,
 		handleSubmit,
@@ -53,7 +53,6 @@ export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLogi
 
 	const [errorOnSubmit, setErrorOnSubmit] = useState<LoginErrors | undefined>(undefined);
 	const [showPassword, setShowPassword] = useState<boolean>(false);
-	const isResetPasswordAllowed = useSetting('Accounts_PasswordReset');
 	const login = useLoginWithPassword();
 	const showFormLogin = useSetting('Accounts_ShowFormLogin');
 
@@ -103,7 +102,7 @@ export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLogi
 				<div style={styles.formWrapper}>
 					<div style={styles.logo}>
 						<div style={styles.logoIcon}>
-							<svg width='48' height='47' viewBox='0 0 48 47' fill='none' xmlns='http://www.w3.org/2000/svg'>
+							<svg width='10rem' height='10rem' viewBox='0 0 48 47' fill='none' xmlns='http://www.w3.org/2000/svg'>
 								<path
 									d='M28.3243 10.6486L28.2549 10.6505C27.5407 10.6866 26.9727 11.277 26.9727 12C26.9727 12.723 27.5407 13.3134 28.2549 13.3495L28.3243 13.3514H31.1756C30.5419 16.7356 27.5711 19.2973 24.002 19.2973C22.832 19.2973 21.7299 19.0231 20.7531 18.5366C20.2258 18.274 19.5861 18.155 18.9376 18.2938L18.808 18.3252L17.2621 18.7385L17.6755 17.1929C17.8607 16.5007 17.7442 15.8106 17.4641 15.2483C16.9775 14.2716 16.7032 13.1697 16.7032 12C16.7032 7.96981 19.971 4.7027 24.002 4.7027C26.1133 4.7027 28.0135 5.59731 29.348 7.03194C29.8564 7.5784 30.7116 7.60933 31.2582 7.10109C31.8048 6.59282 31.8357 5.73776 31.3274 5.19125C29.5029 3.22989 26.8951 2 24.002 2C18.478 2 14 6.47715 14 12C14 13.5972 14.3755 15.1108 15.0443 16.4534C15.0564 16.4776 15.0607 16.4955 15.0618 16.5038L14.5488 18.4197C14.0641 20.2312 15.6884 21.891 17.4949 21.4727L17.581 21.4513L19.4973 20.9384C19.5056 20.9395 19.5235 20.9438 19.5477 20.9559C20.8906 21.6246 22.4044 22 24.002 22C29.4213 22 33.8337 17.6912 33.9992 12.3125C34.028 11.3778 33.2706 10.6486 32.382 10.6486H28.3243Z'
 									fill='#434C78'
@@ -118,7 +117,7 @@ export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLogi
 						</div>
 					</div>
 
-					<p style={styles.welcomeText}>به پیامرسان جی گپ خوش آمدید</p>
+					<p style={styles.welcomeText}>به جی گپ خوش آمدید</p>
 
 					{showFormLogin && (
 						<form
@@ -184,7 +183,7 @@ export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLogi
 										{'وارد کردن این فیلد اجباری است'}
 									</div>
 								)}
-								{isResetPasswordAllowed && (
+								{/* {isResetPasswordAllowed && (
 									<a
 										href='#'
 										style={styles.forgotPassword}
@@ -195,7 +194,7 @@ export const CustomLoginForm = ({ setLoginRoute }: { setLoginRoute: DispatchLogi
 									>
 										رمز عبور خود را فراموش کرده‌اید؟
 									</a>
-								)}
+								)} */}
 							</div>
 
 							{/* Error Messages */}

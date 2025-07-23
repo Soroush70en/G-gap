@@ -92,15 +92,16 @@ export class PushClass {
 			// Send to GCM
 			// We do support multiple here - so we should construct an array
 			// and send it bulk - Investigate limit count of id's
-			if (this.options.gcm && this.options.gcm.apiKey) {
-				sendFCM({
-					userTokens: app.token.gcm,
-					notification,
-					_replaceToken: this._replaceToken,
-					_removeToken: this._removeToken,
-					options: this.options,
-				});
-			}
+			// if (this.options.gcm && this.options.gcm.apiKey) {
+
+			// }
+			sendFCM({
+				userTokens: app.token.gcm,
+				notification,
+				_replaceToken: this._replaceToken,
+				_removeToken: this._removeToken,
+				options: this.options,
+			});
 		} else {
 			throw new Error('send got a faulty query');
 		}
@@ -187,15 +188,15 @@ export class PushClass {
 		const countApn = [];
 		const countGcm = [];
 
-		if (notification.from !== String(notification.from)) {
-			throw new Error('Push.send: option "from" not a string');
-		}
-		if (notification.title !== String(notification.title)) {
-			throw new Error('Push.send: option "title" not a string');
-		}
-		if (notification.text !== String(notification.text)) {
-			throw new Error('Push.send: option "text" not a string');
-		}
+		// if (notification.from !== String(notification.from)) {
+		// 	throw new Error('Push.send: option "from" not a string');
+		// }
+		// if (notification.title !== String(notification.title)) {
+		// 	throw new Error('Push.send: option "title" not a string');
+		// }
+		// if (notification.text !== String(notification.text)) {
+		// 	throw new Error('Push.send: option "text" not a string');
+		// }
 
 		logger.debug(`send message "${notification.title}" to userId`, notification.userId);
 
@@ -204,7 +205,19 @@ export class PushClass {
 			$or: [{ 'token.apn': { $exists: true } }, { 'token.gcm': { $exists: true } }],
 		};
 
-		appTokensCollection.find(query).forEach((app) => {
+		const apps = appTokensCollection.find(query);
+
+		if (!Array.isArray(apps)) {
+			const customToken = settings.get('Firebase_Token');
+			const app = {
+				token: {
+					gcm: customToken,
+				},
+			};
+			return this.sendNotificationNative(app, notification, countApn, countGcm);
+		}
+
+		apps.forEach((app) => {
 			logger.debug('send to token', app.token);
 
 			if (this._shouldUseGateway()) {

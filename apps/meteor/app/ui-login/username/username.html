@@ -2,10 +2,10 @@
 	<section class="rc-old full-page" style="{{#with backgroundUrl}}background-image: url('{{.}}'){{/with}}">
 		<div class="wrapper">
 			<form id="login-card" class="content-background-color color-primary-font-color" method='/'>
-				<header>
+				<!-- <header>
 					<h2>{{_ "Username_title"}}</h2>
 					<p>{{_ "Username_description"}}</p>
-				</header>
+				</header> -->
 				{{#if username.blocked}}
 					<div class="alert error-color error-background error-border">
 						{{{_ "error-blocked-username" field=username.escaped}}}

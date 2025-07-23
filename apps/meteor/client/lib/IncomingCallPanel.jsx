@@ -6,6 +6,10 @@ import { getUserAvatarURL } from '../../app/utils/lib/getUserAvatarURL';
 const IncomingCallPanel = ({ visible, callerName, onJoin, onDismiss, username }) => {
 	if (!visible) return null;
 
+	setTimeout(() => {
+		_onDismiss();
+	}, 30000);
+
 	const userId = Meteor.userId();
 	const audioVolume = getUserPreference(userId, 'notificationsSoundVolume');
 

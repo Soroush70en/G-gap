@@ -849,7 +849,7 @@ settingsRegistry.addGroup('General', function () {
 			public: true,
 		},
 	);
-	this.add('Site_Name', 'Rocket.Chat', {
+	this.add('Site_Name', 'G-Gap', {
 		type: 'string',
 		public: true,
 		wizard: {
@@ -1711,6 +1711,13 @@ settingsRegistry.addGroup('Layout', function () {
 		return this.add('Custom_Script_Logged_In', '//Add your script', {
 			type: 'code',
 			multiline: true,
+			public: true,
+		});
+	});
+	this.section('Firebase_Token', function () {
+		return this.add('Firebase_Token', '//Add your script', {
+			type: 'string',
+			multiline: false,
 			public: true,
 		});
 	});

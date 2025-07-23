@@ -102,7 +102,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 					onClose={handleVideoConfClose}
 					onConfirm={videoConf.onConfirm}
 					url={videoConf.url}
-					title='Video Conference'
+					title='تماس'
 				/>
 			)}
 		</VideoConfContext.Provider>

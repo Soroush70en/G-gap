@@ -131,7 +131,8 @@ class NotificationClass {
 					statusConnection: 1,
 				},
 			}));
-
+		console.log('RECEIVER==============================================================');
+		console.log(receiver);
 		if (!receiver) {
 			return;
 		}
@@ -149,7 +150,8 @@ class NotificationClass {
 			schedule = new Date();
 			schedule.setSeconds(schedule.getSeconds() + delay);
 		}
-
+		console.log('SCHEDULE==============================================================');
+		console.log(schedule);
 		await NotificationQueue.insertOne({
 			uid,
 			rid,

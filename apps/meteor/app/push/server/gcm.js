@@ -135,8 +135,9 @@ if (!admin.apps.length) {
 }
 
 export const sendFCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
-	if (typeof notification.fcm === 'object') {
-		notification = Object.assign({}, notification, notification.fcm);
+	console.log('===========================================SendFCM Called===========================================');
+	if (typeof notification.gcm === 'object') {
+		notification = Object.assign({}, notification, notification.gcm);
 	}
 
 	// Make sure userTokens are an array of strings
@@ -197,13 +198,68 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		data['content-available'] = notification.contentAvailable;
 	}
 
+	if (notification.payload?.host != null) {
+		data.host = notification.payload?.host;
+	}
+
+	if (notification.payload?.rid != null) {
+		data.rid = notification.payload?.rid;
+	}
+
+	if (notification.payload?.type != null) {
+		data.type = notification.payload?.type;
+	}
+
+	if (notification.payload?.sender != null) {
+		const senderObj = {
+			username: notification.payload?.sender.username,
+			name: notification.payload?.sender.name,
+		};
+		data.sender = JSON.stringify(senderObj);
+	}
+
+	if (notification.payload?._id != null) {
+		data._id = notification.payload?._id;
+	}
+
+	if (notification.payload?.messageId != null) {
+		data.messageId = notification.payload?.messageId;
+	}
+
+	if (notification.payload?.notificationType != null) {
+		data.notificationType = notification.payload?.notificationType;
+	}
+
+	if (notification.payload?.senderName != null) {
+		data.senderName = notification.payload?.senderName;
+	}
+
+	if (notification.payload?.callId != null) {
+		data.callId = notification.payload?.callId;
+	}
+
+	if (notification.payload?.message != null) {
+		data.senderName = notification.payload?.message.msg;
+	}
+
+	const notifObject = {
+		title: notification.title,
+		body: notification.payload?.message?.msg,
+	};
+
+	console.log('===========================================NOTIFOBJECT===========================================');
+	console.log(notifObject);
+
+	console.log('===========================================NOTIFDATA===========================================');
+	console.log(data);
+
 	userTokens.forEach((userToken) => {
 		const message = {
-			notification,
+			notification: notifObject,
 			token: userToken,
 			data,
 		};
-		console.log('message ============================================================');
+		console.log('===========================================MESSAGE===========================================');
 		console.log(message);
 		admin
 			.messaging()
