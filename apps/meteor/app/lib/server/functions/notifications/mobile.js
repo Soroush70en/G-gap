@@ -52,6 +52,7 @@ export async function getPushData({
 			messageType: message.t,
 			tmid: message.tmid,
 			...(message.t === 'e2e' && { msg: message.msg }),
+			callId: message.blocks?.length > 0 ? message.blocks[0]?.callId : '',
 		},
 		roomName:
 			settings.get('Push_show_username_room') && roomCoordinator.getRoomDirectives(room.t)?.isGroupChat(room)

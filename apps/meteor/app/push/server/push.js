@@ -188,15 +188,15 @@ export class PushClass {
 		const countApn = [];
 		const countGcm = [];
 
-		// if (notification.from !== String(notification.from)) {
-		// 	throw new Error('Push.send: option "from" not a string');
-		// }
-		// if (notification.title !== String(notification.title)) {
-		// 	throw new Error('Push.send: option "title" not a string');
-		// }
-		// if (notification.text !== String(notification.text)) {
-		// 	throw new Error('Push.send: option "text" not a string');
-		// }
+		if (notification.from !== String(notification.from)) {
+			throw new Error('Push.send: option "from" not a string');
+		}
+		if (notification.title !== String(notification.title)) {
+			throw new Error('Push.send: option "title" not a string');
+		}
+		if (notification.text !== String(notification.text)) {
+			throw new Error('Push.send: option "text" not a string');
+		}
 
 		logger.debug(`send message "${notification.title}" to userId`, notification.userId);
 
@@ -207,17 +207,8 @@ export class PushClass {
 
 		const apps = appTokensCollection.find(query);
 
-		if (!Array.isArray(apps)) {
-			const customToken = settings.get('Firebase_Token');
-			const app = {
-				token: {
-					gcm: customToken,
-				},
-			};
-			return this.sendNotificationNative(app, notification, countApn, countGcm);
-		}
-
 		apps.forEach((app) => {
+			console.log('=========================QUERY Success===================================');
 			logger.debug('send to token', app.token);
 
 			if (this._shouldUseGateway()) {

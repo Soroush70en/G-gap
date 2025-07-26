@@ -85,8 +85,8 @@ export const sendGCM = function ({ userTokens, notification, _replaceToken, _rem
 		data,
 	});
 
-	logger.debug(`Create GCM Sender using "${options.gcm.apiKey}"`);
-	const sender = new gcm.Sender(options.gcm.apiKey);
+	logger.debug(`Create GCM Sender using "${options.gcm?.apiKey}"`);
+	const sender = new gcm.Sender(options.gcm?.apiKey);
 
 	userTokens.forEach((value) => logger.debug(`A:Send message to: ${value}`));
 
@@ -135,7 +135,6 @@ if (!admin.apps.length) {
 }
 
 export const sendFCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
-	console.log('===========================================SendFCM Called===========================================');
 	if (typeof notification.gcm === 'object') {
 		notification = Object.assign({}, notification, notification.gcm);
 	}
@@ -154,110 +153,62 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 	console.log('sendFCM', userTokens, notification);
 
 	// Allow user to set payload
-	const data = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
+	const dataObj = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
 
-	data.title = notification.title;
-	data.message = notification.text;
+	dataObj.title = notification.title;
+	dataObj.message = notification.text;
 
 	// Set image
 	if (notification.image != null) {
-		data.image = notification.image;
+		dataObj.image = notification.image;
 	}
 
 	// Set extra details
 	if (notification.badge != null) {
-		data.msgcnt = notification.badge;
+		dataObj.msgcnt = notification.badge;
 	}
 	if (notification.sound != null) {
-		data.soundname = notification.sound;
+		dataObj.soundname = notification.sound;
 	}
 	if (notification.notId != null) {
-		data.notId = notification.notId;
+		dataObj.notId = notification.notId;
 	}
 	if (notification.style != null) {
-		data.style = notification.style;
+		dataObj.style = notification.style;
 	}
 	if (notification.summaryText != null) {
-		data.summaryText = notification.summaryText;
+		dataObj.summaryText = notification.summaryText;
 	}
 	if (notification.picture != null) {
-		data.picture = notification.picture;
+		dataObj.picture = notification.picture;
 	}
 
 	// Action Buttons
 	if (notification.actions != null) {
-		data.actions = notification.actions;
+		dataObj.actions = notification.actions;
 	}
 
 	// Force Start
 	if (notification.forceStart != null) {
-		data['force-start'] = notification.forceStart;
+		dataObj['force-start'] = notification.forceStart;
 	}
 
 	if (notification.contentAvailable != null) {
-		data['content-available'] = notification.contentAvailable;
-	}
-
-	if (notification.payload?.host != null) {
-		data.host = notification.payload?.host;
-	}
-
-	if (notification.payload?.rid != null) {
-		data.rid = notification.payload?.rid;
-	}
-
-	if (notification.payload?.type != null) {
-		data.type = notification.payload?.type;
-	}
-
-	if (notification.payload?.sender != null) {
-		const senderObj = {
-			username: notification.payload?.sender.username,
-			name: notification.payload?.sender.name,
-		};
-		data.sender = JSON.stringify(senderObj);
-	}
-
-	if (notification.payload?._id != null) {
-		data._id = notification.payload?._id;
-	}
-
-	if (notification.payload?.messageId != null) {
-		data.messageId = notification.payload?.messageId;
-	}
-
-	if (notification.payload?.notificationType != null) {
-		data.notificationType = notification.payload?.notificationType;
-	}
-
-	if (notification.payload?.senderName != null) {
-		data.senderName = notification.payload?.senderName;
-	}
-
-	if (notification.payload?.callId != null) {
-		data.callId = notification.payload?.callId;
-	}
-
-	if (notification.payload?.message != null) {
-		data.senderName = notification.payload?.message.msg;
+		dataObj['content-available'] = notification.contentAvailable;
 	}
 
 	const notifObject = {
 		title: notification.title,
-		body: notification.payload?.message?.msg,
+		body: notification.text,
 	};
 
-	console.log('===========================================NOTIFOBJECT===========================================');
-	console.log(notifObject);
-
-	console.log('===========================================NOTIFDATA===========================================');
-	console.log(data);
+	const data = convertToStrings(dataObj);
 
 	userTokens.forEach((userToken) => {
 		const message = {
 			notification: notifObject,
 			token: userToken,
-			data,
+			data: data,
 		};
 		console.log('===========================================MESSAGE===========================================');
 		console.log(message);
@@ -272,3 +223,11 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 			});
 	});
 };
+
+function convertToStrings(obj) {
+	const result = {};
+	for (const [key, value] of Object.entries(obj)) {
+		result[key] = typeof value === 'string' ? value : String(value);
+	}
+	return result;
+}
