@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const DraggableModal = ({
 	isInitiallyOpen = true,
@@ -313,12 +313,12 @@ const DraggableModal = ({
 				</div>
 
 				{/* Content */}
-				{!isMinimized && (
+				{(
 					<div
 						style={{
 							padding: '0', // iframe will fill the whole area
 							overflow: 'hidden',
-							height: isMaximized ? 'calc(100vh - 60px)' : 'calc(100% - 60px)',
+							height: isMinimized ? '0' :  isMaximized ? 'calc(100vh - 60px)' : 'calc(100% - 60px)',
 						}}
 					>
 						<iframe
