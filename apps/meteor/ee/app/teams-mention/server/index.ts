@@ -1,13 +1,12 @@
-import type { ITeamMember, IMessage } from '@rocket.chat/core-typings';
 import { Team } from '@rocket.chat/core-services';
+import type { IMessage, ITeamMember } from '@rocket.chat/core-typings';
 
-import { onLicense } from '../../license/server';
-import { overwriteClassOnLicense } from '../../license/server/license';
-import { SpotlightEnterprise } from './EESpotlight';
-import { Spotlight } from '../../../../server/lib/spotlight';
 import { MentionQueries } from '../../../../app/mentions/server/server';
 import { callbacks } from '../../../../lib/callbacks';
+import { Spotlight } from '../../../../server/lib/spotlight';
+import { overwriteClassOnLicense } from '../../license/server/license';
 import { MentionQueriesEnterprise } from './EEMentionQueries';
+import { SpotlightEnterprise } from './EESpotlight';
 
 interface IExtraDataForNotification {
 	userMentions: any[];
@@ -15,7 +14,7 @@ interface IExtraDataForNotification {
 	message: IMessage;
 }
 
-onLicense('teams-mention', () => {
+//onLicense('teams-mention', () => {
 	// Override spotlight with EE version
 	overwriteClassOnLicense('teams-mention', Spotlight, SpotlightEnterprise);
 	overwriteClassOnLicense('teams-mention', MentionQueries, MentionQueriesEnterprise);
@@ -36,4 +35,4 @@ onLicense('teams-mention', () => {
 
 		return mentionIds;
 	});
-});
+//});

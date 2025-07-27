@@ -1,4 +1,3 @@
-import { onLicense } from '../../app/license/server/license';
 
 // To facilitate our lives with the stream
 // Collection will be registered on CE too
@@ -6,7 +5,7 @@ import { onLicense } from '../../app/license/server/license';
 import('./LivechatPriority');
 import('./OmnichannelServiceLevelAgreements');
 
-onLicense('livechat-enterprise', () => {
+/////onLicense('livechat-enterprise', () => {
 	import('./CannedResponse');
 	import('./LivechatTag');
 	import('./LivechatUnit');
@@ -15,4 +14,4 @@ onLicense('livechat-enterprise', () => {
 	import('./LivechatInquiry');
 	import('./ReadReceipts');
 	import('./LivechatDepartment');
-});
+//});

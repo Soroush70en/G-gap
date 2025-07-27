@@ -1,8 +1,8 @@
 import { Random } from 'meteor/random';
 
 import { settingsRegistry } from '../../../settings/server';
-import './email';
 import { MessageTypesValues } from '../../lib/MessageTypes';
+import './email';
 
 // Insert server unique id if it doesn't exist
 settingsRegistry.add('uniqueID', process.env.DEPLOYMENT_ID || Random.id(), {
@@ -1199,14 +1199,14 @@ settingsRegistry.addGroup('Message', function () {
 		});
 	});
 	this.section('Read_Receipts', function () {
-		this.add('Message_Read_Receipt_Enabled', false, {
+		this.add('Message_Read_Receipt_Enabled', true, {
 			type: 'boolean',
 			enterprise: true,
 			invalidValue: false,
 			modules: ['message-read-receipt'],
 			public: true,
 		});
-		this.add('Message_Read_Receipt_Store_Users', false, {
+		this.add('Message_Read_Receipt_Store_Users', true, {
 			type: 'boolean',
 			enterprise: true,
 			invalidValue: false,

@@ -1,12 +1,12 @@
 import { Meteor } from 'meteor/meteor';
 
+import { onClientMessageReceived } from '../../../../client/lib/onClientMessageReceived';
+import { dispatchToastMessage } from '../../../../client/lib/toast';
+import { callbacks } from '../../../../lib/callbacks';
+import { trim } from '../../../../lib/utils/stringUtils';
 import { ChatMessage, Rooms } from '../../../models/client';
 import { settings } from '../../../settings';
-import { callbacks } from '../../../../lib/callbacks';
 import { t } from '../../../utils/client';
-import { dispatchToastMessage } from '../../../../client/lib/toast';
-import { onClientMessageReceived } from '../../../../client/lib/onClientMessageReceived';
-import { trim } from '../../../../lib/utils/stringUtils';
 
 Meteor.methods({
 	sendMessage(message) {
@@ -27,9 +27,9 @@ Meteor.methods({
 			message.u.name = user.name;
 		}
 		message.temp = true;
-		if (settings.get('Message_Read_Receipt_Enabled')) {
+		//if (settings.get('Message_Read_Receipt_Enabled')) {
 			message.unread = true;
-		}
+		//}
 
 		// If the room is federated, send the message to matrix only
 		const { federated } = Rooms.findOne({ _id: message.rid }, { fields: { federated: 1 } });

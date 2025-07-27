@@ -1,17 +1,10 @@
 import { Meteor } from 'meteor/meteor';
 
-import './methods/addMonitor';
-import './methods/getUnitsFromUserRoles';
-import './methods/removeMonitor';
-import './methods/removeTag';
-import './methods/saveTag';
-import './methods/removeUnit';
-import './methods/saveUnit';
-import './methods/removeBusinessHour';
-import './methods/resumeOnHold';
-import LivechatUnit from '../../models/server/models/LivechatUnit';
 import LivechatTag from '../../models/server/models/LivechatTag';
+import LivechatUnit from '../../models/server/models/LivechatUnit';
 import LivechatUnitMonitors from '../../models/server/models/LivechatUnitMonitors';
+import './business-hour';
+import './hooks/afterOnHold';
 import './hooks/afterTakeInquiry';
 import './hooks/beforeNewInquiry';
 import './hooks/beforeNewRoom';
@@ -19,21 +12,27 @@ import './hooks/beforeRoutingChat';
 import './hooks/checkAgentBeforeTakeInquiry';
 import './hooks/handleNextAgentPreferredEvents';
 import './hooks/onCheckRoomParamsApi';
-import './hooks/onLoadConfigApi';
 import './hooks/onCloseLivechat';
+import './hooks/onLoadConfigApi';
 import './hooks/onSaveVisitorInfo';
-import './hooks/scheduleAutoTransfer';
-import './hooks/resumeOnHold';
-import './hooks/afterOnHold';
 import './hooks/onTransferFailure';
+import './hooks/resumeOnHold';
+import './hooks/scheduleAutoTransfer';
+import './lib/AutoCloseOnHoldScheduler';
 import './lib/routing/LoadBalancing';
 import './lib/routing/LoadRotation';
-import './lib/AutoCloseOnHoldScheduler';
-import { onLicense } from '../../license/server';
-import './business-hour';
+import './methods/addMonitor';
+import './methods/getUnitsFromUserRoles';
+import './methods/removeBusinessHour';
+import './methods/removeMonitor';
+import './methods/removeTag';
+import './methods/removeUnit';
+import './methods/resumeOnHold';
+import './methods/saveTag';
+import './methods/saveUnit';
 import { createDefaultPriorities } from './priorities';
 
-onLicense('livechat-enterprise', async () => {
+//onLicense('livechat-enterprise', async () => {
 	require('./api');
 	require('./hooks');
 	await import('./startup');
@@ -45,6 +44,7 @@ onLicense('livechat-enterprise', async () => {
 		createPermissions();
 		createDefaultPriorities();
 	});
-});
+//});
 
-export { LivechatUnit, LivechatTag, LivechatUnitMonitors };
+export { LivechatTag, LivechatUnit, LivechatUnitMonitors };
+

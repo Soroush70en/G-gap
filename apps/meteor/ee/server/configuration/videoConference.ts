@@ -1,16 +1,15 @@
-import { Meteor } from 'meteor/meteor';
+import { VideoConf } from '@rocket.chat/core-services';
 import type { IRoom, IUser, VideoConference } from '@rocket.chat/core-typings';
 import { VideoConferenceStatus } from '@rocket.chat/core-typings';
 import { Rooms, Subscriptions } from '@rocket.chat/models';
-import { VideoConf } from '@rocket.chat/core-services';
+import { Meteor } from 'meteor/meteor';
 
-import { onLicense } from '../../app/license/server';
+import { callbacks } from '../../../lib/callbacks';
 import { videoConfTypes } from '../../../server/lib/videoConfTypes';
 import { addSettings } from '../settings/video-conference';
-import { callbacks } from '../../../lib/callbacks';
 
-Meteor.startup(() =>
-	onLicense('videoconference-enterprise', () => {
+Meteor.startup(() =>{
+	//onLicense('videoconference-enterprise', () => {
 		addSettings();
 
 		videoConfTypes.registerVideoConferenceType(
@@ -48,5 +47,6 @@ Meteor.startup(() =>
 		callbacks.add('onJoinVideoConference', async (callId: VideoConference['_id'], userId?: IUser['_id']) =>
 			VideoConf.addUser(callId, userId),
 		);
-	}),
+	//}),
+}
 );

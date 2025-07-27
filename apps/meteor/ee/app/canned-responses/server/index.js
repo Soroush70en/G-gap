@@ -1,6 +1,5 @@
-import { onLicense } from '../../license/server';
 
-onLicense('canned-responses', () => {
+//onLicense('canned-responses', () => {
 	const { createSettings } = require('./settings');
 	require('./permissions');
 	require('./hooks/onRemoveAgentDepartment');
@@ -10,4 +9,4 @@ onLicense('canned-responses', () => {
 	require('./methods/removeCannedResponse');
 
 	createSettings();
-});
+//});

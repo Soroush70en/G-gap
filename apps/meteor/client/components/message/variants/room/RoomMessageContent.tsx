@@ -1,7 +1,7 @@
 import type { IMessage } from '@rocket.chat/core-typings';
-import { isDiscussionMessage, isThreadMainMessage, isE2EEMessage } from '@rocket.chat/core-typings';
+import { isDiscussionMessage, isE2EEMessage, isThreadMainMessage } from '@rocket.chat/core-typings';
 import type { TranslationKey } from '@rocket.chat/ui-contexts';
-import { useSetting, useTranslation, useUserId } from '@rocket.chat/ui-contexts';
+import { useTranslation, useUserId } from '@rocket.chat/ui-contexts';
 import type { ReactElement } from 'react';
 import React, { memo } from 'react';
 
@@ -38,7 +38,7 @@ const RoomMessageContent = ({ message, unread, all, mention, searchText }: RoomM
 	const broadcast = subscription?.broadcast ?? false;
 	const uid = useUserId();
 	const messageUser: UserPresence = { ...message.u, roles: [], ...useUserData(message.u._id) };
-	const readReceiptEnabled = useSetting('Message_Read_Receipt_Enabled', false);
+	const readReceiptEnabled = true;// useSetting('Message_Read_Receipt_Enabled', false);
 	const chat = useChat();
 	const t = useTranslation();
 
