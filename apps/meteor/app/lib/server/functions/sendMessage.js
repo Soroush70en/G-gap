@@ -1,15 +1,14 @@
 import { Match, check } from 'meteor/check';
 
-import { settings } from '../../../settings/server';
-import { callbacks } from '../../../../lib/callbacks';
-import { Messages } from '../../../models/server';
 import { Apps } from '../../../../ee/server/apps';
-import { isURL } from '../../../../lib/utils/isURL';
-import { FileUpload } from '../../../file-upload/server';
-import { hasPermission } from '../../../authorization/server';
-import { parseUrlsInMessage } from './parseUrlsInMessage';
+import { callbacks } from '../../../../lib/callbacks';
 import { isRelativeURL } from '../../../../lib/utils/isRelativeURL';
+import { isURL } from '../../../../lib/utils/isURL';
+import { hasPermission } from '../../../authorization/server';
+import { FileUpload } from '../../../file-upload/server';
+import { Messages } from '../../../models/server';
 import notifications from '../../../notifications/server/lib/Notifications';
+import { parseUrlsInMessage } from './parseUrlsInMessage';
 
 /**
  * IMPORTANT
@@ -211,9 +210,9 @@ export const sendMessage = function (user, message, room, upsert = false) {
 	validateMessage(message, room, user);
 	prepareMessageObject(message, room._id, user);
 
-	if (settings.get('Message_Read_Receipt_Enabled')) {
-		message.unread = true;
-	}
+	//if (settings.get('Message_Read_Receipt_Enabled')) {
+	message.unread = true;
+	//}
 
 	// For the Rocket.Chat Apps :)
 	if (Apps && Apps.isLoaded()) {

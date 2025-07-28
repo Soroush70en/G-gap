@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const DraggableModal = ({
 	isInitiallyOpen = true,
@@ -308,22 +308,46 @@ const DraggableModal = ({
 							>
 								{isMaximized ? '⧉' : '□'}
 							</button>
+							{/* Close Button */}
+
+							<button
+								onClick={closeModal}
+								style={{
+									width: '24px',
+									height: '24px',
+									backgroundColor: '#ef4444',
+									border: 'none',
+									borderRadius: '50%',
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									color: 'white',
+									fontSize: '12px',
+									cursor: 'pointer',
+									transition: 'background-color 0.2s ease',
+								}}
+								onMouseEnter={(e) => (e.target.style.backgroundColor = '#dc2626')}
+								onMouseLeave={(e) => (e.target.style.backgroundColor = '#ef4444')}
+								title='Close'
+							>
+								×
+							</button>
 						</div>
 					)}
 				</div>
 
 				{/* Content */}
-				{!isMinimized && (
+				{
 					<div
 						style={{
 							padding: '0', // iframe will fill the whole area
 							overflow: 'hidden',
-							height: isMaximized ? 'calc(100vh - 60px)' : 'calc(100% - 60px)',
+							height: isMinimized ? '0' : isMaximized ? 'calc(100vh - 60px)' : 'calc(100% - 60px)',
 						}}
 					>
 						<iframe
 							allow='camera; microphone; fullscreen; display-capture; autoplay'
-							src={url || 'https://meet.golrang.com'} // use your fallback URL here
+							src={url || 'https://meet.golrang.com/?lang=fa'} // use your fallback URL here
 							style={{
 								width: '100%',
 								height: '100%',
@@ -332,7 +356,7 @@ const DraggableModal = ({
 							}}
 						/>
 					</div>
-				)}
+				}
 			</div>
 		</>
 	);

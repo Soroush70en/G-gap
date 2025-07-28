@@ -1,9 +1,9 @@
 import { api } from '@rocket.chat/core-services';
 
+import { VideoConference as VideoConferenceModel } from '@rocket.chat/models';
 import { roomCoordinator } from '../../../../../server/lib/rooms/roomCoordinator';
 import { metrics } from '../../../../metrics/server';
 import { settings } from '../../../../settings/server';
-import { PushClass } from '../../../../push/server/push';
 
 /**
  * Send notification to user
@@ -15,17 +15,22 @@ import { PushClass } from '../../../../push/server/push';
  * @param {number} duration Duration of notification
  * @param {string} notificationMessage The message text to send on notification body
  */
-export function notifyDesktopUser({ userId, user, message, room, duration, notificationMessage }) {
+export async function notifyDesktopUser({ userId, user, message, room, duration, notificationMessage }) {
 	const { title, text } = roomCoordinator.getRoomDirectives(room.t)?.getNotificationDetails(room, user, notificationMessage, userId);
+	let messageType = '';
+
+	let callId = message?.blocks?.length > 0 ? message?.blocks[0]?.callId : '';
+
+	if (callId != '') messageType = (await VideoConferenceModel.findOneById(callId))?.type;
+
 	const payload = {
 		title,
 		text,
 		duration,
-		userId,
 		payload: {
 			_id: message._id,
 			rid: message.rid,
-			callId: message.blocks?.length > 0 ? message.blocks[0]?.callId : '',
+			callId,
 			tmid: message.tmid,
 			sender: message.u,
 			type: room.t,
@@ -33,6 +38,7 @@ export function notifyDesktopUser({ userId, user, message, room, duration, notif
 			message: {
 				msg: message.msg,
 				t: message.t,
+				type: messageType,
 			},
 		},
 	};

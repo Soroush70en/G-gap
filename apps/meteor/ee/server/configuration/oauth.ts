@@ -1,11 +1,10 @@
+import type { IUser } from '@rocket.chat/core-typings';
 import { Roles } from '@rocket.chat/models';
 import { capitalize } from '@rocket.chat/string-helpers';
-import type { IUser } from '@rocket.chat/core-typings';
 
 import { Logger } from '../../../app/logger/server';
 import { settings } from '../../../app/settings/server';
 import { callbacks } from '../../../lib/callbacks';
-import { onLicense } from '../../app/license/server';
 import { OAuthEEManager } from '../lib/oauth/Manager';
 
 interface IOAuthUserService {
@@ -54,7 +53,8 @@ function getChannelsMap(channelsMap: string): Record<string, any> | undefined {
 	}
 }
 
-onLicense('oauth-enterprise', () => {
+//onLicense('oauth-enterprise', () =>
+{
 	callbacks.add('afterProcessOAuthUser', (auth: IOAuthUserService) => {
 		auth.serviceName = capitalize(auth.serviceName);
 		const settings = getOAuthSettings(auth.serviceName);
@@ -90,4 +90,5 @@ onLicense('oauth-enterprise', () => {
 			auth.user.roles = mappedRoles;
 		}
 	});
-});
+}
+//);

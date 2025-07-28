@@ -6,42 +6,55 @@ import { Session } from 'meteor/session';
 import { Tracker } from 'meteor/tracker';
 import moment from 'moment';
 
+//import { useToastMessageDispatch } from '@rocket.chat/ui-contexts';
 import 'hljs9/styles/github.css';
 import { hasPermission } from '../../app/authorization/client';
 import { register } from '../../app/markdown/lib/hljs';
 import { settings } from '../../app/settings/client';
 import { getUserPreference, t } from '../../app/utils/client';
+import { dispatchToastMessage } from '../../client/lib/toast';
 import * as banners from '../lib/banners';
 import { setIncomingCall } from '../lib/incomingCallStore';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
 
-
+//const dispatchToast = useToastMessageDispatch();
 const originalLivedataHandler = Meteor.connection._livedata_data;
 
 Meteor.connection._livedata_data = function (message) {
-  try {	
-
-	if((message as any)?.fields?.args[0]?.payload?.message?.t === "videoconf" &&
-		(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId()){
-		console.log('Session:');
-		console.log(Meteor.userId());
-		setIncomingCall({
-
-			callerName: (message as any)?.fields?.args[0]?.payload?.sender?.name ?? 'ناشناس',
-			callId: (message as any)?.fields?.args[0]?.payload?.callId,
-			username: (message as any)?.fields?.args[0]?.payload?.sender?.username,	
-		  });
+	try {
+		if (
+			(message as any)?.fields?.args[0]?.payload?.message?.t === 'videoconf' &&
+			(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId() &&
+			(message as any)?.fields?.args[0]?.payload?.message?.type === 'videoconference'
+		) {
+			setIncomingCall({
+				callerName: (message as any)?.fields?.args[0]?.payload?.sender?.name ?? 'ناشناس',
+				callId: (message as any)?.fields?.args[0]?.payload?.callId,
+				username: (message as any)?.fields?.args[0]?.payload?.sender?.username,
+			});
+		}
+	} catch (e) {
+		console.error(e);
 	}
-    
-  } catch (e) {
-	console.error(e);
-  }
 
-  // اجرای handler اصلی تا Meteor دچار اختلال نشه
-  return originalLivedataHandler.call(this, message);
+	try {
+		if (
+			(message as any)?.fields?.args[0]?.action === 'videoConference/accepted' &&
+			(message as any)?.fields?.args[0]?.params?.uid != Meteor.userId()
+		) {
+			dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });
+			console.log('videoConference/accepted');
+			console.log('This UserId: ' + Meteor.userId());
+			console.log('New UserId: ' + (message as any)?.fields?.args[0]?.params?.uid);
+		}
+	} catch (e) {
+		console.error(e);
+	}
+
+	// اجرای handler اصلی تا Meteor دچار اختلال نشه
+	return originalLivedataHandler.call(this, message);
 };
-
 
 Meteor.startup(() => {
 	fireGlobalEvent('startup', true);

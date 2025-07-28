@@ -2,8 +2,8 @@ import type { IRoom } from '@rocket.chat/core-typings';
 import { isOmnichannelRoom } from '@rocket.chat/core-typings';
 import { escapeRegExp } from '@rocket.chat/string-helpers';
 import { useMethod, useSetting, useTranslation } from '@rocket.chat/ui-contexts';
-import React, { useMemo } from 'react';
 import type { ReactNode } from 'react';
+import React, { useMemo } from 'react';
 
 import { hasAtLeastOnePermission } from '../../../../app/authorization/client';
 import { emoji, EmojiPicker } from '../../../../app/emoji/client';
@@ -15,8 +15,8 @@ import type { ComposerBoxPopupRoomProps } from '../../../../app/ui-message/clien
 import ComposerBoxPopupRoom from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupRoom';
 import type { ComposerBoxPopupSlashCommandProps } from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupSlashCommand';
 import ComposerPopupSlashCommand from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupSlashCommand';
-import ComposerBoxPopupUser from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupUser';
 import type { ComposerBoxPopupUserProps } from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupUser';
+import ComposerBoxPopupUser from '../../../../app/ui-message/client/popup/components/composerBoxPopup/ComposerBoxPopupUser';
 import { usersFromRoomMessages } from '../../../../app/ui-message/client/popup/messagePopupConfig';
 import { slashCommands } from '../../../../app/utils/client';
 import { CannedResponse } from '../../../../ee/app/canned-responses/client/collections/CannedResponse';
@@ -262,7 +262,7 @@ const ComposerPopupProvider = ({ children, room }: { children: ReactNode; room: 
 
 			createMessageBoxPopupConfig<ComposerBoxPopupSlashCommandProps>({
 				title: t('Commands'),
-				trigger: '/',
+				trigger: '*******',
 				suffix: ' ',
 				triggerAnywhere: false,
 				renderItem: ({ item }) => <ComposerPopupSlashCommand {...item} />,

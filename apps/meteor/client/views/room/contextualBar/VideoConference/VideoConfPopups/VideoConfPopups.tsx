@@ -4,7 +4,7 @@ import type { ReactElement } from 'react';
 import React, { useEffect, useMemo } from 'react';
 
 import type { VideoConfPopupPayload } from '../../../../../contexts/VideoConfContext';
-import { useVideoConfIsCalling, useVideoConfIsRinging, useVideoConfIncomingCalls } from '../../../../../contexts/VideoConfContext';
+import { useVideoConfIncomingCalls, useVideoConfIsCalling, useVideoConfIsRinging } from '../../../../../contexts/VideoConfContext';
 import VideoConfPopupPortal from '../../../../../portals/VideoConfPopupPortal';
 import VideoConfPopup from './VideoConfPopup';
 
@@ -28,7 +28,7 @@ const VideoConfPopups = ({ children }: { children?: VideoConfPopupPayload }): Re
 		}
 
 		if (isCalling) {
-			customSound.play('dialtone', { loop: true });
+			customSound.play('ringtone', { loop: true });
 		}
 
 		return (): void => {

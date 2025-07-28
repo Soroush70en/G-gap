@@ -1,8 +1,8 @@
+import { LivechatVisitors, ReadReceipts } from '@rocket.chat/models';
 import { Meteor } from 'meteor/meteor';
 import { Random } from 'meteor/random';
-import { LivechatVisitors, ReadReceipts } from '@rocket.chat/models';
 
-import { Subscriptions, Messages, Rooms, Users } from '../../../../app/models/server';
+import { Messages, Rooms, Subscriptions, Users } from '../../../../app/models/server';
 import { settings } from '../../../../app/settings/server';
 import { SystemLogger } from '../../../../server/lib/logger/system';
 import { roomCoordinator } from '../../../../server/lib/rooms/roomCoordinator';
@@ -36,9 +36,9 @@ const updateMessages = debounceByRoomId(
 
 export const ReadReceipt = {
 	markMessagesAsRead(roomId, userId, userLastSeen) {
-		if (!settings.get('Message_Read_Receipt_Enabled')) {
-			return;
-		}
+		// if (!settings.get('Message_Read_Receipt_Enabled')) {
+		// 	return;
+		// }
 
 		const room = Rooms.findOneById(roomId, { fields: { lm: 1 } });
 
@@ -53,9 +53,9 @@ export const ReadReceipt = {
 	},
 
 	markMessageAsReadBySender(message, { _id: roomId, t }, userId) {
-		if (!settings.get('Message_Read_Receipt_Enabled')) {
-			return;
-		}
+		// if (!settings.get('Message_Read_Receipt_Enabled')) {
+		// 	return;
+		// }
 
 		if (!message.unread) {
 			return;
@@ -72,9 +72,9 @@ export const ReadReceipt = {
 	},
 
 	storeThreadMessagesReadReceipts(tmid, userId, userLastSeen) {
-		if (!settings.get('Message_Read_Receipt_Enabled')) {
-			return;
-		}
+		// if (!settings.get('Message_Read_Receipt_Enabled')) {
+		// 	return;
+		// }
 
 		const message = Messages.findOneById(tmid, { fields: { tlm: 1, rid: 1 } });
 

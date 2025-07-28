@@ -1,16 +1,15 @@
-import type { IUser, IRoom, IMessage } from '@rocket.chat/core-typings';
 import { MessageReads } from '@rocket.chat/core-services';
+import type { IMessage, IRoom, IUser } from '@rocket.chat/core-typings';
 
-import { ReadReceipt } from '../../../../server/lib/message-read-receipt/ReadReceipt';
 import { callbacks } from '../../../../../lib/callbacks';
-import { settings } from '../../../../../app/settings/server';
+import { ReadReceipt } from '../../../../server/lib/message-read-receipt/ReadReceipt';
 
 callbacks.add(
 	'afterReadMessages',
 	(rid: IRoom['_id'], params: { uid: IUser['_id']; lastSeen?: Date; tmid?: IMessage['_id'] }) => {
-		if (!settings.get('Message_Read_Receipt_Enabled')) {
-			return;
-		}
+		// if (!settings.get('Message_Read_Receipt_Enabled')) {
+		// 	return;
+		// }
 		const { uid, lastSeen, tmid } = params;
 
 		if (tmid) {

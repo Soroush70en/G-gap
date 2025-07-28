@@ -1,10 +1,9 @@
 import { Match } from 'meteor/check';
 import _ from 'underscore';
 
-import { Base } from './_Base';
-import Rooms from './Rooms';
-import { settings } from '../../../settings/server';
 import { otrSystemMessages } from '../../../otr/lib/constants';
+import Rooms from './Rooms';
+import { Base } from './_Base';
 
 export class Messages extends Base {
 	constructor() {
@@ -758,9 +757,9 @@ export class Messages extends Base {
 			groupable: false,
 		};
 
-		if (settings.get('Message_Read_Receipt_Enabled')) {
-			record.unread = true;
-		}
+		//if (settings.get('Message_Read_Receipt_Enabled')) {
+		record.unread = true;
+		//}
 
 		_.extend(record, extraData);
 
@@ -783,9 +782,9 @@ export class Messages extends Base {
 			groupable: false,
 		};
 
-		if (settings.get('Message_Read_Receipt_Enabled')) {
-			record.unread = true;
-		}
+		//if (settings.get('Message_Read_Receipt_Enabled')) {
+		record.unread = true;
+		//}
 
 		_.extend(record, extraData);
 
@@ -807,9 +806,9 @@ export class Messages extends Base {
 			groupable: false,
 		};
 
-		if (settings.get('Message_Read_Receipt_Enabled')) {
-			record.unread = true;
-		}
+		///if (settings.get('Message_Read_Receipt_Enabled')) {
+		record.unread = true;
+		//}
 		Object.assign(record, extraData);
 
 		record._id = this.insertOrUpsert(record);

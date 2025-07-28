@@ -1,22 +1,22 @@
 import { Meteor } from 'meteor/meteor';
 import moment from 'moment';
 
-import { hasPermission } from '../../../authorization';
-import { settings } from '../../../settings/server';
 import { callbacks } from '../../../../lib/callbacks';
+import { roomCoordinator } from '../../../../server/lib/rooms/roomCoordinator';
+import { hasPermission } from '../../../authorization';
 import { Subscriptions, Users } from '../../../models/server';
+import { Notification } from '../../../notification-queue/server/NotificationQueue';
+import { settings } from '../../../settings/server';
 import {
 	callJoinRoom,
 	messageContainsHighlight,
 	parseMessageTextPerUser,
 	replaceMentionedUsernamesWithFullNames,
 } from '../functions/notifications';
+import { notifyDesktopUser, shouldNotifyDesktop } from '../functions/notifications/desktop';
 import { getEmailData, shouldNotifyEmail } from '../functions/notifications/email';
 import { getPushData, shouldNotifyMobile } from '../functions/notifications/mobile';
-import { notifyDesktopUser, shouldNotifyDesktop } from '../functions/notifications/desktop';
-import { Notification } from '../../../notification-queue/server/NotificationQueue';
 import { getMentions } from './notifyUsersOnMessage';
-import { roomCoordinator } from '../../../../server/lib/rooms/roomCoordinator';
 
 let TroubleshootDisableNotifications;
 
@@ -95,7 +95,7 @@ export const sendNotification = async ({
 			isThread,
 		})
 	) {
-		notifyDesktopUser({
+		await notifyDesktopUser({
 			notificationMessage,
 			userId: subscription.u._id,
 			user: sender,

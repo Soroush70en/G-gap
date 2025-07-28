@@ -1,45 +1,45 @@
-import os from 'os';
 import { log } from 'console';
+import os from 'os';
 
-import _ from 'underscore';
-import { Meteor } from 'meteor/meteor';
-import { MongoInternals } from 'meteor/mongo';
+import { Analytics, Team, VideoConf } from '@rocket.chat/core-services';
 import type { IRoom, IStats } from '@rocket.chat/core-typings';
 import {
-	NotificationQueue,
-	Users as UsersRaw,
-	Rooms as RoomsRaw,
-	Statistics,
-	Sessions,
+	EmailInbox,
+	InstanceStatus,
 	Integrations,
 	Invites,
-	Uploads,
-	LivechatDepartment,
-	LivechatVisitors,
-	EmailInbox,
 	LivechatBusinessHours,
-	Messages as MessagesRaw,
-	Roles as RolesRaw,
-	InstanceStatus,
-	Settings,
-	LivechatTrigger,
 	LivechatCustomField,
+	LivechatDepartment,
+	LivechatTrigger,
+	LivechatVisitors,
+	Messages as MessagesRaw,
+	NotificationQueue,
+	Roles as RolesRaw,
+	Rooms as RoomsRaw,
+	Sessions,
+	Settings,
+	Statistics,
+	Uploads,
+	Users as UsersRaw,
 } from '@rocket.chat/models';
-import { Analytics, Team, VideoConf } from '@rocket.chat/core-services';
+import { Meteor } from 'meteor/meteor';
+import { MongoInternals } from 'meteor/mongo';
+import _ from 'underscore';
 
-import { Users, Rooms, Subscriptions, Messages } from '../../../models/server';
+import { getStatistics as getEnterpriseStatistics } from '../../../../ee/app/license/server';
+import { readSecondaryPreferred } from '../../../../server/database/readSecondaryPreferred';
+import { isRunningMs } from '../../../../server/lib/isRunningMs';
+import { getControl } from '../../../../server/lib/migrations';
+import { getSettingsStatistics } from '../../../../server/lib/statistics/getSettingsStatistics';
+import { getMatrixFederationStatistics } from '../../../federation-v2/server/infrastructure/rocket-chat/statistics';
+import { getStatistics as federationGetStatistics } from '../../../federation/server/functions/dashboard';
+import { Messages, Rooms, Subscriptions, Users } from '../../../models/server';
 import { settings } from '../../../settings/server';
 import { Info, getMongoInfo } from '../../../utils/server';
-import { getControl } from '../../../../server/lib/migrations';
-import { getStatistics as federationGetStatistics } from '../../../federation/server/functions/dashboard';
-import { readSecondaryPreferred } from '../../../../server/database/readSecondaryPreferred';
 import { getAppsStatistics } from './getAppsStatistics';
 import { getImporterStatistics } from './getImporterStatistics';
 import { getServicesStatistics } from './getServicesStatistics';
-import { getStatistics as getEnterpriseStatistics } from '../../../../ee/app/license/server';
-import { getSettingsStatistics } from '../../../../server/lib/statistics/getSettingsStatistics';
-import { getMatrixFederationStatistics } from '../../../federation-v2/server/infrastructure/rocket-chat/statistics';
-import { isRunningMs } from '../../../../server/lib/isRunningMs';
 
 const wizardFields = ['Organization_Type', 'Industry', 'Size', 'Country', 'Language', 'Server_Type', 'Register_Server'];
 
@@ -329,8 +329,8 @@ export const statistics = {
 			platform: process.env.DEPLOY_PLATFORM || 'selfinstall',
 		};
 
-		statistics.readReceiptsEnabled = settings.get('Message_Read_Receipt_Enabled');
-		statistics.readReceiptsDetailed = settings.get('Message_Read_Receipt_Store_Users');
+		statistics.readReceiptsEnabled = true; // settings.get('Message_Read_Receipt_Enabled');
+		statistics.readReceiptsDetailed = true; //  settings.get('Message_Read_Receipt_Store_Users');
 
 		statistics.enterpriseReady = true;
 		statsPms.push(
