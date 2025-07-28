@@ -118,18 +118,17 @@ export const sendNotification = async ({
 			isThread,
 		})
 	) {
-		const pushData = await getPushData({
-			notificationMessage,
-			room,
-			message,
-			userId: subscription.u._id,
-			senderUsername: sender.username,
-			senderName: sender.name,
-			receiver,
-		});
 		queueItems.push({
 			type: 'push',
-			data: pushData,
+			data: await getPushData({
+				notificationMessage,
+				room,
+				message,
+				userId: subscription.u._id,
+				senderUsername: sender.username,
+				senderName: sender.name,
+				receiver,
+			}),
 		});
 	}
 
