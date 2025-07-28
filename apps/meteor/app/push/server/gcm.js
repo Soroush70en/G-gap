@@ -197,16 +197,10 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		dataObj['content-available'] = notification.contentAvailable;
 	}
 
-	const notifObject = {
-		title: notification.title,
-		body: notification.text,
-	};
-
 	const data = convertToStrings(dataObj);
 
 	userTokens.forEach((userToken) => {
 		const message = {
-			notification: notifObject,
 			token: userToken,
 			data: data,
 		};
