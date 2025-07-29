@@ -61,7 +61,7 @@ export class PushNotification {
 		idOnly = false,
 	}: GetNotificationConfigParam): IPushNotificationConfig {
 		const title = idOnly ? '' : roomName || username;
-
+		const isCall = payload.callId && payload.callId != '';
 		// message is being redacted already by 'getPushData' if idOnly is true
 		const text = !idOnly && roomName !== '' ? `${username}: ${message}` : message;
 
@@ -75,7 +75,7 @@ export class PushNotification {
 			payload: {
 				host: Meteor.absoluteUrl(),
 				messageId,
-				notificationType: idOnly ? 'message-id-only' : 'message',
+				notificationType: isCall ? 'videoconf' : idOnly ? 'message-id-only' : 'message',
 				...(!idOnly && { rid, ...payload }),
 			},
 			userId,
