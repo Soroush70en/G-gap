@@ -1531,11 +1531,18 @@ settingsRegistry.addGroup('Push', function () {
 			enableQuery: [],
 			secret: true,
 		});
-		return this.add('Push_gcm_project_number', '', {
+		this.add('Push_gcm_project_number', '', {
 			type: 'string',
 			public: true,
 			enableQuery: [],
 			secret: true,
+		});
+		return this.add('Firebase_config', '', {
+			type: 'code',
+			public: true,
+			enableQuery: [],
+			secret: true,
+			multiline: true,
 		});
 	});
 	return this.section('Privacy', function () {

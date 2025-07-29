@@ -2,6 +2,7 @@ import admin from 'firebase-admin';
 import { EJSON } from 'meteor/ejson';
 import { logger } from './logger';
 import gcm from 'node-gcm';
+import { settings } from '../../settings/server';
 
 export const sendGCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
 	if (typeof notification.gcm === 'object') {
@@ -127,7 +128,8 @@ export const sendGCM = function ({ userTokens, notification, _replaceToken, _rem
 };
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('./firebase-service-account.json'); // مسیر به فایل serviceAccount
+const serviceAccount = (await getValidServiceAccount()) || require('./firebase-service-account.json');
+
 if (!admin.apps.length) {
 	admin.initializeApp({
 		credential: admin.credential.cert(serviceAccount),
@@ -152,6 +154,16 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 
 	console.log('sendFCM', userTokens, notification);
 
+	notification.payload.host = 'https://chat.golrang.com';
+	notification.payload.messageId = '5Pd85gMG4yA4jY9SL';
+	notification.payload.rid = '7dPHJjDotQsi9qib2gs8oWhetDA2AW2sfY';
+	notification.payload.sender = {
+		_id: '7dPHJjDotQsi9qib2',
+		username: 'Barati.Mohammad',
+		name: 'Barati, Mohammad (GIG)',
+	};
+	notification.payload.callId = '6887844da9e0fd24b410553e';
+	//notification.payload.notificationType = 'message-id-only';
 	// Allow user to set payload
 	const dataObj = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
 
@@ -197,6 +209,11 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		dataObj['content-available'] = notification.contentAvailable;
 	}
 
+	const notifObject = {
+		title: notification.title,
+		body: notification.text,
+	};
+
 	const data = convertToStrings(dataObj);
 
 	userTokens.forEach((userToken) => {
@@ -206,15 +223,19 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		};
 		console.log('===========================================MESSAGE===========================================');
 		console.log(message);
-		admin
-			.messaging()
-			.send(message)
-			.then((response) => {
-				console.log('FCM message sent successfully:', response);
-			})
-			.catch((error) => {
-				console.error('Error sending FCM message:', error);
-			});
+		try {
+			admin
+				.messaging()
+				.send(message)
+				.then((response) => {
+					console.log('FCM message sent successfully:', response);
+				})
+				.catch((error) => {
+					console.error('Error sending FCM message:', error);
+				});
+		} catch (e) {
+			console.error('[FCM CATCH] Error sending FCM message:', e);
+		}
 	});
 };
 
@@ -224,4 +245,47 @@ function convertToStrings(obj) {
 		result[key] = typeof value === 'string' ? value : String(value);
 	}
 	return result;
+}
+
+function isValidJSON(jsonString) {
+	try {
+		const parsed = JSON.parse(jsonString);
+		return typeof parsed === 'object' && parsed !== null;
+	} catch (error) {
+		return false;
+	}
+}
+
+async function getValidServiceAccount() {
+	const serviceAccountString = await settings.get('Firebase_config');
+
+	if (!isValidJSON(serviceAccountString)) {
+		console.warn('[Firebase] Invalid JSON in Firebase_config setting.');
+		return null;
+	}
+
+	const parsed = JSON.parse(serviceAccountString);
+
+	const requiredKeys = [
+		'type',
+		'project_id',
+		'private_key_id',
+		'private_key',
+		'client_email',
+		'client_id',
+		'auth_uri',
+		'token_uri',
+		'auth_provider_x509_cert_url',
+		'client_x509_cert_url',
+		'universe_domain',
+	];
+
+	const missingKeys = requiredKeys.filter((key) => !(key in parsed));
+
+	if (missingKeys.length) {
+		console.warn(`[Firebase] Missing required keys in Firebase_config: ${missingKeys.join(', ')}`);
+		return null;
+	}
+
+	return parsed;
 }
