@@ -21,6 +21,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 		show: boolean;
 		url: string;
 		onConfirm: () => void;
+		callId: string
 	} | null>(null);
 
 	useEffect(
@@ -35,6 +36,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 							show: true,
 							url: props.url,
 							onConfirm: open,
+							callId: props.callId
 						});
 					};
 					open();
@@ -44,11 +46,14 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 	);
 
 	useEffect(() => {
-		VideoConfManager.on('direct/stopped', () => setOutgoing(undefined));
-		VideoConfManager.on('calling/ended', () => setOutgoing(undefined));
+		VideoConfManager.on('direct/end', () => { setVideoConf(null); });
+		VideoConfManager.on('direct/stopped', (params) => { setOutgoing(undefined); });
+		VideoConfManager.on('calling/ended', () => { setOutgoing(undefined); });
 	}, []);
 
 	const handleVideoConfClose = () => {
+		VideoConfManager.leftCall(videoConf?.callId ?? '');
+				
 		setVideoConf(null);
 	};
 

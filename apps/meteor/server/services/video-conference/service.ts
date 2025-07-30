@@ -1,22 +1,25 @@
-import { MongoInternals } from 'meteor/mongo';
+import type { IBlock } from '@rocket.chat/apps-engine/definition/uikit';
+import type { AppVideoConfProviderManager } from '@rocket.chat/apps-engine/server/managers';
+import type { IVideoConfService, VideoConferenceJoinOptions } from '@rocket.chat/core-services';
+import { ServiceClassInternal, VideoConf, api } from '@rocket.chat/core-services';
 import type {
-	IDirectVideoConference,
-	ILivechatVideoConference,
-	IRoom,
-	IUser,
-	VideoConferenceInstructions,
-	DirectCallInstructions,
-	ConferenceInstructions,
-	LivechatInstructions,
 	AtLeast,
+	ConferenceInstructions,
+	DirectCallInstructions,
+	IDirectVideoConference,
 	IGroupVideoConference,
-	IVideoConferenceUser,
+	ILivechatVideoConference,
 	IMessage,
+	IRoom,
 	IStats,
+	IUser,
+	IVideoConferenceUser,
+	LivechatInstructions,
+	Optional,
 	VideoConference,
 	VideoConferenceCapabilities,
 	VideoConferenceCreateData,
-	Optional,
+	VideoConferenceInstructions,
 } from '@rocket.chat/core-typings';
 import {
 	VideoConferenceStatus,
@@ -24,26 +27,23 @@ import {
 	isGroupVideoConference,
 	isLivechatVideoConference,
 } from '@rocket.chat/core-typings';
-import type { MessageSurfaceLayout } from '@rocket.chat/ui-kit';
-import type { AppVideoConfProviderManager } from '@rocket.chat/apps-engine/server/managers';
-import type { IBlock } from '@rocket.chat/apps-engine/definition/uikit';
-import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
+import { Messages, Rooms, Subscriptions, Users, VideoConference as VideoConferenceModel } from '@rocket.chat/models';
 import type { PaginatedResult } from '@rocket.chat/rest-typings';
-import { Users, VideoConference as VideoConferenceModel, Rooms, Messages, Subscriptions } from '@rocket.chat/models';
-import type { IVideoConfService, VideoConferenceJoinOptions } from '@rocket.chat/core-services';
-import { api, ServiceClassInternal } from '@rocket.chat/core-services';
+import type { MessageSurfaceLayout } from '@rocket.chat/ui-kit';
+import { MongoInternals } from 'meteor/mongo';
+import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
 
-import { Apps } from '../../../ee/server/apps';
+import { canAccessRoomIdAsync } from '../../../app/authorization/server/functions/canAccessRoom';
 import { sendMessage } from '../../../app/lib/server/functions/sendMessage';
+import { Notifications } from '../../../app/notifications/server';
 import { settings } from '../../../app/settings/server';
+import { updateCounter } from '../../../app/statistics/server/functions/updateStatsCounter';
+import { Apps } from '../../../ee/server/apps';
+import { callbacks } from '../../../lib/callbacks';
+import { availabilityErrors } from '../../../lib/videoConference/constants';
+import { readSecondaryPreferred } from '../../database/readSecondaryPreferred';
 import { videoConfProviders } from '../../lib/videoConfProviders';
 import { videoConfTypes } from '../../lib/videoConfTypes';
-import { updateCounter } from '../../../app/statistics/server/functions/updateStatsCounter';
-import { readSecondaryPreferred } from '../../database/readSecondaryPreferred';
-import { availabilityErrors } from '../../../lib/videoConference/constants';
-import { callbacks } from '../../../lib/callbacks';
-import { Notifications } from '../../../app/notifications/server';
-import { canAccessRoomIdAsync } from '../../../app/authorization/server/functions/canAccessRoom';
 
 const { db } = MongoInternals.defaultRemoteCollectionDriver().mongo;
 
@@ -950,5 +950,33 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		this.notifyVideoConfUpdate(call.rid, call._id);
 
 		await this.runVideoConferenceChangedEvent(call._id);
+	}
+
+	public async leftCall(uid: IUser['_id'] | undefined, callId: VideoConference['_id']): Promise<void> {		
+		let user: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
+
+		if (uid) {
+			user = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(uid, {
+				projection: { name: 1, username: 1, avatarETag: 1 },
+			});
+			
+			if (!user) {
+				throw new Error('failed-to-load-own-data');
+			}
+		}
+
+		const call = await VideoConferenceModel.findOneById<IDirectVideoConference>(callId);
+
+		if (call) {
+			if(call.type === 'direct')
+			{
+				let obj1= { callId: (call as any)?._id ?? '', rid: (call as any)?.rid, uid: user?._id ?? '', creatorUserId: call.createdBy, user, callType: call.type }
+				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
+				await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);	
+			}
+			
+			await this.runVideoConferenceChangedEvent(call._id);
+			this.notifyVideoConfUpdate(call.rid, call._id);								
+		}
 	}
 }
