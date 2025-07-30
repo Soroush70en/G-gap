@@ -1,17 +1,17 @@
-import type { VideoConferenceInstructions, VideoConference, VideoConferenceCapabilities } from '@rocket.chat/core-typings';
+import type { VideoConference, VideoConferenceCapabilities, VideoConferenceInstructions } from '@rocket.chat/core-typings';
 
+import type { PaginatedResult } from '../../helpers/PaginatedResult';
+import type { VideoConfCancelProps } from './VideoConfCancelProps';
 import type { VideoConfInfoProps } from './VideoConfInfoProps';
+import type { VideoConfJoinProps } from './VideoConfJoinProps';
 import type { VideoConfListProps } from './VideoConfListProps';
 import type { VideoConfStartProps } from './VideoConfStartProps';
-import type { VideoConfJoinProps } from './VideoConfJoinProps';
-import type { VideoConfCancelProps } from './VideoConfCancelProps';
-import type { PaginatedResult } from '../../helpers/PaginatedResult';
 
+export * from './VideoConfCancelProps';
 export * from './VideoConfInfoProps';
+export * from './VideoConfJoinProps';
 export * from './VideoConfListProps';
 export * from './VideoConfStartProps';
-export * from './VideoConfJoinProps';
-export * from './VideoConfCancelProps';
 
 export type VideoConferenceEndpoints = {
 	'/v1/video-conference.start': {
@@ -40,5 +40,9 @@ export type VideoConferenceEndpoints = {
 
 	'/v1/video-conference.providers': {
 		GET: () => { data: { key: string; label: string }[] };
+	};
+
+	'/v1/video-conference.leftCall': {
+		POST: (params: VideoConfCancelProps) => void;
 	};
 };

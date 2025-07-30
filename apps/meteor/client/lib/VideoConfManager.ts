@@ -64,6 +64,8 @@ type VideoConfEvents = {
 
 	// We stopped calling a remote user
 	'direct/stopped': DirectCallParams;
+	
+	'direct/end': void;
 
 	'preference/changed': { key: keyof CallPreferences; value: boolean };
 
@@ -86,6 +88,7 @@ type VideoConfEvents = {
 	'start/error': { error: string };
 
 	'capabilities/changed': void;
+	'videoConference/left': void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
 	private userId: string | undefined;
@@ -433,6 +436,10 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 		APIClient.post('/v1/video-conference.cancel', { callId });
 	}
 
+	async leftCall( callId: string): Promise<void> {		
+		await APIClient.post('/v1/video-conference.leftCall',  { callId });
+	}
+
 	private disconnect(): void {
 		debug && console.log(`[VideoConf] disconnecting user ${this.userId}`);
 		for (const hook of this.hooks) {
@@ -486,6 +493,13 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 				return this.onDirectCallJoined(params);
 			case 'end':
 				return this.onDirectCallEnded(params);
+			case 'left':
+				if(params.callType === 'videoconference'){
+					this.emit('videoConference/left');
+				}
+				else{
+					this.emit('direct/end');
+				}
 		}
 	}
 

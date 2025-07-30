@@ -1,18 +1,18 @@
+import { VideoConf } from '@rocket.chat/core-services';
 import type { VideoConference } from '@rocket.chat/core-typings';
 import {
-	isVideoConfStartProps,
-	isVideoConfJoinProps,
 	isVideoConfCancelProps,
 	isVideoConfInfoProps,
+	isVideoConfJoinProps,
 	isVideoConfListProps,
+	isVideoConfStartProps,
 } from '@rocket.chat/rest-typings';
-import { VideoConf } from '@rocket.chat/core-services';
 
-import { API } from '../api';
+import { availabilityErrors } from '../../../../lib/videoConference/constants';
+import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
 import { canAccessRoomIdAsync } from '../../../authorization/server/functions/canAccessRoom';
 import { hasPermissionAsync } from '../../../authorization/server/functions/hasPermission';
-import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
-import { availabilityErrors } from '../../../../lib/videoConference/constants';
+import { API } from '../api';
 
 API.v1.addRoute(
 	'video-conference.start',
@@ -107,6 +107,29 @@ API.v1.addRoute(
 			}
 
 			await VideoConf.cancel(userId, callId);
+			return API.v1.success();
+		},
+	},
+);
+
+API.v1.addRoute(
+	'video-conference.leftCall',
+	{ authRequired: true, validateParams: isVideoConfCancelProps, rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 } },
+	{
+		async post() {						
+			const { callId } = this.bodyParams;
+			const { userId } = this;
+			
+			const call = await VideoConf.get(callId);
+			if (!call) {
+				return API.v1.failure('invalid-params');
+			}
+
+			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
+				return API.v1.failure('invalid-params');
+			}
+			
+			await VideoConf.leftCall(userId, callId);
 			return API.v1.success();
 		},
 	},
