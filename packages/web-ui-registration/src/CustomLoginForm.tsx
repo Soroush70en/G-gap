@@ -341,7 +341,7 @@ const styles: LoginFormStyles = {
 		display: 'flex',
 		alignItems: 'center',
 		justifyContent: 'center',
-		fontFamily: 'Vazir',
+		fontFamily: 'Vazirmatn',
 		padding: '20px',
 	},
 	formWrapper: {
@@ -457,9 +457,8 @@ const styles: LoginFormStyles = {
 
 const fontFaceStyle = `
 	@font-face {
-    font-family: 'Vazir';
-    src: url('./fonts/Vazir.woff') format('woff'), 
-         url('./fonts/Vazir.woff2') format('woff2');
+    font-family: 'Vazirmatn';
+    src: url('./fonts/Vazirmatn.woff2') format('woff2');
     font-weight: normal;
     font-style: normal;
   }

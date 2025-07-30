@@ -15,8 +15,8 @@ html {
 }
 
 @font-face {
-	font-family: 'Vazir';
-	src: url(./fonts/Vazir.woff) format('woff'), url(./fonts/Vazir.woff) format('woff2');
+	font-family: 'Vazirmatn';
+	src: url(./fonts/Vazirmatn.woff2) format('woff2');
 	font-weight: normal;
 	font-style: normal;
 }

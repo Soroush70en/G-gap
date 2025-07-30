@@ -4,31 +4,30 @@ import { VideoConfManager } from './VideoConfManager';
 import { clearIncomingCall, subscribeToIncomingCall } from './incomingCallStore';
 
 const IncomingCallBridge = () => {
-const [callData, setCallData] = useState(null);
+	const [callData, setCallData] = useState(null);
 
-  useEffect(() => {
-    const unsubscribe = subscribeToIncomingCall(setCallData);
-    return () => unsubscribe();
-  }, []);
+	useEffect(() => {
+		const unsubscribe = subscribeToIncomingCall(setCallData);
+		return () => unsubscribe();
+	}, []);
 
-  if (!callData) return null;
+	if (!callData) return null;
 
-  return (
-
-    <IncomingCallPanel
-      visible={!!callData}
-      callerName={callData?.callerName}
-      onJoin={() => {
-        VideoConfManager.joinCall(callData?.callId); 
-        clearIncomingCall();
-      }}
-      onDismiss={() => {
-        clearIncomingCall();
-      }}
-      username={callData?.username}
-    />
-
-  );
+	return (
+		<IncomingCallPanel
+			visible={!!callData}
+			callerName={callData?.callerName}
+			onJoin={() => {
+				VideoConfManager.joinCall(callData?.callId);
+				clearIncomingCall();
+			}}
+			onDismiss={() => {
+				clearIncomingCall();
+			}}
+			username={callData?.username}
+			callId={callData?.callId}
+		/>
+	);
 };
 
 export default IncomingCallBridge;
