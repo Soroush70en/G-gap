@@ -23,7 +23,8 @@ Meteor.connection._livedata_data = function (message) {
   try {	
 
 	if((message as any)?.fields?.args[0]?.payload?.message?.t === "videoconf" &&
-		(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId()){
+		(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId()&&
+		(message as any)?.fields?.args[0]?.payload?.message?.type === 'videoconference'){
 		console.log('Session:');
 		console.log(Meteor.userId());
 		setIncomingCall({
