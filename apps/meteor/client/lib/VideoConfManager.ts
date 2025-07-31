@@ -5,6 +5,7 @@ import { Tracker } from 'meteor/tracker';
 
 import { Notifications } from '../../app/notifications/client';
 import { APIClient } from '../../app/utils/client';
+import { clearIncomingCall } from './incomingCallStore';
 import { getConfig } from './utils/getConfig';
 
 const debug = !!(getConfig('debug') || getConfig('debug-VideoConf'));
