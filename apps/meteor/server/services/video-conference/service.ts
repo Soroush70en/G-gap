@@ -755,6 +755,9 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		await callbacks.runAsync('onJoinVideoConference', call._id, user?._id);
 
 		await this.runOnUserJoinEvent(call._id, user as IVideoConferenceUser);
+		let obj1= { callId: (call as any)?._id ?? '', rid: (call as any)?.rid, uid: user?._id ?? '', creatorUserId: call.createdBy, user}
+		//if (call.ringing) {
+		await this.notifyAllUsersOfRoom(call.rid, user?._id ?? '', 'videoConference/accepted', obj1);
 
 		return this.getUrl(call, user, options);
 	}
