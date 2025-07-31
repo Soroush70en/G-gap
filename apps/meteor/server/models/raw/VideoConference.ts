@@ -1,14 +1,14 @@
-import type { FindCursor, UpdateOptions, UpdateFilter, UpdateResult, IndexDescription, Collection, Db, FindOptions } from 'mongodb';
 import type {
-	VideoConference,
 	IGroupVideoConference,
 	ILivechatVideoConference,
-	IUser,
 	IRoom,
+	IUser,
 	RocketChatRecordDeleted,
+	VideoConference,
 } from '@rocket.chat/core-typings';
-import type { FindPaginated, InsertionModel, IVideoConferenceModel } from '@rocket.chat/model-typings';
 import { VideoConferenceStatus } from '@rocket.chat/core-typings';
+import type { FindPaginated, IVideoConferenceModel, InsertionModel } from '@rocket.chat/model-typings';
+import type { Collection, Db, FindCursor, FindOptions, IndexDescription, UpdateFilter, UpdateOptions, UpdateResult } from 'mongodb';
 
 import { BaseRaw } from './BaseRaw';
 
@@ -201,6 +201,19 @@ export class VideoConferenceRaw extends BaseRaw<VideoConference> implements IVid
 					name: user.name,
 					avatarETag: user.avatarETag,
 					ts: user.ts || new Date(),
+				},
+			},
+		});
+	}
+
+	public async removeUserById(
+		callId: string,
+		user: Required<Pick<IUser, '_id'>>,
+	): Promise<void> {
+		await this.updateOneById(callId, {
+			$pull: {
+				users: {
+					_id: user._id
 				},
 			},
 		});

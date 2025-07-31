@@ -658,6 +658,20 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		await subscriptions.forEach((subscription) => this.notifyUser(subscription.u._id, action, params));
 	}
 
+	private async notifyAllUsersOfRoom(
+		rid: IRoom['_id'],
+		uid: IUser['_id'],
+		action: string,
+		params: { uid: IUser['_id']; rid: IRoom['_id']; callId: VideoConference['_id'] },
+	): Promise<void> {
+		console.log('video-conference:notifyUsersOfRoom---------------------------------------------------------');
+		const subscriptions = Subscriptions.findByRoomId(rid, {
+			projection: { 'u._id': 1, '_id': 0 },
+		});
+
+		await subscriptions.forEach((subscription) => this.notifyUser(subscription.u._id, action, params));
+	}
+
 	private async startGroup(
 		providerName: string,
 		user: IUser,
@@ -968,12 +982,15 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const call = await VideoConferenceModel.findOneById<IDirectVideoConference>(callId);
 
 		if (call) {
+			await VideoConferenceModel.removeUserById(call._id, { _id: uid  ?? ''});
+		
 			if(call.type === 'direct')
 			{
-				let obj1= { callId: (call as any)?._id ?? '', rid: (call as any)?.rid, uid: user?._id ?? '', creatorUserId: call.createdBy, user, callType: call.type }
 				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
-				await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);	
 			}
+			
+			let obj1= { callId: (call as any)?._id ?? '', rid: (call as any)?.rid, uid: user?._id ?? '', creatorUserId: call.createdBy, user, callType: call.type }
+			await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);	
 			
 			await this.runVideoConferenceChangedEvent(call._id);
 			this.notifyVideoConfUpdate(call.rid, call._id);								

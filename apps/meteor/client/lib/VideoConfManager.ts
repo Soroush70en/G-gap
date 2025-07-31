@@ -88,6 +88,9 @@ type VideoConfEvents = {
 	'start/error': { error: string };
 
 	'capabilities/changed': void;
+
+	// A remote user accepted our call
+	'videoConference/accepted': VideoConferenceCallParams;
 	'videoConference/left': void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
@@ -500,6 +503,9 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 				else{
 					this.emit('direct/end');
 				}
+			case 'videoConference/accepted':
+				if(params.uid === this.userId)
+					clearIncomingCall();
 		}
 	}
 

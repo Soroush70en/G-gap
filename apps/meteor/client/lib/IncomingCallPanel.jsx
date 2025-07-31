@@ -1,10 +1,17 @@
-import React from 'react';
+import { default as React, useEffect } from 'react';
 import { CustomSounds } from '../../app/custom-sounds/client/lib/CustomSounds';
 import { getUserPreference } from '../../app/utils';
 import { getUserAvatarURL } from '../../app/utils/lib/getUserAvatarURL';
 
 const IncomingCallPanel = ({ visible, callerName, onJoin, onDismiss, username }) => {
 	if (!visible) return null;
+
+	useEffect(() => {
+		return () => {			
+			return sound?.pause();
+		  };
+		  
+	  }, []);
 
 	const userId = Meteor.userId();
 	const audioVolume = getUserPreference(userId, 'notificationsSoundVolume');
