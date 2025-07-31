@@ -27,6 +27,17 @@ export type DirectCallParams = {
 	// #ToDo: The attributes below should not be part of DirectCallParams - they are used by local events only, never notification events.
 	dismissed?: boolean;
 	acceptTimeout?: ReturnType<typeof setTimeout> | undefined;
+	callType: string;
+};
+
+export type VideoConferenceCallParams = {
+	uid: IUser['_id'];
+	rid: IRoom['_id'];
+	callId: string;
+
+	// #ToDo: The attributes below should not be part of DirectCallParams - they are used by local events only, never notification events.
+	dismissed?: boolean;
+	acceptTimeout?: ReturnType<typeof setTimeout> | undefined;
 };
 
 type IncomingDirectCall = DirectCallParams & { timeout: number };
