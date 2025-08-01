@@ -12,7 +12,6 @@ import { hasPermission } from '../../app/authorization/client';
 import { register } from '../../app/markdown/lib/hljs';
 import { settings } from '../../app/settings/client';
 import { getUserPreference, t } from '../../app/utils/client';
-import { dispatchToastMessage } from '../../client/lib/toast';
 import * as banners from '../lib/banners';
 import { setIncomingCall } from '../lib/incomingCallStore';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
@@ -50,19 +49,19 @@ Meteor.connection._livedata_data = function (message) {
 		console.error(e);
 	}
 
-	try {
-		if (
-			(message as any)?.fields?.args[0]?.action === 'videoConference/accepted' &&
-			(message as any)?.fields?.args[0]?.params?.uid != Meteor.userId()
-		) {
-			dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });
-			console.log('videoConference/accepted');
-			console.log('This UserId: ' + Meteor.userId());
-			console.log('New UserId: ' + (message as any)?.fields?.args[0]?.params?.uid);
-		}
-	} catch (e) {
-		console.error(e);
-	}
+	// try {
+	// 	if (
+	// 		(message as any)?.fields?.args[0]?.action === 'videoConference/accepted' &&
+	// 		(message as any)?.fields?.args[0]?.params?.uid != Meteor.userId()
+	// 	) {
+	// 		dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });
+	// 		console.log('videoConference/accepted');
+	// 		console.log('This UserId: ' + Meteor.userId());
+	// 		console.log('New UserId: ' + (message as any)?.fields?.args[0]?.params?.uid);
+	// 	}
+	// } catch (e) {
+	// 	console.error(e);
+	// }
 
 	// اجرای handler اصلی تا Meteor دچار اختلال نشه
 	return originalLivedataHandler.call(this, message);

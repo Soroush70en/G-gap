@@ -1,21 +1,16 @@
-import React, { useMemo } from 'react';
-import {
-	VideoConfPopup,
-	VideoConfPopupContent,
-	VideoConfPopupControllers,
-	VideoConfController,
-	useVideoConfControllers,
-	VideoConfButton,
-	VideoConfPopupFooter,
-	VideoConfPopupFooterButtons,
-	VideoConfPopupTitle,
-	VideoConfPopupHeader,
-} from '@rocket.chat/ui-video-conf';
-import { useTranslation } from '@rocket.chat/ui-contexts';
-import { useEndpointData } from '../hooks/useEndpointData';
-import { AsyncStatePhase } from '../hooks/useAsyncState';
 import { Skeleton } from '@rocket.chat/fuselage';
+import { useTranslation } from '@rocket.chat/ui-contexts';
+import {
+	VideoConfController,
+	VideoConfPopupControllers,
+	VideoConfPopupHeader,
+	VideoConfPopupTitle,
+	useVideoConfControllers
+} from '@rocket.chat/ui-video-conf';
+import React, { useEffect, useMemo } from 'react';
 import { CustomSounds } from '../../app/custom-sounds/client/lib/CustomSounds';
+import { AsyncStatePhase } from '../hooks/useAsyncState';
+import { useEndpointData } from '../hooks/useEndpointData';
 
 // Mock functions and hooks since the original imports are not available in this environment.
 // This allows the component to render without compilation errors.
