@@ -46,3 +46,4 @@ yarn-error.log*
 .exrc
 .history
 .envrc
+apps/meteor/app/push/server/firebase-service-account.json
