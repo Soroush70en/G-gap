@@ -23,16 +23,28 @@ const originalLivedataHandler = Meteor.connection._livedata_data;
 
 Meteor.connection._livedata_data = function (message) {
 	try {
-		if (
-			(message as any)?.fields?.args[0]?.payload?.message?.t === 'videoconf' &&
-			(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId() &&
-			(message as any)?.fields?.args[0]?.payload?.message?.type === 'videoconference'
-		) {
-			setIncomingCall({
-				callerName: (message as any)?.fields?.args[0]?.payload?.sender?.name ?? 'ناشناس',
-				callId: (message as any)?.fields?.args[0]?.payload?.callId,
-				username: (message as any)?.fields?.args[0]?.payload?.sender?.username,
-			});
+		if ((message as any)?.fields?.args?.length > 0) {
+			if (
+				(message as any)?.fields?.args[0]?.payload?.message?.t === 'videoconf' &&
+				(message as any)?.fields?.args[0]?.payload?.sender?._id != Meteor.userId() &&
+				(message as any)?.fields?.args[0]?.payload?.message?.type === 'videoconference'
+			) {
+				setIncomingCall({
+					callerName: (message as any)?.fields?.args[0]?.payload?.sender?.name ?? 'ناشناس',
+					callId: (message as any)?.fields?.args[0]?.payload?.callId,
+					username: (message as any)?.fields?.args[0]?.payload?.sender?.username,
+				});
+			} else if (
+				(message as any)?.fields?.args[0]?.action === 'join' &&
+				(message as any)?.fields?.args[0]?.params.uid === Meteor.userId() &&
+				(message as any)?.fields?.args[0]?.params.type === 'videoconference.add'
+			) {
+				setIncomingCall({
+					callerName: (message as any)?.fields?.args[0]?.params?.name ?? 'ناشناس',
+					callId: (message as any)?.fields?.args[0]?.params.callId,
+					username: (message as any)?.fields?.args[0]?.params.username,
+				});
+			}
 		}
 	} catch (e) {
 		console.error(e);

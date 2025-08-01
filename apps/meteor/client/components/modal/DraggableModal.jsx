@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from '@rocket.chat/ui-contexts';
 
 const DraggableModal = ({
 	isInitiallyOpen = true,
@@ -7,7 +8,8 @@ const DraggableModal = ({
 	url = null,
 	title = 'Draggable Modal',
 	children = null,
-	isVisible = true, // New prop to control visibility without destroying
+	isVisible = true,
+	userSelectorComponent = null, // New prop to control visibility without destroying
 }) => {
 	const [isOpen, setIsOpen] = useState(isInitiallyOpen);
 	const [isMinimized, setIsMinimized] = useState(false);
@@ -22,6 +24,8 @@ const DraggableModal = ({
 	}));
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+	const [showUserSelector, setShowUserSelector] = useState(false);
+	const t = useTranslation();
 
 	const modalRef = useRef(null);
 	const headerRef = useRef(null);
@@ -340,21 +344,103 @@ const DraggableModal = ({
 				{
 					<div
 						style={{
-							padding: '0', // iframe will fill the whole area
-							overflow: 'hidden',
+							display: 'flex',
+							flexDirection: 'column',
 							height: isMinimized ? '0' : isMaximized ? 'calc(100vh - 60px)' : 'calc(100% - 60px)',
+							overflow: 'hidden',
 						}}
 					>
-						<iframe
-							allow='camera; microphone; fullscreen; display-capture; autoplay'
-							src={url || 'https://meet.golrang.com/?lang=fa'} // use your fallback URL here
+						{/* Navbar */}
+						{!isMinimized && (
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'space-between',
+									padding: '8px 16px',
+									backgroundColor: '#f9fafb',
+									borderBottom: '1px solid #e5e7eb',
+									minHeight: '40px',
+								}}
+							>
+								<div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+									<button
+										onClick={() => setShowUserSelector(true)}
+										style={{
+											padding: '6px 12px',
+											backgroundColor: '#3b82f6',
+											color: 'white',
+											border: 'none',
+											borderRadius: '4px',
+											cursor: 'pointer',
+											fontSize: '14px',
+											fontWeight: '500',
+											transition: 'background-color 0.2s ease',
+											display: 'flex',
+											alignItems: 'center',
+											gap: '6px',
+										}}
+										onMouseEnter={(e) => (e.target.style.backgroundColor = '#2563eb')}
+										onMouseLeave={(e) => (e.target.style.backgroundColor = '#3b82f6')}
+									>
+										👥 {t('Add_users')}
+									</button>
+								</div>
+							</div>
+						)}
+
+						{/* iframe */}
+						<div
 							style={{
-								width: '100%',
-								height: '100%',
-								border: '0',
-								display: 'block',
+								flex: 1,
+								overflow: 'hidden',
 							}}
-						/>
+						>
+							<iframe
+								allow='camera; microphone; fullscreen; display-capture; autoplay'
+								src={url + '?lang=fa' || 'https://meet.golrang.com/?lang=fa'}
+								style={{
+									width: '100%',
+									height: '100%',
+									border: '0',
+									display: 'block',
+								}}
+							/>
+							{/* User Selector Component */}
+							{showUserSelector && userSelectorComponent && (
+								<div
+									style={{
+										position: 'fixed',
+										top: 0,
+										left: 0,
+										right: 0,
+										bottom: 0,
+										backgroundColor: 'rgba(0, 0, 0, 0.5)',
+										zIndex: 1002,
+										display: 'flex',
+										alignItems: 'center',
+										justifyContent: 'center',
+									}}
+									onClick={() => setShowUserSelector(false)}
+								>
+									<div
+										onClick={(e) => e.stopPropagation()}
+										style={{
+											backgroundColor: 'white',
+											borderRadius: '8px',
+											padding: '20px',
+											maxWidth: '500px',
+											maxHeight: '70vh',
+											overflow: 'auto',
+										}}
+									>
+										{React.cloneElement(userSelectorComponent, {
+											onClose: () => setShowUserSelector(false),
+										})}
+									</div>
+								</div>
+							)}
+						</div>
 					</div>
 				}
 			</div>

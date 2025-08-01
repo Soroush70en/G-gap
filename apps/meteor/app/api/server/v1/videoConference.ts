@@ -6,6 +6,7 @@ import {
 	isVideoConfJoinProps,
 	isVideoConfListProps,
 	isVideoConfStartProps,
+	isVideoConfAddProps,
 } from '@rocket.chat/rest-typings';
 
 import { availabilityErrors } from '../../../../lib/videoConference/constants';
@@ -61,7 +62,7 @@ API.v1.addRoute(
 			}
 
 			if (!(await canAccessRoomIdAsync(call.rid, userId))) {
-				return API.v1.failure('invalid-params');
+				console.warn('A user outside of the room is trying to join');
 			}
 
 			let url: string | undefined;
@@ -116,10 +117,10 @@ API.v1.addRoute(
 	'video-conference.leftCall',
 	{ authRequired: true, validateParams: isVideoConfCancelProps, rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 } },
 	{
-		async post() {						
+		async post() {
 			const { callId } = this.bodyParams;
 			const { userId } = this;
-			
+
 			const call = await VideoConf.get(callId);
 			if (!call) {
 				return API.v1.failure('invalid-params');
@@ -128,8 +129,30 @@ API.v1.addRoute(
 			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
 				return API.v1.failure('invalid-params');
 			}
-			
+
 			await VideoConf.leftCall(userId, callId);
+			return API.v1.success();
+		},
+	},
+);
+
+API.v1.addRoute(
+	'video-conference.add',
+	{ authRequired: true, validateParams: isVideoConfAddProps, rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 } },
+	{
+		async post() {
+			const { callId, currentUserId, usernames } = this.bodyParams;
+			const { userId } = this;
+			const call = await VideoConf.get(callId);
+			if (!call) {
+				return API.v1.failure('invalid-params');
+			}
+
+			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
+				console.warn('A user outside of the room is trying to join');
+			}
+
+			await VideoConf.addUsers(callId, currentUserId, usernames);
 			return API.v1.success();
 		},
 	},
@@ -149,7 +172,7 @@ API.v1.addRoute(
 			}
 
 			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
-				return API.v1.failure('invalid-params');
+				console.warn('A user outside of the room is trying to join');
 			}
 
 			const capabilities = await VideoConf.listProviderCapabilities(call.providerName);

@@ -260,6 +260,15 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		VideoConferenceModel.setStatusById(callId, status);
 	}
 
+	public async addUsers(callId: VideoConference['_id'], currentUserId: string, usernames: string[]): Promise<void> {
+		if (typeof usernames === 'string') {
+			usernames = [usernames];
+		}
+		usernames.forEach(async (username) => {
+			await this.addUserByUsername(callId, currentUserId, username);
+		});
+	}
+
 	public async addUser(callId: VideoConference['_id'], userId?: IUser['_id'], ts?: Date): Promise<void> {
 		const call = await this.get(callId);
 		if (!call) {
@@ -288,6 +297,35 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			avatarETag: user.avatarETag,
 			ts: ts || new Date(),
 		});
+	}
+
+	private async addUserByUsername(callId: VideoConference['_id'], currentUserId: string, username: IUser['username']): Promise<void> {
+		const call = await this.get(callId);
+		if (!call) {
+			throw new Error('Invalid video conference');
+		}
+
+		if (!username) {
+			if (call.type === 'videoconference') {
+				return this.addAnonymousUser(call as Omit<IGroupVideoConference, 'providerData'>);
+			}
+
+			throw new Error('Invalid User');
+		}
+
+		const user = await Users.findOneByUsername<Required<Pick<IUser, '_id' | 'username' | 'name'>>>(username, {
+			projection: { username: 1, name: 1, avatarETag: 1 },
+		});
+		if (!user) {
+			throw new Error('Invalid User');
+		}
+		this.addUserToCallByUsername(
+			call,
+			{
+				_id: user._id,
+			},
+			currentUserId,
+		);
 	}
 
 	public async listProviders(): Promise<{ key: string; label: string }[]> {
@@ -414,6 +452,14 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		userId: IUser['_id'],
 		action: string,
 		params: { uid: IUser['_id']; rid: IRoom['_id']; callId: VideoConference['_id'] },
+	): void {
+		api.broadcast('user.video-conference', { userId, action, params });
+	}
+
+	private notifyUserAfterAdd(
+		userId: IUser['_id'],
+		action: string,
+		params: { uid: IUser['_id']; callId: VideoConference['_id']; type: string; name: IUser['name'] },
 	): void {
 		api.broadcast('user.video-conference', { userId, action, params });
 	}
@@ -910,6 +956,32 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		});
 	}
 
+	private async addUserToCallByUsername(
+		call: Optional<VideoConference, 'providerData'>,
+		{ _id }: AtLeast<Required<IUser>, '_id' | 'username' | 'name'> & { ts?: Date },
+		currentUserId: string,
+	): Promise<void> {
+		if (call.users.find((user: IUser) => user._id === _id)) {
+			return;
+		}
+
+		if (!currentUserId) {
+			return;
+		}
+
+		const currentUser = await Users.findOneById<Required<Pick<IUser, '_id' | 'username' | 'name'>>>(currentUserId, {
+			projection: { username: 1, name: 1, avatarETag: 1 },
+		});
+
+		if (!currentUser) {
+			throw new Error('Invalid User');
+		}
+
+		const params = { uid: _id, callId: call._id, type: 'videoconference.add', username: currentUser.username, name: currentUser.name };
+		this.notifyUserAfterAdd(_id, 'join', params);
+		this.notifyVideoConfUpdate(call.rid, call._id);
+	}
+
 	private async addUserToCall(
 		call: Optional<VideoConference, 'providerData'>,
 		{ _id, username, name, avatarETag, ts }: AtLeast<Required<IUser>, '_id' | 'username' | 'name' | 'avatarETag'> & { ts?: Date },
@@ -952,14 +1024,14 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		await this.runVideoConferenceChangedEvent(call._id);
 	}
 
-	public async leftCall(uid: IUser['_id'] | undefined, callId: VideoConference['_id']): Promise<void> {		
+	public async leftCall(uid: IUser['_id'] | undefined, callId: VideoConference['_id']): Promise<void> {
 		let user: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (uid) {
 			user = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(uid, {
 				projection: { name: 1, username: 1, avatarETag: 1 },
 			});
-			
+
 			if (!user) {
 				throw new Error('failed-to-load-own-data');
 			}
@@ -968,15 +1040,21 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const call = await VideoConferenceModel.findOneById<IDirectVideoConference>(callId);
 
 		if (call) {
-			if(call.type === 'direct')
-			{
-				let obj1= { callId: (call as any)?._id ?? '', rid: (call as any)?.rid, uid: user?._id ?? '', creatorUserId: call.createdBy, user, callType: call.type }
+			if (call.type === 'direct') {
+				let obj1 = {
+					callId: (call as any)?._id ?? '',
+					rid: (call as any)?.rid,
+					uid: user?._id ?? '',
+					creatorUserId: call.createdBy,
+					user,
+					callType: call.type,
+				};
 				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
-				await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);	
+				await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);
 			}
-			
+
 			await this.runVideoConferenceChangedEvent(call._id);
-			this.notifyVideoConfUpdate(call.rid, call._id);								
+			this.notifyVideoConfUpdate(call.rid, call._id);
 		}
 	}
 }

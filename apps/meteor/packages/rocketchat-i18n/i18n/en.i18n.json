@@ -5781,5 +5781,7 @@
 	"Uninstall_grandfathered_app": "Uninstall __appName__?",
 	"App_will_lose_grandfathered_status": "**This __context__ app will lose its grandfathered status.**\n\nWorkspaces on Community Edition can have up to __limit__ __context__ apps enabled. Grandfathered apps count towards the limit but the limit is not applied to them.",
 	"Theme_Appearence": "Theme Appearence",
-	"Firebase_config": "Firebase Config"
+	"Firebase_config": "Firebase Config",
+	"Add_Participants": "Add Participants",
+	"Add_Participants_description": "You are about to add one or more users to the ongoing call. Add the ones you would like to talk, everyone in the same place."
 }

@@ -9,6 +9,7 @@ import type { DirectCallParams, ProviderCapabilities, CallPreferences } from '..
 import { VideoConfManager } from '../lib/VideoConfManager';
 import VideoConfPopups from '../views/room/contextualBar/VideoConference/VideoConfPopups';
 import DraggableModal from '../components/modal/DraggableModal';
+import AddParticipant from '../components/modal/AddParticipant';
 type WindowMaybeDesktop = typeof window & {
 	RocketChatDesktop?: {
 		openInternalVideoChatWindow?: (url: string, options: undefined) => void;
@@ -21,7 +22,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 		show: boolean;
 		url: string;
 		onConfirm: () => void;
-		callId: string
+		callId: string;
 	} | null>(null);
 
 	useEffect(
@@ -36,7 +37,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 							show: true,
 							url: props.url,
 							onConfirm: open,
-							callId: props.callId
+							callId: props.callId,
 						});
 					};
 					open();
@@ -46,14 +47,20 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 	);
 
 	useEffect(() => {
-		VideoConfManager.on('direct/end', () => { setVideoConf(null); });
-		VideoConfManager.on('direct/stopped', (params) => { setOutgoing(undefined); });
-		VideoConfManager.on('calling/ended', () => { setOutgoing(undefined); });
+		VideoConfManager.on('direct/end', () => {
+			setVideoConf(null);
+		});
+		VideoConfManager.on('direct/stopped', (params) => {
+			setOutgoing(undefined);
+		});
+		VideoConfManager.on('calling/ended', () => {
+			setOutgoing(undefined);
+		});
 	}, []);
 
 	const handleVideoConfClose = () => {
 		VideoConfManager.leftCall(videoConf?.callId ?? '');
-				
+
 		setVideoConf(null);
 	};
 
@@ -108,6 +115,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 					onConfirm={videoConf.onConfirm}
 					url={videoConf.url}
 					title='تماس'
+					userSelectorComponent={<AddParticipant callId={videoConf.callId} />}
 				/>
 			)}
 		</VideoConfContext.Provider>
