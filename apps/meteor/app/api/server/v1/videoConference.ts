@@ -127,7 +127,7 @@ API.v1.addRoute(
 			}
 
 			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
-				return API.v1.failure('invalid-params');
+				console.warn('A user outside of the room is trying to leave');
 			}
 
 			await VideoConf.leftCall(userId, callId);
