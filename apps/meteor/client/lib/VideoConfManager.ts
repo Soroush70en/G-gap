@@ -5,6 +5,7 @@ import { Tracker } from 'meteor/tracker';
 
 import { Notifications } from '../../app/notifications/client';
 import { APIClient } from '../../app/utils/client';
+import { clearIncomingCall } from './incomingCallStore';
 import { getConfig } from './utils/getConfig';
 
 const debug = !!(getConfig('debug') || getConfig('debug-VideoConf'));
@@ -19,6 +20,17 @@ const CALL_TIMEOUT = 10000;
 const ACCEPT_TIMEOUT = 5000;
 
 export type DirectCallParams = {
+	uid: IUser['_id'];
+	rid: IRoom['_id'];
+	callId: string;
+
+	// #ToDo: The attributes below should not be part of DirectCallParams - they are used by local events only, never notification events.
+	dismissed?: boolean;
+	acceptTimeout?: ReturnType<typeof setTimeout> | undefined;
+	callType: string;
+};
+
+export type VideoConferenceCallParams = {
 	uid: IUser['_id'];
 	rid: IRoom['_id'];
 	callId: string;
@@ -88,6 +100,9 @@ type VideoConfEvents = {
 	'start/error': { error: string };
 
 	'capabilities/changed': void;
+
+	// A remote user accepted our call
+	'videoConference/accepted': VideoConferenceCallParams;
 	'videoConference/left': void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
@@ -500,6 +515,9 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 				else{
 					this.emit('direct/end');
 				}
+			case 'videoConference/accepted':
+				if(params.uid === this.userId)
+					clearIncomingCall();
 		}
 	}
 

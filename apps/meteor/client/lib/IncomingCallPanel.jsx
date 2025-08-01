@@ -45,6 +45,12 @@ const IncomingCallPanel = ({ visible, callerName, onJoin, onDismiss, username, c
 		return () => clearTimeout(timer);
 	}, [visible]);
 
+	useEffect(() => {
+		return () => {
+			return sound?.pause();
+		};
+	}, []);
+
 	const userId = Meteor.userId();
 	const audioVolume = getUserPreference(userId, 'notificationsSoundVolume');
 
