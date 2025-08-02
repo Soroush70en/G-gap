@@ -154,16 +154,6 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 
 	console.log('sendFCM', userTokens, notification);
 
-	notification.payload.host = 'https://chat.golrang.com';
-	notification.payload.messageId = '5Pd85gMG4yA4jY9SL';
-	notification.payload.rid = '7dPHJjDotQsi9qib2gs8oWhetDA2AW2sfY';
-	notification.payload.sender = {
-		_id: '7dPHJjDotQsi9qib2',
-		username: 'Barati.Mohammad',
-		name: 'Barati, Mohammad (GIG)',
-	};
-	notification.payload.callId = '6887844da9e0fd24b410553e';
-	//notification.payload.notificationType = 'message-id-only';
 	// Allow user to set payload
 	const dataObj = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
 
