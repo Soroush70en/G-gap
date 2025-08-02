@@ -398,7 +398,7 @@ const DraggableModal = ({
 						>
 							<iframe
 								allow='camera; microphone; fullscreen; display-capture; autoplay'
-								src={url + '?lang=fa' || 'https://meet.golrang.com/?lang=fa'}
+								src={url || 'https://meet.golrang.com/?lang=fa'}
 								style={{
 									width: '100%',
 									height: '100%',
