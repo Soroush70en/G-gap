@@ -1059,7 +1059,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		if (call) {
 			await VideoConferenceModel.removeUserById(call._id, { _id: uid ?? '' });
 
-			if (call.type === 'direct') {
+			if (call.type === 'direct' || call.users.length == 1) {
 				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
 			}
 
