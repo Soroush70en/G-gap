@@ -1,13 +1,17 @@
 import { VideoConf } from '@rocket.chat/core-services';
 import type { VideoConference } from '@rocket.chat/core-typings';
 import {
+	isVideoConfAddProps,
 	isVideoConfCancelProps,
 	isVideoConfInfoProps,
 	isVideoConfJoinProps,
 	isVideoConfListProps,
 	isVideoConfStartProps,
-	isVideoConfAddProps,
 } from '@rocket.chat/rest-typings';
+
+import {
+	isVideoConfDeclineProps
+} from './VideoConference/VideoConfDeclineProps';
 
 import { availabilityErrors } from '../../../../lib/videoConference/constants';
 import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
@@ -131,6 +135,20 @@ API.v1.addRoute(
 			}
 
 			await VideoConf.leftCall(userId, callId);
+			return API.v1.success();
+		},
+	},
+);
+
+API.v1.addRoute(
+	'video-conference.decline',
+	{ authRequired: true, validateParams: isVideoConfDeclineProps, rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 } },
+	{
+		async post() {
+			const { callerId } = this.bodyParams;
+			const { userId } = this;
+
+			await VideoConf.decline(callerId, userId);
 			return API.v1.success();
 		},
 	},

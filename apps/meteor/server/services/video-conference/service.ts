@@ -1,7 +1,7 @@
 import type { IBlock } from '@rocket.chat/apps-engine/definition/uikit';
 import type { AppVideoConfProviderManager } from '@rocket.chat/apps-engine/server/managers';
 import type { IVideoConfService, VideoConferenceJoinOptions } from '@rocket.chat/core-services';
-import { ServiceClassInternal, VideoConf, api } from '@rocket.chat/core-services';
+import { ServiceClassInternal, api } from '@rocket.chat/core-services';
 import type {
 	AtLeast,
 	ConferenceInstructions,
@@ -1076,5 +1076,30 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			await this.runVideoConferenceChangedEvent(call._id);
 			this.notifyVideoConfUpdate(call.rid, call._id);
 		}
+	}
+
+	public async decline(callerId: IUser['_id'] | undefined, calleeId: IUser['_id'] | undefined): Promise<void> {
+		this.notifyUserAfterVideoConfDecline(callerId ?? '', calleeId ?? '');
+	}
+
+	private async notifyUserAfterVideoConfDecline(
+		callerId: IUser['_id'], calleeId: IUser['_id']
+	): void {
+		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
+
+		if (calleeId) {
+			callee = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(calleeId, {
+				projection: { name: 1, username: 1, avatarETag: 1 },
+			});
+			
+			if (!callee) {
+				throw new Error('failed-to-load-own-data');
+			}
+		}
+
+		const params = { uid: callerId, type: 'videoconference.declined', username: callee?.username, name: callee?.name };
+
+		const action = 'videoConference/declined';
+		api.broadcast('user.video-conference', { userId: callerId, action, params} );
 	}
 }

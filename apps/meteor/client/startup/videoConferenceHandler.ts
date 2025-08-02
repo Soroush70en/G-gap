@@ -38,6 +38,7 @@ interface Message {
 }
 
 interface IncomingCall {
+	callerId: string;
 	callerName: string;
 	callId?: string;
 	username?: string;
@@ -53,7 +54,8 @@ const getFirstArg = (message: Message): MessageArg | null => {
 	return message?.fields?.args?.[0] || null;
 };
 
-const createIncomingCall = (callerName?: string, callId?: string, username?: string): IncomingCall => ({
+const createIncomingCall = ( callerId?: string, callerName?: string, callId?: string, username?: string): IncomingCall => ({
+	callerId: callerId ?? '',
 	callerName: callerName ?? 'ناشناس',
 	callId,
 	username,
@@ -136,4 +138,4 @@ export const processVideoConferenceMessage = (
 };
 
 // Export types for use in other files
-export type { Message, IncomingCall, ToastMessage };
+export type { IncomingCall, Message, ToastMessage };

@@ -1,12 +1,12 @@
 import type { VideoConference, VideoConferenceCapabilities, VideoConferenceInstructions } from '@rocket.chat/core-typings';
 
 import type { PaginatedResult } from '../../helpers/PaginatedResult';
+import type { VideoConfAddProps } from './VideoConfAddProps';
 import type { VideoConfCancelProps } from './VideoConfCancelProps';
 import type { VideoConfInfoProps } from './VideoConfInfoProps';
 import type { VideoConfJoinProps } from './VideoConfJoinProps';
 import type { VideoConfListProps } from './VideoConfListProps';
 import type { VideoConfStartProps } from './VideoConfStartProps';
-import type { VideoConfAddProps } from './VideoConfAddProps';
 
 export * from './VideoConfCancelProps';
 export * from './VideoConfInfoProps';
@@ -46,6 +46,10 @@ export type VideoConferenceEndpoints = {
 	'/v1/video-conference.leftCall': {
 		POST: (params: VideoConfCancelProps) => void;
 	};
+
+	// '/v1/video-conference.decline': {
+	// 	POST: (params: VideoConfDeclineProps) => void;
+	// };
 
 	'/v1/video-conference.add': {
 		POST: (params: VideoConfAddProps) => void;

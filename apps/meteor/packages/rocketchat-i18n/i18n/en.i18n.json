@@ -5783,5 +5783,6 @@
 	"Theme_Appearence": "Theme Appearence",
 	"Firebase_config": "Firebase Config",
 	"Add_Participants": "Add Participants",
-	"Add_Participants_description": "You are about to add one or more users to the ongoing call. Add the ones you would like to talk, everyone in the same place."
+	"Add_Participants_description": "You are about to add one or more users to the ongoing call. Add the ones you would like to talk, everyone in the same place.",	
+	"Did_Not_Answerd": "Didn't answerd"
 }

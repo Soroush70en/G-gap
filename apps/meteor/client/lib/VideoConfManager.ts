@@ -104,6 +104,7 @@ type VideoConfEvents = {
 	// A remote user accepted our call
 	'videoConference/accepted': VideoConferenceCallParams;
 	'videoConference/left': void;
+	'videoConference/decline':void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
 	private userId: string | undefined;
@@ -311,6 +312,14 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 		}
 		debug && console.log(`[VideoConf] Failed to dismiss call ${callId}`);
 		return false;
+	}
+
+	public async declineIncomingCall(callerId: string): Promise<void> {
+		await APIClient.post('/v1/video-conference.decline',  { callerId }).catch((e: any) => {
+			return Promise.reject(e);
+		});
+
+		return;
 	}
 
 	public updateUser(): void {

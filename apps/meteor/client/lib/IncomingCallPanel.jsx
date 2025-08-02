@@ -17,7 +17,7 @@ import { useEndpointData } from '../hooks/useEndpointData';
 const useThemeMode = () => [null, null, 'light']; // Mock hook to return a light theme by default
 const getUserPreference = () => 100; // Mock function
 
-const IncomingCallPanel = ({ visible, callerName, onJoin, onDismiss, username, callId }) => {
+const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, username, callId }) => {
 	if (!visible) return null;
 
 	const t = useTranslation();
@@ -41,7 +41,7 @@ const IncomingCallPanel = ({ visible, callerName, onJoin, onDismiss, username, c
 	}, [visible]);
 
 	useEffect(() => {
-		return () => {
+		return () => {			
 			return sound?.pause();
 		};
 	}, []);

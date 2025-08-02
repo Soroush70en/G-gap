@@ -15,6 +15,7 @@ const IncomingCallBridge = () => {
 
 	return (
 		<IncomingCallPanel
+			callerId={callData.callerId}
 			visible={!!callData}
 			callerName={callData?.callerName}
 			onJoin={() => {
@@ -23,6 +24,7 @@ const IncomingCallBridge = () => {
 			}}
 			onDismiss={() => {
 				clearIncomingCall();
+				VideoConfManager.declineIncomingCall(callData?.callerId);
 			}}
 			username={callData?.username}
 			callId={callData?.callId}

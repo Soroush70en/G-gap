@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
 import { useTranslation } from '@rocket.chat/ui-contexts';
+import React, { useEffect, useRef, useState } from 'react';
 
 const DraggableModal = ({
 	isInitiallyOpen = true,
@@ -29,6 +29,12 @@ const DraggableModal = ({
 
 	const modalRef = useRef(null);
 	const headerRef = useRef(null);
+
+	useEffect(() => {
+		return () => {			
+			onClose();
+		};
+	}, []);
 
 	useEffect(() => {
 		const handleMouseMove = (e) => {
