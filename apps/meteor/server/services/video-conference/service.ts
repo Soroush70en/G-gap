@@ -313,10 +313,6 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			throw new Error('Invalid User');
 		}
 
-		if (call.type === 'direct') {
-			await VideoConferenceModel.setDataById(call._id, { type: 'videoconference' });
-		}
-
 		const user = await Users.findOneByUsername<Required<Pick<IUser, '_id' | 'username' | 'name'>>>(username, {
 			projection: { username: 1, name: 1, avatarETag: 1 },
 		});
@@ -463,7 +459,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 	private notifyUserAfterAdd(
 		userId: IUser['_id'],
 		action: string,
-		params: { uid: IUser['_id']; callId: VideoConference['_id']; type: string; name: IUser['name'] },
+		params: { uid: IUser['_id']; callId: VideoConference['_id']; type: string; name: IUser['name']; callerId: IUser['_id'] },
 	): void {
 		api.broadcast('user.video-conference', { userId, action, params });
 	}
@@ -809,6 +805,13 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		//if (call.ringing) {
 		await this.notifyAllUsersOfRoom(call.rid, user?._id ?? '', 'videoConference/accepted', obj1);
 
+		//turn call into videoconf if a user is being added
+		if (call.users.length >= 2) {
+			if (call.type === 'direct') {
+				await VideoConferenceModel.setDataById(call._id, { type: 'videoconference' });
+			}
+		}
+
 		return this.getUrl(call, user, options);
 	}
 
@@ -998,7 +1001,14 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			throw new Error('Invalid User');
 		}
 
-		const params = { uid: _id, callId: call._id, type: 'videoconference.add', username: currentUser.username, name: currentUser.name };
+		const params = {
+			uid: _id,
+			callId: call._id,
+			type: 'videoconference.add',
+			username: currentUser.username,
+			name: currentUser.name,
+			callerId: currentUser._id,
+		};
 		this.notifyUserAfterAdd(_id, 'join', params);
 		this.notifyVideoConfUpdate(call.rid, call._id);
 	}
@@ -1086,16 +1096,14 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		this.notifyUserAfterVideoConfDecline(callerId ?? '', calleeId ?? '');
 	}
 
-	private async notifyUserAfterVideoConfDecline(
-		callerId: IUser['_id'], calleeId: IUser['_id']
-	): void {
+	private async notifyUserAfterVideoConfDecline(callerId: IUser['_id'], calleeId: IUser['_id']): void {
 		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (calleeId) {
 			callee = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(calleeId, {
 				projection: { name: 1, username: 1, avatarETag: 1 },
 			});
-			
+
 			if (!callee) {
 				throw new Error('failed-to-load-own-data');
 			}
@@ -1104,6 +1112,20 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const params = { uid: callerId, type: 'videoconference.declined', username: callee?.username, name: callee?.name };
 
 		const action = 'videoConference/declined';
-		api.broadcast('user.video-conference', { userId: callerId, action, params} );
+		api.broadcast('user.video-conference', { userId: callerId, action, params });
+	}
+
+	private getApikey() {
+		return '7zLsetAP9NFyHBkBdQJscuG';
+	}
+
+	public generateUrlWithApiKey(originalUrl: string): string {
+		const url = new URL(originalUrl);
+
+		// Add the API key as a search parameter
+		url.searchParams.set('Apikey', this.getApikey());
+		url.searchParams.set('lang', 'fa');
+
+		return url.toString();
 	}
 }

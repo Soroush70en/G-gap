@@ -17,7 +17,6 @@ import { dispatchToastMessage } from '../lib/toast';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
 
-
 //const dispatchToast = useToastMessageDispatch();
 const originalLivedataHandler = Meteor.connection._livedata_data;
 
@@ -41,7 +40,7 @@ Meteor.connection._livedata_data = function (message) {
 				(message as any)?.fields?.args[0]?.params.type === 'videoconference.add'
 			) {
 				setIncomingCall({
-					callerId: (message as any)?.fields?.args[0]?.payload?.sender?._id ?? '',
+					callerId: (message as any)?.fields?.args[0]?.params?.callerId ?? '',
 					callerName: (message as any)?.fields?.args[0]?.params?.name ?? 'ناشناس',
 					callId: (message as any)?.fields?.args[0]?.params.callId,
 					username: (message as any)?.fields?.args[0]?.params.username,
@@ -57,7 +56,7 @@ Meteor.connection._livedata_data = function (message) {
 	// 		(message as any)?.fields?.args[0]?.action === 'videoConference/accepted' &&
 	// 		(message as any)?.fields?.args[0]?.params?.uid != Meteor.userId()
 	// 	) {
-	// 		dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });			
+	// 		dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });
 	// 	}
 	// } catch (e) {
 	// 	console.error(e);
