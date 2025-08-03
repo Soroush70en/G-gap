@@ -1082,6 +1082,10 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		this.notifyUserAfterVideoConfDecline(callerId ?? '', calleeId ?? '');
 	}
 
+	public async lost(callerId: IUser['_id'] | undefined, calleeId: IUser['_id'] | undefined): Promise<void> {
+		this.notifyUserAfterVideoConfLost(callerId ?? '', calleeId ?? '');
+	}	
+
 	private async notifyUserAfterVideoConfDecline(
 		callerId: IUser['_id'], calleeId: IUser['_id']
 	): void {
@@ -1100,6 +1104,27 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const params = { uid: callerId, type: 'videoconference.declined', username: callee?.username, name: callee?.name };
 
 		const action = 'videoConference/declined';
+		api.broadcast('user.video-conference', { userId: callerId, action, params} );
+	}
+
+	private async notifyUserAfterVideoConfLost(
+		callerId: IUser['_id'], calleeId: IUser['_id']
+	): void {		
+		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
+
+		if (calleeId) {
+			callee = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(calleeId, {
+				projection: { name: 1, username: 1, avatarETag: 1 },
+			});
+			
+			if (!callee) {
+				throw new Error('failed-to-load-own-data');
+			}
+		}
+
+		const params = { uid: callerId, type: 'videoconference.lost', username: callee?.username, name: callee?.name };
+
+		const action = 'videoConference/lost';
 		api.broadcast('user.video-conference', { userId: callerId, action, params} );
 	}
 }

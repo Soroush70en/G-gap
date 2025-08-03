@@ -12,6 +12,9 @@ import {
 import {
 	isVideoConfDeclineProps
 } from './VideoConference/VideoConfDeclineProps';
+import {
+	isVideoConfLostProps
+} from './VideoConference/VideoConfLostProps';
 
 import { availabilityErrors } from '../../../../lib/videoConference/constants';
 import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
@@ -149,6 +152,20 @@ API.v1.addRoute(
 			const { userId } = this;
 
 			await VideoConf.decline(callerId, userId);
+			return API.v1.success();
+		},
+	},
+);
+
+API.v1.addRoute(
+	'video-conference.lost',
+	{ authRequired: true, validateParams: isVideoConfLostProps, rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 } },
+	{
+		async post() {
+			const { callerId } = this.bodyParams;
+			const { userId } = this;
+
+			await VideoConf.lost(callerId, userId);
 			return API.v1.success();
 		},
 	},

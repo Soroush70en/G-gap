@@ -7,6 +7,7 @@ import { Tracker } from 'meteor/tracker';
 import moment from 'moment';
 
 import 'hljs9/styles/github.css';
+import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
 import { hasPermission } from '../../app/authorization/client';
 import { register } from '../../app/markdown/lib/hljs';
 import { settings } from '../../app/settings/client';
@@ -17,8 +18,6 @@ import { dispatchToastMessage } from '../lib/toast';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
 
-
-//const dispatchToast = useToastMessageDispatch();
 const originalLivedataHandler = Meteor.connection._livedata_data;
 
 Meteor.connection._livedata_data = function (message) {
@@ -52,20 +51,23 @@ Meteor.connection._livedata_data = function (message) {
 		console.error(e);
 	}
 
-	// try {
-	// 	if (
-	// 		(message as any)?.fields?.args[0]?.action === 'videoConference/accepted' &&
-	// 		(message as any)?.fields?.args[0]?.params?.uid != Meteor.userId()
-	// 	) {
-	// 		dispatchToastMessage({ type: 'success', message: (message as any)?.fields?.args[0]?.params?.user.name + ' تماس را پذیرفت.' });			
-	// 	}
-	// } catch (e) {
-	// 	console.error(e);
-	// }
-
 	try {
 		if ((message as any)?.fields?.args[0]?.action === 'videoConference/declined') {
-			dispatchToastMessage({ type: 'error', message: (message as any)?.fields?.args[0]?.params?.name + 'تماس را نپذیرفت.' });
+			dispatchToastMessage({ type: 'error', message: TAPi18n.__('User_Declined_Call', {
+				name: (message as any)?.fields?.args[0]?.params?.name
+			}
+			)});
+		}
+	} catch (e) {
+		console.error(e);
+	}
+
+	try {
+		if ((message as any)?.fields?.args[0]?.action === 'videoConference/lost') {
+			dispatchToastMessage({ type: 'error', message: TAPi18n.__('User_Did_Not_Answerd_Call', {
+				name: (message as any)?.fields?.args[0]?.params?.name
+			}
+			) });
 		}
 	} catch (e) {
 		console.error(e);

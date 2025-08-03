@@ -26,6 +26,10 @@ const IncomingCallBridge = () => {
 				clearIncomingCall();
 				VideoConfManager.declineIncomingCall(callData?.callerId);
 			}}
+			onLost={() => {
+				clearIncomingCall();
+				VideoConfManager.lostIncomingCall(callData?.callerId);
+			}}
 			username={callData?.username}
 			callId={callData?.callId}
 		/>

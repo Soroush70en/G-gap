@@ -17,7 +17,7 @@ import { useEndpointData } from '../hooks/useEndpointData';
 const useThemeMode = () => [null, null, 'light']; // Mock hook to return a light theme by default
 const getUserPreference = () => 100; // Mock function
 
-const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, username, callId }) => {
+const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, username, callId, onLost }) => {
 	if (!visible) return null;
 
 	const t = useTranslation();
@@ -33,7 +33,7 @@ const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, u
 	// We are using a useEffect hook to properly manage the timer's lifecycle.
 	React.useEffect(() => {
 		const timer = setTimeout(() => {
-			_onDismiss();
+			_onLost();
 		}, 40000);
 
 		// Cleanup the timer when the component unmounts or visibility changes
@@ -65,6 +65,10 @@ const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, u
 	const _onJoin = () => {
 		if (sound) sound.pause();
 		if (onJoin) onJoin();
+	};
+
+	const _onLost = () => {
+		if (onLost) onLost();
 	};
 
 	// SVGs for icons to avoid external dependencies

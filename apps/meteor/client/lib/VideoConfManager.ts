@@ -105,6 +105,7 @@ type VideoConfEvents = {
 	'videoConference/accepted': VideoConferenceCallParams;
 	'videoConference/left': void;
 	'videoConference/decline':void;
+	'videoConference/lost':void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
 	private userId: string | undefined;
@@ -316,6 +317,14 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 
 	public async declineIncomingCall(callerId: string): Promise<void> {
 		await APIClient.post('/v1/video-conference.decline',  { callerId }).catch((e: any) => {
+			return Promise.reject(e);
+		});
+
+		return;
+	}
+
+	public async lostIncomingCall(callerId: string): Promise<void> {	
+		await APIClient.post('/v1/video-conference.lost',  { callerId }).catch((e: any) => {
 			return Promise.reject(e);
 		});
 
