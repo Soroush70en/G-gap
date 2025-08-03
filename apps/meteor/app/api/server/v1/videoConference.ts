@@ -79,6 +79,8 @@ API.v1.addRoute(
 					...(state?.cam !== undefined ? { cam: state.cam } : {}),
 					...(state?.mic !== undefined ? { mic: state.mic } : {}),
 				});
+
+				url = await VideoConf.generateUrlWithApiKey(url);
 			} catch (e) {
 				if (userId) {
 					return API.v1.failure(await VideoConf.diagnoseProvider(userId, call.rid, call.providerName));

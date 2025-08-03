@@ -40,7 +40,7 @@ Meteor.connection._livedata_data = function (message) {
 				(message as any)?.fields?.args[0]?.params.type === 'videoconference.add'
 			) {
 				setIncomingCall({
-					callerId: (message as any)?.fields?.args[0]?.payload?.sender?._id ?? '',
+					callerId: (message as any)?.fields?.args[0]?.params?.callerId ?? '',
 					callerName: (message as any)?.fields?.args[0]?.params?.name ?? 'ناشناس',
 					callId: (message as any)?.fields?.args[0]?.params.callId,
 					username: (message as any)?.fields?.args[0]?.params.username,
