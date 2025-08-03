@@ -313,6 +313,10 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			throw new Error('Invalid User');
 		}
 
+		if (call.type === 'direct') {
+			await VideoConferenceModel.setDataById(call._id, { type: 'videoconference' });
+		}
+
 		const user = await Users.findOneByUsername<Required<Pick<IUser, '_id' | 'username' | 'name'>>>(username, {
 			projection: { username: 1, name: 1, avatarETag: 1 },
 		});
@@ -1063,7 +1067,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
 			}
 
-			let obj1 = {
+			const params = {
 				callId: (call as any)?._id ?? '',
 				rid: (call as any)?.rid,
 				uid: user?._id ?? '',
@@ -1071,7 +1075,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 				user,
 				callType: call.type,
 			};
-			await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', obj1);
+			await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', params);
 
 			await this.runVideoConferenceChangedEvent(call._id);
 			this.notifyVideoConfUpdate(call.rid, call._id);
