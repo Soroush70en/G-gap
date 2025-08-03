@@ -16,6 +16,20 @@ type WindowMaybeDesktop = typeof window & {
 	};
 };
 
+const moveApiKeyBeforeFragment = (originalUrl: string, apiKey: string) => {
+	const url = new URL(originalUrl);
+
+	// Add the API key as a search parameter
+	url.searchParams.set('Apikey', apiKey);
+	url.searchParams.set('lang', 'fa');
+
+	return url.toString();
+};
+
+const getApikey = () => {
+	return '7zLsetAP9NFyHBkBdQJscuG';
+};
+
 const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactElement => {
 	const [outgoing, setOutgoing] = useState<VideoConfPopupPayload | undefined>();
 	const [videoConf, setVideoConf] = useState<{
@@ -32,10 +46,11 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 				if (windowMaybeDesktop.RocketChatDesktop?.openInternalVideoChatWindow) {
 					windowMaybeDesktop.RocketChatDesktop.openInternalVideoChatWindow(props.url, undefined);
 				} else {
+					const newUrl = moveApiKeyBeforeFragment(props.url, getApikey());
 					const open = (): void => {
 						setVideoConf({
 							show: true,
-							url: props.url,
+							url: newUrl,
 							onConfirm: open,
 							callId: props.callId,
 						});
