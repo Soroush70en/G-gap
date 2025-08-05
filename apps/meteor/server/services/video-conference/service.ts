@@ -1092,17 +1092,52 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		}
 	}
 
+	public async leftCallJitsi(uid: IUser['_id'] | undefined, callId: VideoConference['_id']): Promise<void> {
+		let user: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
+
+		if (uid) {
+			user = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(uid, {
+				projection: { name: 1, username: 1, avatarETag: 1 },
+			});
+
+			if (!user) {
+				throw new Error('failed-to-load-own-data');
+			}
+		}
+
+		const call = await VideoConferenceModel.findOneById<IDirectVideoConference>(callId);
+
+		if (call) {
+			await VideoConferenceModel.removeUserById(call._id, { _id: uid ?? '' });
+
+			if (call.type === 'direct' || call.users.length == 1) {
+				await VideoConferenceModel.setDataById(call._id, { endedAt: new Date(), status: VideoConferenceStatus.ENDED });
+			}
+
+			const params = {
+				callId: (call as any)?._id ?? '',
+				rid: (call as any)?.rid,
+				uid: user?._id ?? '',
+				creatorUserId: call.createdBy,
+				user,
+				callType: call.type,
+			};
+			await this.notifyUsersOfRoom(call.rid, user?._id ?? '', 'left', params);
+
+			await this.runVideoConferenceChangedEvent(call._id);
+			this.notifyVideoConfUpdate(call.rid, call._id);
+		}
+	}
+
 	public async decline(callerId: IUser['_id'] | undefined, calleeId: IUser['_id'] | undefined): Promise<void> {
 		this.notifyUserAfterVideoConfDecline(callerId ?? '', calleeId ?? '');
 	}
 
 	public async lost(callerId: IUser['_id'] | undefined, calleeId: IUser['_id'] | undefined): Promise<void> {
 		this.notifyUserAfterVideoConfLost(callerId ?? '', calleeId ?? '');
-	}	
+	}
 
-	private async notifyUserAfterVideoConfDecline(
-		callerId: IUser['_id'], calleeId: IUser['_id']
-	): void {
+	private async notifyUserAfterVideoConfDecline(callerId: IUser['_id'], calleeId: IUser['_id']): void {
 		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (calleeId) {
@@ -1125,26 +1160,26 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		return '7zLsetAP9NFyHBkBdQJscuG';
 	}
 
-	public generateUrlWithApiKey(originalUrl: string): string {
+	public generateUrlWithApiKey(originalUrl: string, callId: string, userId: string): string {
 		const url = new URL(originalUrl);
 
 		// Add the API key as a search parameter
 		url.searchParams.set('Apikey', this.getApikey());
+		url.searchParams.set('CallId', callId);
+		url.searchParams.set('UserId', userId);
 		url.searchParams.set('lang', 'fa');
 
 		return url.toString();
 	}
 
-	private async notifyUserAfterVideoConfLost(
-		callerId: IUser['_id'], calleeId: IUser['_id']
-	): void {		
+	private async notifyUserAfterVideoConfLost(callerId: IUser['_id'], calleeId: IUser['_id']): void {
 		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (calleeId) {
 			callee = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(calleeId, {
 				projection: { name: 1, username: 1, avatarETag: 1 },
 			});
-			
+
 			if (!callee) {
 				throw new Error('failed-to-load-own-data');
 			}
@@ -1153,6 +1188,6 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const params = { uid: callerId, type: 'videoconference.lost', username: callee?.username, name: callee?.name };
 
 		const action = 'videoConference/lost';
-		api.broadcast('user.video-conference', { userId: callerId, action, params} );
+		api.broadcast('user.video-conference', { userId: callerId, action, params });
 	}
 }

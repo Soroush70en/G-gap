@@ -5783,7 +5783,7 @@
 	"Theme_Appearence": "Theme Appearence",
 	"Firebase_config": "Firebase Config",
 	"Add_Participants": "Add Participants",
-	"Add_Participants_description": "You are about to add one or more users to the ongoing call. Add the ones you would like to talk, everyone in the same place.",	
-	"User_Did_Not_Answerd_Call": "User __name__ didn't answerd",
-	"User_Declined_Call": "User __name__ declined."
+	"Add_Participants_description": "You are about to add one or more users to the ongoing call. Add the ones you would like to talk, everyone in the same place.",
+	"User_Did_Not_Answerd_Call": "User __name__ did not answerd",
+	"User_Declined_Call": "User __name__ declined your call"
 }

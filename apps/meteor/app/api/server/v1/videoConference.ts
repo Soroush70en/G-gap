@@ -7,14 +7,11 @@ import {
 	isVideoConfJoinProps,
 	isVideoConfListProps,
 	isVideoConfStartProps,
+	isVideoConfLeftCallJitsiProps,
 } from '@rocket.chat/rest-typings';
 
-import {
-	isVideoConfDeclineProps
-} from './VideoConference/VideoConfDeclineProps';
-import {
-	isVideoConfLostProps
-} from './VideoConference/VideoConfLostProps';
+import { isVideoConfDeclineProps } from './VideoConference/VideoConfDeclineProps';
+import { isVideoConfLostProps } from './VideoConference/VideoConfLostProps';
 
 import { availabilityErrors } from '../../../../lib/videoConference/constants';
 import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
@@ -80,7 +77,7 @@ API.v1.addRoute(
 					...(state?.mic !== undefined ? { mic: state.mic } : {}),
 				});
 
-				url = await VideoConf.generateUrlWithApiKey(url);
+				url = await VideoConf.generateUrlWithApiKey(url, callId, userId);
 			} catch (e) {
 				if (userId) {
 					return API.v1.failure(await VideoConf.diagnoseProvider(userId, call.rid, call.providerName));
@@ -263,6 +260,32 @@ API.v1.addRoute(
 			const data = await VideoConf.listCapabilities();
 
 			return API.v1.success(data);
+		},
+	},
+);
+
+API.v1.addRoute(
+	'video-conference.leftCallJitsi',
+	{
+		authRequired: false,
+		validateParams: isVideoConfLeftCallJitsiProps,
+		rateLimiterOptions: { numRequestsAllowed: 3, intervalTimeInMS: 60000 },
+	},
+	{
+		async post() {
+			console.log(this.bodyParams);
+			const { callId, userId } = this.bodyParams;
+			const call = await VideoConf.get(callId);
+			if (!call) {
+				return API.v1.failure('invalid-params');
+			}
+
+			if (!userId || !(await canAccessRoomIdAsync(call.rid, userId))) {
+				console.warn('A user outside of the room is trying to leave');
+			}
+
+			await VideoConf.leftCallJitsi(userId, callId);
+			return API.v1.success();
 		},
 	},
 );

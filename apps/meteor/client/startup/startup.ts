@@ -53,10 +53,12 @@ Meteor.connection._livedata_data = function (message) {
 
 	try {
 		if ((message as any)?.fields?.args[0]?.action === 'videoConference/declined') {
-			dispatchToastMessage({ type: 'error', message: TAPi18n.__('User_Declined_Call', {
-				name: (message as any)?.fields?.args[0]?.params?.name
-			}
-			)});
+			dispatchToastMessage({
+				type: 'error',
+				message: TAPi18n.__('User_Declined_Call', {
+					name: (message as any)?.fields?.args[0]?.params?.name,
+				}),
+			});
 		}
 	} catch (e) {
 		console.error(e);
@@ -64,10 +66,12 @@ Meteor.connection._livedata_data = function (message) {
 
 	try {
 		if ((message as any)?.fields?.args[0]?.action === 'videoConference/lost') {
-			dispatchToastMessage({ type: 'error', message: TAPi18n.__('User_Did_Not_Answerd_Call', {
-				name: (message as any)?.fields?.args[0]?.params?.name
-			}
-			) });
+			dispatchToastMessage({
+				type: 'error',
+				message: TAPi18n.__('User_Did_Not_Answerd_Call', {
+					name: (message as any)?.fields?.args[0]?.params?.name,
+				}),
+			});
 		}
 	} catch (e) {
 		console.error(e);

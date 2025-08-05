@@ -767,6 +767,7 @@ const defaultOptionsEndpoint = function _defaultOptionsEndpoint() {
 		'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, HEAD, PATCH',
 		'Access-Control-Allow-Headers':
 			'Origin, X-Requested-With, Content-Type, Accept, X-User-Id, X-Auth-Token, x-visitor-token, Authorization',
+		'Access-Control-Allow-Credentials': 'true',
 	};
 
 	if (CORSOriginSetting === '*') {

@@ -5,17 +5,14 @@ import {
 	VideoConfPopupControllers,
 	VideoConfPopupHeader,
 	VideoConfPopupTitle,
-	useVideoConfControllers
+	useVideoConfControllers,
 } from '@rocket.chat/ui-video-conf';
 import React, { useEffect, useMemo } from 'react';
 import { CustomSounds } from '../../app/custom-sounds/client/lib/CustomSounds';
 import { AsyncStatePhase } from '../hooks/useAsyncState';
 import { useEndpointData } from '../hooks/useEndpointData';
-
-// Mock functions and hooks since the original imports are not available in this environment.
-// This allows the component to render without compilation errors.
-const useThemeMode = () => [null, null, 'light']; // Mock hook to return a light theme by default
-const getUserPreference = () => 100; // Mock function
+import { useThemeMode } from '@rocket.chat/ui-theming/src/hooks/useThemeMode';
+import { getUserPreference } from '../../app/utils';
 
 const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, username, callId, onLost }) => {
 	if (!visible) return null;
@@ -41,7 +38,7 @@ const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, u
 	}, [visible]);
 
 	useEffect(() => {
-		return () => {			
+		return () => {
 			return sound?.pause();
 		};
 	}, []);

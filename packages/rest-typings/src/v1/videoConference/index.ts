@@ -54,4 +54,8 @@ export type VideoConferenceEndpoints = {
 	'/v1/video-conference.add': {
 		POST: (params: VideoConfAddProps) => void;
 	};
+
+	'/v1/video-conference.leftCallJitsi': {
+		POST: (params: VideoConfCancelProps) => void;
+	};
 };
