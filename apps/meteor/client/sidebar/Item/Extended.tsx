@@ -1,10 +1,11 @@
 import type { IconProps } from '@rocket.chat/fuselage';
-import { Sidebar, IconButton } from '@rocket.chat/fuselage';
+import { IconButton, Sidebar } from '@rocket.chat/fuselage';
 import { useMutableCallback, usePrefersReducedMotion } from '@rocket.chat/fuselage-hooks';
 import type { VFC } from 'react';
 import React, { memo, useState } from 'react';
 
 import { useShortTimeAgo } from '../../hooks/useTimeAgo';
+import { usePersianDateShort } from '../../lib/usePersianDate';
 
 type ExtendedProps = {
 	icon?: IconProps['name'];
@@ -62,8 +63,8 @@ const Extended: VFC<ExtendedProps> = ({
 						{icon}
 						<Sidebar.Item.Title data-qa='sidebar-item-title' className={(unread && 'rcx-sidebar-item--highlighted') as string}>
 							{title}
-						</Sidebar.Item.Title>
-						{time && <Sidebar.Item.Time>{formatDate(time)}</Sidebar.Item.Time>}
+						</Sidebar.Item.Title>						
+						{time && <Sidebar.Item.Time>{usePersianDateShort(new Date(time),true, formatDate(time))}</Sidebar.Item.Time>}						
 					</Sidebar.Item.Wrapper>
 				</Sidebar.Item.Content>
 				<Sidebar.Item.Content>

@@ -165,9 +165,8 @@ const DraggableModal = ({
 			return {
 				position: 'fixed',
 				bottom: '20px',
-				right: '20px',
-				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width
-				height: '40px',
+				left: '20px',
+				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width				
 				zIndex: 1000,
 				backgroundColor: 'white',
 				borderRadius: '6px',
@@ -222,10 +221,8 @@ const DraggableModal = ({
 				<div
 					style={{
 						position: 'fixed',
-						top: 0,
-						left: 0,
-						right: 0,
-						bottom: 0,
+						width:0,
+						height:0,
 						zIndex: 999,
 					}}
 				/>
