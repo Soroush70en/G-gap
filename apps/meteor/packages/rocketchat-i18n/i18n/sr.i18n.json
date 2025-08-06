@@ -193,7 +193,7 @@
   "AutoLinker_Phone_Description": "Аутоматски повезује на бројеве телефона. нпр `(123) 456-7890`",
   "All": "Све",
   "AutoLinker_StripPrefix": "АутоЛинкер Стрип Префикс",
-  "AutoLinker_StripPrefix_Description": "Кратак приказ. нпр https://rocket.chat => rocket.chat",
+  "AutoLinker_StripPrefix_Description": "Кратак приказ. нпр https://chat.golrang => chat.golrang",
   "AutoLinker_Urls_Scheme": "АутоЛинкер Шема: // адресе",
   "All_channels": "Сви канали",
   "AutoLinker_Urls_www": "АутоЛинкер 'ввв' СЕО",
