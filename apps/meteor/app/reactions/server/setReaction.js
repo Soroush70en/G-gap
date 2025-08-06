@@ -20,83 +20,139 @@ const removeUserReaction = (message, reaction, username) => {
 };
 
 async function setReaction(room, user, message, reaction, shouldReact) {
-	reaction = `:${reaction.replace(/:/g, '')}:`;
-
+	// --- normalize emoji name
+	reaction = `:${ reaction.replace(/:/g, '') }:`;
+  
+	// --- validation (همان منطق قبلی شما)
 	if (!emoji.list[reaction] && (await EmojiCustom.findByNameOrAlias(reaction).count()) === 0) {
-		throw new Meteor.Error('error-not-allowed', 'Invalid emoji provided.', {
-			method: 'setReaction',
-		});
+	  throw new Meteor.Error('error-not-allowed', 'Invalid emoji provided.', {
+		method: 'setReaction',
+	  });
 	}
-
 	if (room.ro === true && !room.reactWhenReadOnly && !hasPermission(user._id, 'post-readonly', room._id)) {
-		// Unless the user was manually unmuted
-		if (!(room.unmuted || []).includes(user.username)) {
-			throw new Error("You can't send messages because the room is readonly.");
-		}
+	  if (!(room.unmuted || []).includes(user.username)) {
+		throw new Error("You can't send messages because the room is readonly.");
+	  }
 	}
-
 	if (Array.isArray(room.muted) && room.muted.indexOf(user.username) !== -1) {
-		throw new Meteor.Error('error-not-allowed', TAPi18n.__('You_have_been_muted', {}, user.language), {
-			rid: room._id,
-		});
+	  throw new Meteor.Error('error-not-allowed', TAPi18n.__('You_have_been_muted', {}, user.language), {
+		rid: room._id,
+	  });
 	}
-
-	const userAlreadyReacted =
-		Boolean(message.reactions) &&
-		Boolean(message.reactions[reaction]) &&
-		message.reactions[reaction].usernames.indexOf(user.username) !== -1;
-	// When shouldReact was not informed, toggle the reaction.
+  
+	// --- پیدا کردن همه‌ی واکنش‌های قبلیِ این کاربر (به جز واکنش فعلی)
+	const previousReactions = message.reactions
+	  ? Object.keys(message.reactions)
+		  .filter((name) => message.reactions[name].usernames.includes(user.username))
+		  .filter((name) => name !== reaction)
+	  : [];
+  
+	// --- اگر shouldReact مشخص نیست، بر اساس وضعیت فعلی toggle کن
+	const userHasThisReaction =
+	  Boolean(message.reactions) &&
+	  Boolean(message.reactions[reaction]) &&
+	  message.reactions[reaction].usernames.includes(user.username);
+  
 	if (shouldReact === undefined) {
-		shouldReact = !userAlreadyReacted;
+	  shouldReact = !userHasThisReaction;
 	}
-
-	if (userAlreadyReacted === shouldReact) {
-		return;
-	}
-
-	let isReacted;
-
-	if (userAlreadyReacted) {
+  
+	// --- اگر می‌خوایم واکنش جدید بزنیم، اول همه‌ی قبلی‌ها رو پاک کن
+	if (shouldReact) {
+	  for (const prev of previousReactions) {
 		const oldMessage = JSON.parse(JSON.stringify(message));
-		removeUserReaction(message, reaction, user.username);
+		// حذفِ کاربر از واکنشِ قبلی
+		removeUserReaction(message, prev, user.username);
+  
+		// به‌روزرسانی DB بر اساس اینکه بعد از حذف، هنوز واکنش هست یا نه
 		if (_.isEmpty(message.reactions)) {
-			delete message.reactions;
-			if (isTheLastMessage(room, message)) {
-				Rooms.unsetReactionsInLastMessage(room._id);
-			}
-			Messages.unsetReactions(message._id);
+		  delete message.reactions;
+		  if (isTheLastMessage(room, message)) {
+			Rooms.unsetReactionsInLastMessage(room._id);
+		  }
+		  Messages.unsetReactions(message._id);
 		} else {
-			Messages.setReactions(message._id, message.reactions);
-			if (isTheLastMessage(room, message)) {
-				Rooms.setReactionsInLastMessage(room._id, message);
-			}
+		  Messages.setReactions(message._id, message.reactions);
+		  if (isTheLastMessage(room, message)) {
+			Rooms.setReactionsInLastMessage(room._id, message);
+		  }
 		}
-		callbacks.run('unsetReaction', message._id, reaction);
-		callbacks.run('afterUnsetReaction', message, { user, reaction, shouldReact, oldMessage });
-
-		isReacted = false;
-	} else {
-		if (!message.reactions) {
-			message.reactions = {};
+  
+		// فراخوانی callbackهای مربوط به unset
+		callbacks.run('unsetReaction', message._id, prev);
+		callbacks.run('afterUnsetReaction', message, {
+		  user,
+		  reaction: prev,
+		  shouldReact: false,
+		  oldMessage,
+		});
+	  }
+	}
+  
+	// --- بررسی وضعیت فعلی واکنشِ انتخابی
+	const userAlreadyReacted =
+	  Boolean(message.reactions) &&
+	  Boolean(message.reactions[reaction]) &&
+	  message.reactions[reaction].usernames.indexOf(user.username) !== -1;
+  
+	// اگر وضعیت جدید با وضعیت فعلی برابر است، هیچ کاری لازم نیست
+	if (userAlreadyReacted === shouldReact) {
+	  return;
+	}
+  
+	// --- اگر کاربر قبلاً این ایموجی را زده بود، حذفش کن
+	let isReacted;
+	if (userAlreadyReacted) {
+	  const oldMessage = JSON.parse(JSON.stringify(message));
+	  removeUserReaction(message, reaction, user.username);
+	  if (_.isEmpty(message.reactions)) {
+		delete message.reactions;
+		if (isTheLastMessage(room, message)) {
+		  Rooms.unsetReactionsInLastMessage(room._id);
 		}
-		if (!message.reactions[reaction]) {
-			message.reactions[reaction] = {
-				usernames: [],
-			};
-		}
-		message.reactions[reaction].usernames.push(user.username);
+		Messages.unsetReactions(message._id);
+	  } else {
 		Messages.setReactions(message._id, message.reactions);
 		if (isTheLastMessage(room, message)) {
-			Rooms.setReactionsInLastMessage(room._id, message);
+		  Rooms.setReactionsInLastMessage(room._id, message);
 		}
-		callbacks.run('setReaction', message._id, reaction);
-		callbacks.run('afterSetReaction', message, { user, reaction, shouldReact });
-
-		isReacted = true;
+	  }
+	  callbacks.run('unsetReaction', message._id, reaction);
+	  callbacks.run('afterUnsetReaction', message, {
+		user,
+		reaction,
+		shouldReact,
+		oldMessage,
+	  });
+	  isReacted = false;
+	} else {
+	  // --- در غیر این صورت، واکنش جدید را اضافه کن
+	  if (!message.reactions) {
+		message.reactions = {};
+	  }
+	  if (!message.reactions[reaction]) {
+		message.reactions[reaction] = { usernames: [] };
+	  }
+	  message.reactions[reaction].usernames.push(user.username);
+	  Messages.setReactions(message._id, message.reactions);
+	  if (isTheLastMessage(room, message)) {
+		Rooms.setReactionsInLastMessage(room._id, message);
+	  }
+	  callbacks.run('setReaction', message._id, reaction);
+	  callbacks.run('afterSetReaction', message, {
+		user,
+		reaction,
+		shouldReact,
+	  });
+	  isReacted = true;
 	}
-
-	Promise.await(Apps.triggerEvent(AppEvents.IPostMessageReacted, message, user, reaction, isReacted));
-}
+  
+	// --- اطلاع‌رسانی به Apps
+	Promise.await(
+	  Apps.triggerEvent(AppEvents.IPostMessageReacted, message, user, reaction, isReacted),
+	);
+  }
+  
 
 export const executeSetReaction = async function (reaction, messageId, shouldReact) {
 	const user = Meteor.user();
