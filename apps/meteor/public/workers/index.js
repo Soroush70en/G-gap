@@ -46,12 +46,7 @@ self.addEventListener('fetch', (event) => {
 					const clonedResponse = response.clone();
 					const contentType = clonedResponse.headers.get('content-type');
 
-					if (
-						!clonedResponse ||
-						clonedResponse.status !== 200 ||
-						clonedResponse.type !== 'basic' ||
-						/\/sockjs\//.test(event.request.url)
-					) {
+					if (!clonedResponse || clonedResponse.status !== 200 || clonedResponse.type !== 'basic' || /\/sockjs\//.test(event.request.url)) {
 						return response;
 					}
 
@@ -88,6 +83,12 @@ self.addEventListener('fetch', (event) => {
 				});
 		}),
 	);
+});
+
+self.addEventListener('push', function (event) {
+	const data = event.data.json();
+	const options = { body: data.body, icon: 'images/logo/android-chrome-192x192.png' };
+	event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
 function removeHash(element) {

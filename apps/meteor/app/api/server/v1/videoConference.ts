@@ -9,12 +9,8 @@ import {
 	isVideoConfStartProps,
 } from '@rocket.chat/rest-typings';
 
-import {
-	isVideoConfDeclineProps
-} from './VideoConference/VideoConfDeclineProps';
-import {
-	isVideoConfLostProps
-} from './VideoConference/VideoConfLostProps';
+import { isVideoConfDeclineProps } from './VideoConference/VideoConfDeclineProps';
+import { isVideoConfLostProps } from './VideoConference/VideoConfLostProps';
 
 import { availabilityErrors } from '../../../../lib/videoConference/constants';
 import { videoConfProviders } from '../../../../server/lib/videoConfProviders';
@@ -80,7 +76,7 @@ API.v1.addRoute(
 					...(state?.mic !== undefined ? { mic: state.mic } : {}),
 				});
 
-				url = await VideoConf.generateUrlWithApiKey(url);
+				url = await VideoConf.generateUrlWithApiKey(url, callId);
 			} catch (e) {
 				if (userId) {
 					return API.v1.failure(await VideoConf.diagnoseProvider(userId, call.rid, call.providerName));

@@ -68,7 +68,7 @@ const DraggableModal = ({
 			if (event.data.type === 'timeoutDone') {
 				console.log('Timeout is over:', event.data.message);
 				// Perform actions like closing the modal or updating state
-				onClose();
+				//onClose();
 			}
 		}
 		window.addEventListener('message', handleIframeMessage);
@@ -166,7 +166,7 @@ const DraggableModal = ({
 				position: 'fixed',
 				bottom: '20px',
 				left: '20px',
-				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width				
+				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width
 				zIndex: 1000,
 				backgroundColor: 'white',
 				borderRadius: '6px',
@@ -221,8 +221,8 @@ const DraggableModal = ({
 				<div
 					style={{
 						position: 'fixed',
-						width:0,
-						height:0,
+						width: 0,
+						height: 0,
 						zIndex: 999,
 					}}
 				/>

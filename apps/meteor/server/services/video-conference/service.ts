@@ -1069,6 +1069,8 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		}
 
 		const call = await VideoConferenceModel.findOneById<IDirectVideoConference>(callId);
+		const isLastUser = call.users.length == 1;
+		console.log(isLastUser);
 
 		if (call) {
 			await VideoConferenceModel.removeUserById(call._id, { _id: uid ?? '' });
@@ -1098,11 +1100,9 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 
 	public async lost(callerId: IUser['_id'] | undefined, calleeId: IUser['_id'] | undefined): Promise<void> {
 		this.notifyUserAfterVideoConfLost(callerId ?? '', calleeId ?? '');
-	}	
+	}
 
-	private async notifyUserAfterVideoConfDecline(
-		callerId: IUser['_id'], calleeId: IUser['_id']
-	): void {
+	private async notifyUserAfterVideoConfDecline(callerId: IUser['_id'], calleeId: IUser['_id']): void {
 		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (calleeId) {
@@ -1125,26 +1125,25 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		return '7zLsetAP9NFyHBkBdQJscuG';
 	}
 
-	public generateUrlWithApiKey(originalUrl: string): string {
+	public generateUrlWithApiKey(originalUrl: string, callId: string): string {
 		const url = new URL(originalUrl);
 
 		// Add the API key as a search parameter
 		url.searchParams.set('Apikey', this.getApikey());
 		url.searchParams.set('lang', 'fa');
+		url.searchParams.set('callId', callId);
 
 		return url.toString();
 	}
 
-	private async notifyUserAfterVideoConfLost(
-		callerId: IUser['_id'], calleeId: IUser['_id']
-	): void {		
+	private async notifyUserAfterVideoConfLost(callerId: IUser['_id'], calleeId: IUser['_id']): void {
 		let callee: Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
 
 		if (calleeId) {
 			callee = await Users.findOneById<Pick<IUser, '_id' | 'username' | 'name' | 'avatarETag'>>(calleeId, {
 				projection: { name: 1, username: 1, avatarETag: 1 },
 			});
-			
+
 			if (!callee) {
 				throw new Error('failed-to-load-own-data');
 			}
@@ -1153,6 +1152,6 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const params = { uid: callerId, type: 'videoconference.lost', username: callee?.username, name: callee?.name };
 
 		const action = 'videoConference/lost';
-		api.broadcast('user.video-conference', { userId: callerId, action, params} );
+		api.broadcast('user.video-conference', { userId: callerId, action, params });
 	}
 }
