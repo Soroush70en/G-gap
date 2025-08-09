@@ -10,7 +10,6 @@ import RoomMessage from '../../../components/message/variants/RoomMessage';
 import SystemMessage from '../../../components/message/variants/SystemMessage';
 import ThreadMessagePreview from '../../../components/message/variants/ThreadMessagePreview';
 import { useFormatDate } from '../../../hooks/useFormatDate';
-import { usePersianDate } from '../../../lib/usePersianDate';
 import { useRoomSubscription } from '../contexts/RoomContext';
 import { SelectedMessagesProvider } from '../providers/SelectedMessagesProvider';
 import { useMessages } from './hooks/useMessages';
@@ -57,9 +56,8 @@ export const MessageList = ({ rid, scrollMessageList }: MessageListProps): React
 						<Fragment key={message._id}>
 							{showDivider && (
 								<MessageDivider unreadLabel={firstUnread ? t('Unread_Messages').toLowerCase() : undefined}>
-									{newDay && usePersianDate(new Date(message.ts),true,formatDate(message.ts))}
+									{newDay && formatDate(message.ts)}
 								</MessageDivider>
-
 							)}
 
 							{visible && (

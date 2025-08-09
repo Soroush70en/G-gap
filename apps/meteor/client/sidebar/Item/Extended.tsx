@@ -3,9 +3,7 @@ import { IconButton, Sidebar } from '@rocket.chat/fuselage';
 import { useMutableCallback, usePrefersReducedMotion } from '@rocket.chat/fuselage-hooks';
 import type { VFC } from 'react';
 import React, { memo, useState } from 'react';
-
 import { useShortTimeAgo } from '../../hooks/useTimeAgo';
-import { usePersianDateShort } from '../../lib/usePersianDate';
 
 type ExtendedProps = {
 	icon?: IconProps['name'];
@@ -41,7 +39,9 @@ const Extended: VFC<ExtendedProps> = ({
 	selected,
 	...props
 }) => {
+
 	const formatDate = useShortTimeAgo();
+
 	const [menuVisibility, setMenuVisibility] = useState(!!window.DISABLE_ANIMATION);
 
 	const isReduceMotionEnabled = usePrefersReducedMotion();
@@ -52,7 +52,7 @@ const Extended: VFC<ExtendedProps> = ({
 
 	const handleMenuEvent = {
 		[isReduceMotionEnabled ? 'onMouseEnter' : 'onTransitionEnd']: handleMenu,
-	};
+	};	
 
 	return (
 		<Sidebar.Item aria-selected={selected} selected={selected} highlighted={unread} {...props} {...({ href } as any)} clickable={!!href}>
@@ -64,7 +64,7 @@ const Extended: VFC<ExtendedProps> = ({
 						<Sidebar.Item.Title data-qa='sidebar-item-title' className={(unread && 'rcx-sidebar-item--highlighted') as string}>
 							{title}
 						</Sidebar.Item.Title>						
-						{time && <Sidebar.Item.Time>{usePersianDateShort(new Date(time),true, formatDate(time))}</Sidebar.Item.Time>}						
+						{time && <Sidebar.Item.Time>{formatDate(time, true, true)}</Sidebar.Item.Time>}
 					</Sidebar.Item.Wrapper>
 				</Sidebar.Item.Content>
 				<Sidebar.Item.Content>
