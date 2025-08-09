@@ -17,27 +17,23 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 	const setModal = useSetModal();
 
 	const handleCloseModal = useCallback(() => {
-		setModal(null); // Setting the modal to null will close it.
+		if (window.RocketChatDesktop?.send) {
+			window.RocketChatDesktop.send('video-call-focus-requested');
+		}
+		setModal(null);
 	}, [setModal]);
 
 	useEffect(() => {
-		// Check for the API and the new 'on' method
 		if (window.RocketChatDesktop && typeof window.RocketChatDesktop.on === 'function') {
-			alert('Here');
-			window.RocketChatDesktop.on('video-call-window/open-url', () => alert('video-call-window/open-url'));
-			// Use your official API to subscribe to the event
 			const unsubscribe = window.RocketChatDesktop.on('webapp:show-add-participants-modal', ({ callId }: { callId: string }) => {
-				// 3. Instead of using local state, pass the entire component
-				//    you want to render to the setModal function.
 				setModal(<AddParticipant callId={callId} onClose={handleCloseModal} />);
 			});
 
-			// The useEffect cleanup function will now call the returned unsubscribe function
 			return () => {
 				unsubscribe();
 			};
 		}
-	}, [setModal, handleCloseModal]); // Empty dependency array ensures this runs only once on mount
+	}, [setModal, handleCloseModal]);
 
 	return (
 		<>
