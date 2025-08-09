@@ -5,7 +5,7 @@ import {
 	VideoConfPopupControllers,
 	VideoConfPopupHeader,
 	VideoConfPopupTitle,
-	useVideoConfControllers
+	useVideoConfControllers,
 } from '@rocket.chat/ui-video-conf';
 import React, { useEffect, useMemo } from 'react';
 import { CustomSounds } from '../../app/custom-sounds/client/lib/CustomSounds';
@@ -41,7 +41,7 @@ const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, u
 	}, [visible]);
 
 	useEffect(() => {
-		return () => {			
+		return () => {
 			return sound?.pause();
 		};
 	}, []);
@@ -300,10 +300,10 @@ const IncomingCallPanel = ({ visible, callerId, callerName, onJoin, onDismiss, u
 
 				<div className='buttons'>
 					<button className='button accept-button' onClick={_onJoin}>
-						Accept
+						{t('Accept')}
 					</button>
 					<button className='button decline-button' onClick={_onDismiss}>
-						Decline
+						{t('Decline')}
 					</button>
 					<button className='button dismiss-button' onClick={_onDismiss}>
 						<CloseIcon />

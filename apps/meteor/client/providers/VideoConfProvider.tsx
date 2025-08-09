@@ -17,7 +17,6 @@ type WindowMaybeDesktop = typeof window & {
 };
 
 const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactElement => {
-	console.log(children);
 	const [outgoing, setOutgoing] = useState<VideoConfPopupPayload | undefined>();
 	const [videoConf, setVideoConf] = useState<{
 		show: boolean;

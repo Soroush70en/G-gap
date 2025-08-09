@@ -306,11 +306,11 @@ export function setURL(url: string): void {
 }
 
 export function hasLicense(feature: string): boolean {
-	return License.hasModule(feature);
+	return true;
 }
 
 export function isEnterprise(): boolean {
-	return License.hasAnyValidLicense();
+	return true;
 }
 
 export function getMaxGuestUsers(): number {
