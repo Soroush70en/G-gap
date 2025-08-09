@@ -3095,5 +3095,6 @@
   "registration.component.form.password": "رمز عبور",
   "registration.component.form.divider": "یا",
   "registration.component.form.submit": "ارسال",
-  "RegisterWorkspace_Features_Omnichannel_Title": "کانال همه‌کاره"
+  "RegisterWorkspace_Features_Omnichannel_Title": "کانال همه‌کاره",
+  "Video_Conference_Info": "مشخصات تماس"
 }

@@ -1113,10 +1113,12 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			}
 		}
 
-		const params = { uid: callerId, type: 'videoconference.declined', username: callee?.username, name: callee?.name };
+		const params = { uid: callerId, calleeId: calleeId, type: 'videoconference.declined', username: callee?.username, name: callee?.name };
 
 		const action = 'videoConference/declined';
 		api.broadcast('user.video-conference', { userId: callerId, action, params });
+		api.broadcast('user.video-conference', { userId: calleeId, action, params });
+		
 	}
 
 	private getApikey() {

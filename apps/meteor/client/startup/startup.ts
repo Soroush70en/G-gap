@@ -13,7 +13,7 @@ import { register } from '../../app/markdown/lib/hljs';
 import { settings } from '../../app/settings/client';
 import { getUserPreference, t } from '../../app/utils/client';
 import * as banners from '../lib/banners';
-import { setIncomingCall } from '../lib/incomingCallStore';
+import { clearIncomingCall, setIncomingCall } from '../lib/incomingCallStore';
 import { dispatchToastMessage } from '../lib/toast';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
@@ -21,6 +21,7 @@ import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
 const originalLivedataHandler = Meteor.connection._livedata_data;
 
 Meteor.connection._livedata_data = function (message) {
+
 	try {
 		if ((message as any)?.fields?.args?.length > 0) {
 			if (
@@ -48,13 +49,20 @@ Meteor.connection._livedata_data = function (message) {
 			}
 
 			if ((message as any)?.fields?.args[0]?.action === 'videoConference/declined') {
-				dispatchToastMessage({
-					type: 'error',
-					message: TAPi18n.__('User_Declined_Call', {
-						name: (message as any)?.fields?.args[0]?.params?.name,
-					}),
-				});
+				if ((message as any)?.fields?.args[0]?.params?.calleeId === Meteor.userId()) {
+					clearIncomingCall()
+				}
+				else if ((message as any)?.fields?.args[0]?.params?.uid === Meteor.userId()) {
+					dispatchToastMessage({
+						type: 'error',
+						message: TAPi18n.__('User_Declined_Call', {
+							name: (message as any)?.fields?.args[0]?.params?.name,
+						}),
+					});
+				}
 			}
+
+
 
 			if ((message as any)?.fields?.args[0]?.action === 'videoConference/lost') {
 				dispatchToastMessage({

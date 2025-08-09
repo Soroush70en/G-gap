@@ -533,9 +533,11 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 				else{
 					this.emit('direct/end');
 				}
+				break;
 			case 'videoConference/accepted':
 				if(params.uid === this.userId)
 					clearIncomingCall();
+				break;
 		}
 	}
 
