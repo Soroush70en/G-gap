@@ -10,12 +10,14 @@ export class VideoConfModule implements IUiKitCoreApp {
 			triggerId,
 			actionId,
 			payload: { blockId: callId },
-			user: { _id: userId },
+			user: { _id: userId, language: userLanguage },
 		} = payload;
 
 		if (actionId === 'join') {
 			VideoConf.join(userId, callId, {});
 		}
+
+		const language = userLanguage || 'fa';
 
 		if (actionId === 'info') {
 			const blocks = await VideoConf.getInfo(callId, userId);
@@ -30,14 +32,14 @@ export class VideoConfModule implements IUiKitCoreApp {
 					id: `${callId}-info`,
 					title: {
 						type: 'plain_text',
-						text: TAPi18n.__('Video_Conference_Info'),
+						text: TAPi18n.__('Video_Conference_Info', { lng: language }),
 						emoji: false,
 					},
 					close: {
 						type: 'button',
 						text: {
 							type: 'plain_text',
-							text: TAPi18n.__('Close'),
+							text: TAPi18n.__('Close', { lng: language }),
 							emoji: false,
 						},
 						actionId: 'cancel',

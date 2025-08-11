@@ -141,16 +141,18 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			throw new Error('video-conf-provider-unavailable');
 		}
 
-		let user: Pick<Required<IUser>, '_id' | 'username' | 'name' | 'avatarETag'> | null = null;
+		let user: Pick<Required<IUser>, '_id' | 'username' | 'name' | 'avatarETag' | 'language'> | null = null;
 
 		if (uid) {
-			user = await Users.findOneById<Pick<Required<IUser>, '_id' | 'username' | 'name' | 'avatarETag'>>(uid, {
-				projection: { name: 1, username: 1, avatarETag: 1 },
+			user = await Users.findOneById<Pick<Required<IUser>, '_id' | 'username' | 'name' | 'avatarETag' | 'language'>>(uid, {
+				projection: { name: 1, username: 1, avatarETag: 1, language: 1 },
 			});
 			if (!user) {
 				throw new Error('failed-to-load-own-data');
 			}
 		}
+
+		const language = user?.language || settings.get('Language') || 'fa';
 
 		const blocks = await (await this.getProviderManager()).getVideoConferenceInfo(call.providerName, call, user || undefined).catch((e) => {
 			throw new Error(e);
@@ -166,7 +168,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 				type: 'section',
 				text: {
 					type: 'mrkdwn',
-					text: `**${TAPi18n.__('Video_Conference_Url')}**: ${call.url}`,
+					text: `**${TAPi18n.__('Video_Conference_Url', { lng: language })}**: ${call.url}`,
 				},
 			} as IBlock,
 		];
@@ -1118,7 +1120,6 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		const action = 'videoConference/declined';
 		api.broadcast('user.video-conference', { userId: callerId, action, params });
 		api.broadcast('user.video-conference', { userId: calleeId, action, params });
-		
 	}
 
 	private getApikey() {
