@@ -152,8 +152,6 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		return;
 	}
 
-	console.log('sendFCM', userTokens, notification);
-
 	// Allow user to set payload
 	const dataObj = notification.payload ? { ejson: EJSON.stringify(notification.payload) } : {};
 
@@ -211,8 +209,6 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 			token: userToken,
 			data: data,
 		};
-		console.log('===========================================MESSAGE===========================================');
-		console.log(message);
 		try {
 			admin
 				.messaging()

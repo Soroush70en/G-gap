@@ -63,7 +63,7 @@ Meteor.startup(() => {
 		);
 	});
 
-	settings.watch('Site_Name', (value = 'Rocket.Chat') => {
+	settings.watch('Site_Name', (value = 'G-Gap') => {
 		const escapedValue = escapeHTML(value);
 		injectIntoHead(
 			'Site_Name',

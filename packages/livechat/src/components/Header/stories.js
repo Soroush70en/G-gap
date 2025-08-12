@@ -45,7 +45,7 @@ storiesOf('Components/Header', module)
 			onClick={action('clicked')}
 		>
 			<Content>
-				<Title>{text('title', 'Rocket.Chat')}</Title>
+				<Title>{text('title', 'G-Gap')}</Title>
 				<SubTitle>{text('subtitle', 'Livechat')}</SubTitle>
 			</Content>
 		</Header>

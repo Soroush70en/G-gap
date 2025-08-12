@@ -80,7 +80,7 @@ export const exampleData = {
 		name: 'Christian Castro',
 		username: 'christian.castro',
 	},
-	siteName: 'Rocket.Chat',
+	siteName: 'G-Gap',
 	closedAt: '2022-11-21T00:00:00.000Z',
 	dateFormat: 'MMM D, YYYY',
 	timeAndDateFormat: 'MMM D, YYYY H:mm:ss',

@@ -152,8 +152,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			}
 		}
 
-		const language = user?.language || settings.get('Language') || 'fa';
-
+		const language: string = user?.language || settings.get('Language') || 'fa';
 		const blocks = await (await this.getProviderManager()).getVideoConferenceInfo(call.providerName, call, user || undefined).catch((e) => {
 			throw new Error(e);
 		});
@@ -712,7 +711,6 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		action: string,
 		params: { uid: IUser['_id']; rid: IRoom['_id']; callId: VideoConference['_id'] },
 	): Promise<void> {
-		console.log('video-conference:notifyUsersOfRoom---------------------------------------------------------');
 		const subscriptions = Subscriptions.findByRoomId(rid, {
 			projection: { 'u._id': 1, '_id': 0 },
 		});
@@ -870,7 +868,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 		}
 
 		const room = await Rooms.findOneById(call.rid);
-		return room?.fname || room?.name || 'Rocket.Chat';
+		return room?.fname || room?.name || 'G-Gap';
 	}
 
 	private async getCallTitle(call: VideoConference): Promise<string> {
@@ -893,7 +891,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			}
 		}
 
-		return 'Rocket.Chat';
+		return 'G-Gap';
 	}
 
 	private async getUrl(

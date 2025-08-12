@@ -208,7 +208,6 @@ export class PushClass {
 		const apps = appTokensCollection.find(query);
 
 		apps.forEach((app) => {
-			console.log('=========================QUERY Success===================================');
 			logger.debug('send to token', app.token);
 
 			if (this._shouldUseGateway()) {
