@@ -62,22 +62,53 @@ const DraggableModal = ({
 	}, [isDragging, dragOffset, isMaximized]);
 
 	useEffect(() => {
-		// Define the handler for messages from the iframe
 		function handleIframeMessage(event) {
-			// Check if the message is of type 'timeoutDone'
 			if (event.data.type === 'timeoutDone') {
 				console.log('Timeout is over:', event.data.message);
-				// Perform actions like closing the modal or updating state
 				onClose();
 			}
 		}
 		window.addEventListener('message', handleIframeMessage);
 
-		// Cleanup the event listener on component unmount
 		return () => {
 			window.removeEventListener('message', handleIframeMessage);
 		};
 	}, [onClose]);
+
+	useEffect(() => {
+		async function handleOpenDialouge(event) {
+			if (event.data.type === 'REQUEST_FILE_SAVE') {
+				try {
+					const handle = await window.showSaveFilePicker({
+						suggestedName: event.data.suggestedName,
+						types: [
+							{
+								description: 'WebM Video',
+								accept: { 'video/webm': ['.webm'] },
+							},
+						],
+					});
+
+					const writableStream = await handle.createWritable();
+
+					event.source.postMessage(
+						{
+							type: 'FILE_HANDLE_READY',
+							writableStream,
+						},
+						event.origin,
+					);
+				} catch (err) {
+					console.error('Save cancelled or failed', err);
+				}
+			}
+		}
+		window.addEventListener('message', handleOpenDialouge);
+
+		return () => {
+			window.removeEventListener('message', handleOpenDialouge);
+		};
+	}, []);
 
 	useEffect(() => {
 		const handleResize = () => {
@@ -166,7 +197,7 @@ const DraggableModal = ({
 				position: 'fixed',
 				bottom: '20px',
 				left: '20px',
-				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width				
+				width: Math.min(200, window.innerWidth - 40), // Responsive minimized width
 				zIndex: 1000,
 				backgroundColor: 'white',
 				borderRadius: '6px',
@@ -221,8 +252,8 @@ const DraggableModal = ({
 				<div
 					style={{
 						position: 'fixed',
-						width:0,
-						height:0,
+						width: 0,
+						height: 0,
 						zIndex: 999,
 					}}
 				/>
