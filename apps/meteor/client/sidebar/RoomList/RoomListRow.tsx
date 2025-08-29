@@ -15,6 +15,7 @@ const sections: {
 } = {
 	Omnichannel: OmnichannelSection,
 };
+type RoomTab = 'all' | 'direct' | 'groups' | 'channels' | 'teams';
 
 type RoomListRowProps = {
 	extended: boolean;
@@ -24,7 +25,10 @@ type RoomListRowProps = {
 	openedRoom: string;
 	sidebarViewMode: 'extended' | 'condensed' | 'medium';
 	isAnonymous: boolean;
-};
+  
+	// ← این خط را اضافه کنید:
+	tabCounts?: Partial<Record<RoomTab, number>>;
+  };
 
 const RoomListRow = ({ data, item }: { data: RoomListRowProps; item: ISubscription & IRoom }): ReactElement => {
 	const { extended, t, SideBarItemTemplate, AvatarTemplate, openedRoom, sidebarViewMode } = data;

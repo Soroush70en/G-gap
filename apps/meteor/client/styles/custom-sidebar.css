@@ -1,0 +1,5 @@
+/* apps/meteor/client/styles/custom-sidebar.css */
+.rcx-sidebar .rcx-text-input input { height: 36px; }
+.rcx-sidebar .rcx-tabs { border-bottom: 0; }
+.rcx-sidebar .rcx-tabs__item { padding: 4px 10px; font-weight: 600; }
+:root[dir="rtl"] .rcx-text-input input { text-align: right; }

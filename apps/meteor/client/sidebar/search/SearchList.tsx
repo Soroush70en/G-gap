@@ -187,7 +187,7 @@ const SearchList = forwardRef(function SearchList({ onClose }: SearchListProps, 
 
 	const filterText = useDebouncedValue(filter.value, 100);
 
-	const placeholder = [t('Search'), shortcut].filter(Boolean).join(' ');
+	const placeholder = [t('Search'), ''].filter(Boolean).join(' ');
 
 	const { data: items = [], isLoading } = useSearchItems(filterText);
 

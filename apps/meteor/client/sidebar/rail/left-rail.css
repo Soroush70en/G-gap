@@ -1,0 +1,163 @@
+/* ── تنظیمات عمومی ریل ───────────────────────────────────────────── */
+
+#sidebar-region.gg-has-rail { position: relative; overflow: visible; }
+
+/* عرض ریل و فاصله از محتوا (گاتر) */
+#sidebar-region.gg-has-rail {
+  --gg-rail-w: 76px;
+  --gg-rail-gap: 8px;
+  border-left: 1px solid var(--stroke-default, #C4CED4);
+}
+
+/* محتوای اصلی کنار ریل بره (start = راست در RTL) */
+#sidebar-region.gg-has-rail .gg-sidebar-main{
+  padding-inline-start: calc(var(--gg-rail-w) + var(--gg-rail-gap)) !important;
+  padding-inline-end: 0 !important;
+}
+
+/* خود ریل: به inline-start بچسبد */
+#gg-left-rail{
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: var(--gg-rail-w);
+
+  /* ✅ فقط از توکن‌ها استفاده کن، با fallback زنجیره‌ای */
+  background: var(--rcx-color-surface-sidebar,
+               var(--rcx-color-surface,
+               var(--rcx-color-surface-room, #ffffff)));
+  border-inline-end: 1px solid var(--rcx-color-stroke, rgba(0,0,0,.08));
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 3;
+  overflow: visible;
+}
+
+
+
+/* بخش‌ها داخل ریل */
+#gg-left-rail .gg-rail-top{ padding: 12px 0 8px; }
+#gg-left-rail .gg-rail-nav{
+  display: flex; flex-direction: column; gap: 8px;
+  width: 100%; padding: 8px 0;
+}
+#gg-left-rail .gg-rail-bottom{ margin-top: auto; padding: 8px 0; }
+
+/* دکمه‌ها */
+#gg-left-rail .gg-rail-btn{
+  position: relative;
+  width: 100%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 10px 8px 8px;
+  border: 0; background: transparent; cursor: pointer;
+  border-radius: 14px; user-select: none;
+
+  /* ✅ رنگ متن/آیکن از توکن‌ها */
+  color: var(--rcx-color-font-secondary, #6c767d);
+
+  transition: background .12s ease, color .12s ease, transform .12s ease;
+}
+
+/* هاور */
+#gg-left-rail .gg-rail-btn:hover{
+  background: var(--rcx-color-surface-hover, rgba(0,0,0,.04));
+  color: var(--rcx-color-font-default, #2f343d);
+  transform: translateY(-1px);
+}
+
+/* فعال */
+#gg-left-rail .gg-rail-btn.active{
+  background: var(--rcx-color-surface-selected, rgba(29,116,245,.12));
+  color: var(--rcx-color-primary, #1d74f5);
+}
+
+
+
+/* آیکن و لیبل */
+#gg-left-rail .gg-rail-btn svg{ width:24px; height:24px; fill: currentColor; }
+#gg-left-rail .gg-rail-label{
+  width:100%; text-align:center; font-size:11px; line-height:1; white-space:nowrap; direction:rtl;
+}
+
+/* آیکون‌ها یکدست و وسط‌چین */
+#gg-left-rail .gg-rail-btn .gg-rail-icon{
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px;
+  margin-inline-end: 8px;
+}
+#gg-left-rail .gg-rail-btn .gg-rail-icon svg{
+  width: 24px; height: 24px; display: block; color: currentColor;
+}
+html[dir="ltr"] #gg-left-rail .gg-active-indicator{
+  left: 1px !important;
+}
+/* خط فعال همرنگ متن/primary */
+#gg-left-rail .gg-active-indicator{
+  position:absolute;
+  inset-inline-end: 4px;
+  top:50%; transform:translateY(-50%);
+  width:3px; height:24px; border-radius:2px;
+  background: currentColor;
+  right: 1px;
+}
+
+/* یکدست‌سازی تاپ‌بار سایدبار */
+.rcx-sidebar-topbar__wrapper{
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* تب‌بار سفارشی: تم‌پذیر */
+.gg-tabs-bar{
+  background: var(--rcx-color-surface, #f6f7f9);
+  border-top: 1px solid var(--rcx-color-stroke, rgba(0,0,0,.08));
+  border-bottom: 1px solid var(--rcx-color-stroke, rgba(0,0,0,.08));
+}
+.gg-tabs-track { scrollbar-width: none; }
+.gg-tabs-track::-webkit-scrollbar { display: none; }
+
+/* آواتار کمی بزرگ‌تر */
+.rcx-avatar__element--x24{ width:35px !important; height:35px !important; }
+nav.rcx-box.rcx-box--full.rcx-css-f28tdi.rcx-sidebar--main.rcx-sidebar.rcx-sidebar--extended.gg-sidebar-main.rcx-css-ogq2n4
+{
+  margin-right: -8px;
+}
+hr.rcx-box.rcx-box--full.rcx-sidebar--divider.rcx-divider.rcx-css-oz39hi
+{
+  display: none ;
+}
+body.theme-dark {
+  /* هاور */
+  #gg-left-rail .gg-rail-btn:hover {
+    background: var(--rcx-color-surface-hover, rgba(0, 0, 0, .04));
+    color: var(--rcx-color-font-default, #2f343d);
+    transform: translateY(-1px);
+  }
+
+  /* فعال */
+  #gg-left-rail .gg-rail-btn.active {
+    background: var(--rcx-color-surface-selected, rgba(29, 116, 245, .12));
+    color: var(--rcx-color-primary, #50ADE7);
+  }
+
+  #sidebar-region.gg-has-rail,
+  #gg-left-rail,
+  #sidebar-region.gg-has-rail .gg-sidebar-main {
+    border-left: 1px solid var(--stroke-default, #343F46) !important;
+    background-color: #161B1D !important;
+    
+  }
+}
+
+@media only screen and (max-width: 800px){
+ 
+
+}
+
+/* ===== موبایل: #sidebar-region پیش‌فرض مخفی است ===== */
+@media (max-width: 768px){
+  :root{--sidebar-width:100% !important;
+  }
+}

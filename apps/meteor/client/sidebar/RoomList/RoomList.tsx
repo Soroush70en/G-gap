@@ -1,10 +1,10 @@
-import type { IRoom } from '@rocket.chat/core-typings';
+import type { IRoom, ISubscription } from '@rocket.chat/core-typings';
 import { css } from '@rocket.chat/css-in-js';
 import { Box } from '@rocket.chat/fuselage';
 import { useResizeObserver } from '@rocket.chat/fuselage-hooks';
 import { useSession, useUserPreference, useUserId, useTranslation } from '@rocket.chat/ui-contexts';
 import type { ReactElement } from 'react';
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 import { useAvatarTemplate } from '../hooks/useAvatarTemplate';
@@ -15,118 +15,170 @@ import { useTemplateByViewMode } from '../hooks/useTemplateByViewMode';
 import RoomListRow from './RoomListRow';
 import ScrollerWithCustomProps from './ScrollerWithCustomProps';
 
-const computeItemKey = (index: number, room: IRoom): IRoom['_id'] | number => room._id || index;
+type RoomTab = 'all' | 'direct' | 'groups' | 'channels' | 'teams';
+
+const computeItemKey = (index: number, room: ISubscription & IRoom): IRoom['_id'] | number => room._id || index;
+
+/* ---------------- helpers ---------------- */
+
+// یک دسته‌بندی «منحصر به فرد» برای هر اتاق برمی‌گرداند تا دابل کانت نشود
+const exclusiveCategoryOf = (r: ISubscription & IRoom): RoomTab | null => {
+  // فقط همین انواع را لحاظ کنیم؛ سایر انواع (مثل livechat و ...) کنار گذاشته شوند
+  if (r.t === 'd') return 'direct';
+  if (r.teamMain) return 'teams'; // تیم‌ها اولویت دارند تا توی groups/channels دوباره شمرده نشوند
+  if (r.t === 'c') return 'channels';
+  if (r.t === 'p') return 'groups';
+  return null;
+};
+
+const filterByTabExclusive = (items: Array<ISubscription & IRoom>, tab: RoomTab) => {
+  if (tab === 'all') return items.filter((r) => exclusiveCategoryOf(r) !== null);
+  return items.filter((r) => exclusiveCategoryOf(r) === tab);
+};
+
+const applyQuery = (items: Array<ISubscription & IRoom>, query: string) => {
+  const q = query?.trim().toLowerCase();
+  if (!q) return items;
+  return items.filter((room) => room.name?.toLowerCase().includes(q));
+};
+
+const computeCountsExclusive = (items: Array<ISubscription & IRoom>, query: string) => {
+  // اول سرچ، بعد دسته‌بندی انحصاری
+  const filteredByQuery = applyQuery(items, query);
+  const base = filteredByQuery.filter((r) => exclusiveCategoryOf(r) !== null);
+
+  const direct = base.filter((r) => exclusiveCategoryOf(r) === 'direct').length;
+  const teams = base.filter((r) => exclusiveCategoryOf(r) === 'teams').length;
+  const channels = base.filter((r) => exclusiveCategoryOf(r) === 'channels').length;
+  const groups = base.filter((r) => exclusiveCategoryOf(r) === 'groups').length;
+
+  return {
+    all: base.length,
+    direct,
+    groups,
+    channels,
+    teams,
+  } as Partial<Record<RoomTab, number>>;
+};
+/* ----------------------------------------- */
 
 const RoomList = (): ReactElement => {
-	const t = useTranslation();
-	const isAnonymous = !useUserId();
-	const roomsList = useRoomList();
-	const avatarTemplate = useAvatarTemplate();
-	const sideBarItemTemplate = useTemplateByViewMode();
-	const { ref } = useResizeObserver({ debounceDelay: 100 });
-	const openedRoom = (useSession('openedRoom') as string) || '';
-	const sidebarViewMode = useUserPreference<'extended' | 'medium' | 'condensed'>('sidebarViewMode') || 'extended';
+  const t = useTranslation();
+  const isAnonymous = !useUserId();
+  const roomsList = useRoomList() as Array<ISubscription & IRoom>;
+  const avatarTemplate = useAvatarTemplate();
+  const sideBarItemTemplate = useTemplateByViewMode();
+  const { ref } = useResizeObserver({ debounceDelay: 100 });
+  const openedRoom = (useSession('openedRoom') as string) || '';
+  const sidebarViewMode = useUserPreference<'extended' | 'medium' | 'condensed'>('sidebarViewMode') || 'extended';
 
-	const extended = sidebarViewMode === 'extended';
-	const itemData = useMemo(
-		() => ({
-			extended,
-			t,
-			SideBarItemTemplate: sideBarItemTemplate,
-			AvatarTemplate: avatarTemplate,
-			openedRoom,
-			sidebarViewMode,
-			isAnonymous,
-		}),
-		[avatarTemplate, extended, isAnonymous, openedRoom, sideBarItemTemplate, sidebarViewMode, t],
-	);
+  const extended = sidebarViewMode === 'extended';
 
-	usePreventDefault(ref);
-	useShortcutOpenMenu(ref);
+  // فیلتر جاری که از Header می‌آید
+  const [filterState, setFilterState] = useState<{ query: string; tab: RoomTab }>({ query: '', tab: 'all' });
 
-	const roomsListStyle = css`
-		position: relative;
+  // لیست نهایی برای نمایش
+  const [filteredRooms, setFilteredRooms] = useState<Array<ISubscription & IRoom>>(
+    roomsList.filter((r) => exclusiveCategoryOf(r) !== null),
+  );
 
-		display: flex;
+  // کانت تب‌ها (انحصاری)
+  const [counts, setCounts] = useState<Partial<Record<RoomTab, number>>>({});
 
-		overflow-x: hidden;
-		overflow-y: hidden;
+  // وقتی لیست اتاق‌ها عوض شد، نمایش و کانت را رفرش کن
+  useEffect(() => {
+    const { query, tab } = filterState;
+    const base = roomsList;
+    const byTab = filterByTabExclusive(base, tab);
+    const byQuery = applyQuery(byTab, query);
+    setFilteredRooms(byQuery);
 
-		flex: 1 1 auto;
+    const c = computeCountsExclusive(base, query);
+    setCounts(c);
+    window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
+  }, [roomsList]); // eslint-disable-line react-hooks/exhaustive-deps
 
-		height: 100%;
+  // دریافت فیلترها از Header
+  useEffect(() => {
+    const onFilter = (e: Event) => {
+      const { query, tab } = (e as CustomEvent).detail as { query: string; tab: RoomTab };
+      setFilterState({ query, tab });
 
-		&--embedded {
-			margin-top: 2rem;
-		}
+      const base = roomsList;
+      const byTab = filterByTabExclusive(base, tab);
+      const byQuery = applyQuery(byTab, query);
+      setFilteredRooms(byQuery);
 
-		&__list:not(:last-child) {
-			margin-bottom: 22px;
-		}
+      const c = computeCountsExclusive(base, query);
+      setCounts(c);
+      window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
+    };
 
-		&__type {
-			display: flex;
+    window.addEventListener('sidebar:filter', onFilter as EventListener);
+    return () => window.removeEventListener('sidebar:filter', onFilter as EventListener);
+  }, [roomsList]);
 
-			flex-direction: row;
+  // اگر فقط query عوض شد (بدون تغییر roomsList)، کانت/نمایش را آپدیت کن
+  useEffect(() => {
+    const { query, tab } = filterState;
+    const base = roomsList;
+    const byTab = filterByTabExclusive(base, tab);
+    const byQuery = applyQuery(byTab, query);
+    setFilteredRooms(byQuery);
 
-			padding: 0 var(--sidebar-default-padding) 1rem var(--sidebar-default-padding);
+    const c = computeCountsExclusive(base, query);
+    setCounts(c);
+    window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
+  }, [filterState.query]); // eslint-disable-line react-hooks/exhaustive-deps
 
-			color: var(--rooms-list-title-color);
+  const itemData = useMemo(
+    () => ({
+      extended,
+      t,
+      SideBarItemTemplate: sideBarItemTemplate,
+      AvatarTemplate: avatarTemplate,
+      openedRoom,
+      sidebarViewMode,
+      isAnonymous,
+      counts, // شمارنده‌های صحیح
+    }),
+    [avatarTemplate, extended, isAnonymous, openedRoom, sideBarItemTemplate, sidebarViewMode, t, counts],
+  );
 
-			font-size: var(--rooms-list-title-text-size);
-			align-items: center;
-			justify-content: space-between;
+  usePreventDefault(ref);
+  useShortcutOpenMenu(ref);
 
-			&-text--livechat {
-				flex: 1;
-			}
-		}
+  const roomsListStyle = css`
+    position: relative;
+    display: flex;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    flex: 1 1 auto;
+    height: 100%;
 
-		&__empty-room {
-			padding: 0 var(--sidebar-default-padding);
+    &--embedded {
+      margin-top: 2rem;
+    }
+  `;
 
-			color: var(--rooms-list-empty-text-color);
-
-			font-size: var(--rooms-list-empty-text-size);
-		}
-
-		&__toolbar-search {
-			position: absolute;
-			z-index: 10;
-			left: 0;
-
-			overflow-y: scroll;
-
-			height: 100%;
-
-			background-color: var(--sidebar-background);
-
-			padding-block-start: 12px;
-		}
-
-		@media (max-width: 400px) {
-			padding: 0 calc(var(--sidebar-small-default-padding) - 4px);
-
-			&__type,
-			&__empty-room {
-				padding: 0 calc(var(--sidebar-small-default-padding) - 4px) 0.5rem calc(var(--sidebar-small-default-padding) - 4px);
-			}
-		}
-	`;
-
-	return (
-		<Box className={[roomsListStyle, 'sidebar--custom-colors'].filter(Boolean)} aria-label={t('Channels')} role='region'>
-			<Box h='full' w='full' ref={ref}>
-				<Virtuoso
-					totalCount={roomsList.length}
-					data={roomsList}
-					components={{ Scroller: ScrollerWithCustomProps }}
-					computeItemKey={computeItemKey}
-					itemContent={(_, data): ReactElement => <RoomListRow data={itemData} item={data} />}
-				/>
-			</Box>
-		</Box>
-	);
+  return (
+    <Box className={[roomsListStyle, 'sidebar--custom-colors'].filter(Boolean)} aria-label={t('Channels')} role="region">
+      <Box h="full" w="full" ref={ref}>
+        <Virtuoso<ISubscription & IRoom>
+          totalCount={filteredRooms.length}
+          data={filteredRooms}
+          components={{ Scroller: ScrollerWithCustomProps }}
+          computeItemKey={computeItemKey}
+          itemContent={(index, room): ReactElement => (
+            <RoomListRow
+              data={{ ...itemData, tabCounts: counts }}
+              item={room}
+            />
+          )}
+        />
+      </Box>
+    </Box>
+  );
 };
 
 export default RoomList;
