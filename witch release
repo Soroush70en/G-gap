@@ -1,0 +1,24 @@
+* [33maa6dae74b7[m[33m ([m[1;32mrelease[m[33m)[m new sidebarr
+* [33m1db8baff48[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmohamadi/side-bar[m[33m, [m[1;31morigin/release[m[33m, [m[1;31morigin/mohamadi/side-bar[m[33m)[m modal recording
+* [33m7d2f98192c[m some minor changes
+* [33mc53fba59de[m[33m ([m[1;32mmohamadi/imoji[m[33m)[m add space before emoji
+* [33mbef5a7a03d[m fix meeting details translation
+* [33mb5034347a2[m Decline Call handle
+* [33mbbda42e07d[m bug fixes
+* [33mf1cf6e5167[m add push pwa
+* [33m033a1568ba[m bug fix
+* [33me5863d0df8[m Refactor: Persian Date
+* [33m6db255a827[m add-users
+* [33m32b3ca7de2[m slight persiandate changes
+* [33md9db42efe1[m remove KaTeX from formatter pane
+*   [33med7d496ae2[m[33m ([m[1;32mmohamdi/single-avatar[m[33m)[m Merge branch 'release' into mohamdi/single-avatar
+[32m|[m[33m\[m  
+* [33m|[m [33mbdc87fc721[m singe avartar reaction
+[33m|[m [33m|[m * [33m056abb491e[m[33m ([m[1;31morigin/sajad/electron-add-users[m[33m)[m add-users-final-changes
+[33m|[m [33m|[m * [33m10138b6446[m init changes
+[33m|[m [33m|[m[33m/[m  
+[33m|[m [33m|[m * [33mad782edb37[m[33m ([m[1;31morigin/newDev[m[33m)[m edit translate files
+[33m|[m [33m|[m *   [33m81b1fc9a76[m Merge branch 'newDev' of https://github.com/Soroush70en/G-gap into newDev
+[33m|[m [33m|[m [36m|[m[33m\[m  
+[33m|[m [33m|[m [36m|[m[33m/[m  
+[33m|[m [33m|[m[33m/[m[36m|[m   

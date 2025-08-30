@@ -62,14 +62,14 @@
 
 /* هاور */
 #gg-left-rail .gg-rail-btn:hover{
-  background: var(--rcx-color-surface-hover, rgba(0,0,0,.04));
+  /* background: var(--rcx-color-surface-hover, rgba(0,0,0,.04)); */
   color: var(--rcx-color-font-default, #2f343d);
   transform: translateY(-1px);
 }
 
 /* فعال */
 #gg-left-rail .gg-rail-btn.active{
-  background: var(--rcx-color-surface-selected, rgba(29,116,245,.12));
+  /* background: var(--rcx-color-surface-selected, rgba(29,116,245,.12)); */
   color: var(--rcx-color-primary, #1d74f5);
 }
 
@@ -131,14 +131,14 @@ hr.rcx-box.rcx-box--full.rcx-sidebar--divider.rcx-divider.rcx-css-oz39hi
 body.theme-dark {
   /* هاور */
   #gg-left-rail .gg-rail-btn:hover {
-    background: var(--rcx-color-surface-hover, rgba(0, 0, 0, .04));
+    /* background: var(--rcx-color-surface-hover, rgba(0, 0, 0, .04)); */
     color: var(--rcx-color-font-default, #2f343d);
     transform: translateY(-1px);
   }
 
   /* فعال */
   #gg-left-rail .gg-rail-btn.active {
-    background: var(--rcx-color-surface-selected, rgba(29, 116, 245, .12));
+    /* background: var(--rcx-color-surface-selected, rgba(29, 116, 245, .12)); */
     color: var(--rcx-color-primary, #50ADE7);
   }
 
@@ -159,5 +159,9 @@ body.theme-dark {
 /* ===== موبایل: #sidebar-region پیش‌فرض مخفی است ===== */
 @media (max-width: 768px){
   :root{--sidebar-width:100% !important;
+  }
+}
+@media (min-width: 600px) and (max-width: 768px){
+  :root{--sidebar-width:302px !important;
   }
 }

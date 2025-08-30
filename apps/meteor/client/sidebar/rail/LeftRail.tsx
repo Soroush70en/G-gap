@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Box } from '@rocket.chat/fuselage';
-import { useRoute, useUser } from '@rocket.chat/ui-contexts';
 import './left-rail.css';
 import UserAvatarButton from '../header/UserAvatarButton';
+import { useRoute, useUser, useTranslation } from '@rocket.chat/ui-contexts';
 
 type Item = {
   id: string;
@@ -10,6 +10,7 @@ type Item = {
   renderIcon: () => React.ReactNode;
   click: () => void;
   isActive?: () => boolean;
+  disabled: boolean;  // تغییر به یک مقدار بولی
 };
 
 /* =================== ICONS (currentColor) =================== */
@@ -67,7 +68,7 @@ export default function LeftRail() {
   const dirRoute = useRoute('directory');
   const meetRoute = useRoute('videoconference');
   const go = (p: string) => (window as any).FlowRouter?.go?.(p);
-
+  const t = useTranslation();
   const isMobile = () => window.matchMedia('(max-width:768px)').matches;
 
   const closeMobileRail = () => {
@@ -98,7 +99,7 @@ export default function LeftRail() {
         '.rcx-sidebar__overlay',
         '[data-overlay="sidebar"]',
         '.rcx-portal .rcx-backdrop',
-        '.rcx-css-hy65ai.opened',   // 👈 همینی که گفتی
+        '.rcx-css-hy65ai.opened',   
       ].join(','),
     ).forEach((el) => el.parentElement?.removeChild(el));
   
@@ -112,41 +113,52 @@ export default function LeftRail() {
     () => [
       {
         id: 'chats',
-        label: 'گفتگوها',
+        label: t('gg_rail_chats'), // ← کلید ترجمه
         renderIcon: () => <ChatIcon />,
-        click: () => { homeRoute?.push?.({}) ?? go('/home'); },
+        click: () => {
+          homeRoute?.push?.({}) ?? go('/home');
+        },
         isActive: () =>
-          (
-            location.pathname === '/' ||
+          (location.pathname === '/' ||
             location.pathname.startsWith('/home') ||
             location.pathname.startsWith('/channel') ||
             location.pathname.startsWith('/group') ||
-            location.pathname.startsWith('/direct/')
-          ) && (!location.pathname.startsWith('/direct/D9NtG')),
+            location.pathname.startsWith('/direct/')) &&
+          !location.pathname.startsWith('/direct/D9NtG'),
+          disabled:false,
       },
       {
         id: 'contacts',
-        label: 'مخاطبین',
+        label: t('gg_rail_contacts'),
         renderIcon: () => <ContactsIcon />,
-        click: () => { dirRoute?.push?.({}) ?? go('/directory'); },
+        click: () => {
+          dirRoute?.push?.({}) ?? go('/directory');
+        },
         isActive: () => location.pathname.startsWith('/directory'),
+        disabled:false,
       },
       {
         id: 'meet',
-        label: 'جلسات',
+        label: t('gg_rail_meet'),
         renderIcon: () => <MeetIcon />,
-        click: () => { meetRoute?.push?.({}) ?? go('#'); },
+        click: () => {
+          //meetRoute?.push?.({}) ?? go('#');
+        },
         isActive: () => location.pathname.includes('video') || location.pathname.startsWith('/meet'),
+        disabled: true,
       },
       {
         id: 'ai',
-        label: 'هوش مصنوعی',
+        label: t('gg_rail_ai'),
         renderIcon: () => <AiIcon />,
-        click: () => { go('/direct/AIBot'); },
-        isActive: () => location.pathname.startsWith('/direct/D9NtG'),
+        click: () => {
+          go('/direct/AIBot');
+        },
+        isActive: () => location.pathname.startsWith('/direct/D9NtG'), // مسیر ربات هوش
+        disabled:false,
       },
     ],
-    [homeRoute, dirRoute, meetRoute],
+    [homeRoute, dirRoute, meetRoute, t],
   );
 
   // برای رفرش وضعیت active بعد از ناوبری
@@ -174,31 +186,36 @@ export default function LeftRail() {
       </div>
 
       <nav className="gg-rail-nav">
-        {items.map((it) => {
-          const active = it.isActive?.() ?? false;
-          return (
-            <button
-              key={it.id}
-              className={`gg-rail-btn${active ? ' active' : ''}`}
-              title={it.label}
-              type="button"
-              onClick={() => activate(it)}
-              onContextMenu={(e) => {
-                // راست‌کلیک/لانگ‌پرس → منو بسته شود و آیتم فعال بماند
-                e.preventDefault();
-                e.stopPropagation();
-                activate(it);
-                return false;
-              }}
-            >
-              <span className="gg-rail-icon" aria-hidden="true">
-                {it.renderIcon()}
-              </span>
-              <span className="gg-rail-label">{it.label}</span>
-              {active && <span className="gg-active-indicator" />}
-            </button>
-          );
-        })}
+      {items.map((it) => {
+  const active = it.isActive?.() ?? false;
+  const disabled = it.disabled; // بررسی وضعیت غیرفعال بودن دکمه
+  return (
+    <button
+      key={it.id}
+      className={`gg-rail-btn${active ? ' active' : ''}${disabled ? ' disabled' : ''}`} // اضافه کردن کلاس disabled
+      title={it.label}
+      type="button"
+      onClick={!disabled ? () => activate(it) : undefined} // جلوگیری از کلیک
+      onContextMenu={(e) => {
+        // راست‌کلیک/لانگ‌پرس → منو بسته شود و آیتم فعال بماند
+        if (!disabled) {
+          e.preventDefault();
+          e.stopPropagation();
+          activate(it);
+        }
+        return false;
+      }}
+      disabled={disabled} // غیرفعال کردن دکمه از طریق خاصیت disabled
+    >
+      <span className="gg-rail-icon" aria-hidden="true">
+        {it.renderIcon()}
+      </span>
+      <span className="gg-rail-label">{it.label}</span>
+      {active && <span className="gg-active-indicator" />}
+    </button>
+  );
+})}
+
       </nav>
 
       <div className="gg-rail-bottom" />

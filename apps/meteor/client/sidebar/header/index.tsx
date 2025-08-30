@@ -310,10 +310,10 @@ const HeaderWithData = (): ReactElement => {
       placeItems: 'center',
       cursor: 'pointer',
       fontWeight: 500,
-      color: (isDark? '#FFF':'#000'),
+      color: ('#FFF'),
     },
     arrowBtnDisabled: { opacity: 0.35, cursor: 'default' },
-    arrowBtnEnable: { background: 'rgb(52 63 70 / 47%)' },
+    arrowBtnEnable: { background: 'rgb(52 63 70)' },
   };
 
   return (
