@@ -28,20 +28,15 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 	useEffect(
 		() =>
 			VideoConfManager.on('call/join', (props) => {
-				const windowMaybeDesktop = window as WindowMaybeDesktop;
-				if (windowMaybeDesktop.RocketChatDesktop?.openInternalVideoChatWindow) {
-					windowMaybeDesktop.RocketChatDesktop.openInternalVideoChatWindow(props.url, undefined);
-				} else {
-					const open = (): void => {
-						setVideoConf({
-							show: true,
-							url: props.url,
-							onConfirm: open,
-							callId: props.callId,
-						});
-					};
-					open();
-				}
+				const open = (): void => {
+					setVideoConf({
+						show: true,
+						url: props.url,
+						onConfirm: open,
+						callId: props.callId,
+					});
+				};
+				open();
 			}),
 		[],
 	);
