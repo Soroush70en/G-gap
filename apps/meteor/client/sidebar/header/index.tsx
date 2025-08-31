@@ -3,10 +3,10 @@ import { Sidebar, Box, TextInput, Icon } from '@rocket.chat/fuselage';
 import { useTranslation } from '@rocket.chat/ui-contexts';
 import type { ReactElement } from 'react';
 import React, { memo, useEffect, useRef, useState, useCallback } from 'react';
-
+import '../rail/left-rail.css'
 import SearchList from '../search/SearchList';
 
-type RoomTab = 'all' | 'direct' | 'groups' | 'channels' | 'teams';
+type RoomTab = 'all' | 'direct' | 'channels' | 'teams';
 
 const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="11.5" cy="11.5" r="9.5" stroke="#596C78" stroke-width="1.5"/>
@@ -16,7 +16,6 @@ const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="
 const TABS: { id: RoomTab; label: string }[] = [
   { id: 'all', label: 'All' },
   { id: 'direct', label: 'Direct_Messages' },
-  { id: 'groups', label: 'Private_Groups' },
   { id: 'channels', label: 'Channels' },
   { id: 'teams', label: 'Teams' },
 ];
@@ -24,8 +23,33 @@ const TABS: { id: RoomTab; label: string }[] = [
 /* ---------- helpers: RTL-safe scroll (بدون هوک بیرون کامپوننت) ---------- */
 type RtlScrollType = 'default' | 'negative' | 'reverse';
 
+// function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
+//   if (!dirIsRtl) return 'default';
+//   const outer = document.createElement('div');
+//   outer.style.width = '100px';
+//   outer.style.height = '50px';
+//   outer.style.overflow = 'scroll';
+//   outer.style.direction = 'rtl';
+
+//   const inner = document.createElement('div');
+//   inner.style.width = '200px';
+//   inner.style.height = '1px';
+//   outer.appendChild(inner);
+//   document.body.appendChild(outer);
+
+//   let mode: RtlScrollType;
+//   outer.scrollLeft = 0;
+//   if (outer.scrollLeft > 0) {
+//     mode = 'default';
+//   } else {
+//     outer.scrollLeft = 1;
+//     mode = outer.scrollLeft === 0 ? 'negative' : 'reverse';
+//   }
+
+//   document.body.removeChild(outer);
+//   return mode;
+// }
 function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
-  // برای LTR اصلاً مهم نیست
   if (!dirIsRtl) return 'default';
 
   const outer = document.createElement('div');
@@ -38,20 +62,29 @@ function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
   inner.style.width = '200px';
   inner.style.height = '1px';
   outer.appendChild(inner);
+
   document.body.appendChild(outer);
 
-  let mode: RtlScrollType;
-  outer.scrollLeft = 0;
-  if (outer.scrollLeft > 0) {
-    mode = 'default';
-  } else {
-    outer.scrollLeft = 1;
-    mode = outer.scrollLeft === 0 ? 'negative' : 'reverse';
+  try {
+    let mode: RtlScrollType;
+    outer.scrollLeft = 0;
+    if (outer.scrollLeft > 0) {
+      mode = 'default';
+    } else {
+      outer.scrollLeft = 1;
+      mode = outer.scrollLeft === 0 ? 'negative' : 'reverse';
+    }
+    return mode;
+  } finally {
+    // حذف ایمن بدون وابستگی به parent
+    if ((outer as any).remove) {
+      (outer as any).remove();
+    } else if (outer.parentNode) {
+      try { outer.parentNode.removeChild(outer); } catch {}
+    }
   }
-
-  document.body.removeChild(outer);
-  return mode;
 }
+
 
 function getNormalizedPos(el: HTMLDivElement, rtl: boolean, rtlMode: RtlScrollType) {
   const max = Math.max(0, el.scrollWidth - el.clientWidth);
@@ -134,13 +167,36 @@ const HeaderWithData = (): ReactElement => {
     if (!searchOpen && query.trim().length > 0) setSearchOpen(true);
   }, [query, searchOpen]);
 
-  // دریافت کانت‌ها از RoomList
-  const [counts, setCounts] = useState<Partial<Record<RoomTab, number>>>({});
+  // --- فقط unread هر تب را نگه می‌داریم ---
+  // ورودی می‌تواند:
+  //   counts = { tab: number }
+  //   یا counts = { tab: { total, unread } } / { unreadCount }
+  // در همه حالات، ما فقط unread را ذخیره می‌کنیم.
+  const [unreadCounts, setUnreadCounts] = useState<Partial<Record<RoomTab, number>>>({});
+
   useEffect(() => {
-    const onCounts = (e: Event) => setCounts((e as CustomEvent).detail || {});
+    const normalizeUnread = (v: any): number => {
+      if (typeof v === 'number') return Math.max(0, v | 0);
+      if (v && typeof v === 'object') {
+        if (typeof v.unread === 'number') return Math.max(0, v.unread | 0);
+        if (typeof v.unreadCount === 'number') return Math.max(0, v.unreadCount | 0);
+        // اگر فقط total داشت، ما 0 در نظر می‌گیریم چون unread تعریف نشده
+        return 0;
+      }
+      return 0;
+    };
+
+    const onCounts = (e: Event) => {
+      const detail: any = (e as CustomEvent).detail || {};
+      const next: Partial<Record<RoomTab, number>> = {};
+      for (const tb of TABS) {
+        next[tb.id] = normalizeUnread(detail[tb.id]);
+      }
+      setUnreadCounts(next);
+    };
+
     window.addEventListener('sidebar:counts', onCounts as EventListener);
-    return () =>
-      window.removeEventListener('sidebar:counts', onCounts as EventListener);
+    return () => window.removeEventListener('sidebar:counts', onCounts as EventListener);
   }, []);
 
   // ارسال query و tab به RoomList
@@ -163,7 +219,6 @@ const HeaderWithData = (): ReactElement => {
     setCanRight(pos > 2);
   }, [isRtl, rtlMode]);
 
-  // ریست پوزیشن و آپدیت فلش‌ها هنگام mount و تغییر RTL
   useEffect(() => {
     const el = trackRef.current;
     if (!el) return;
@@ -230,7 +285,6 @@ const HeaderWithData = (): ReactElement => {
     };
   }, []);
 
-  // پالت رنگ تب‌ها بر اساس تم
   const palette = isDark
     ? { tab: '#8D9FAA', tabActive: '#FFFFFF', borderBottom: '#50ADE7' }
     : { tab: '#596C78', tabActive: '#161B1D', borderBottom: '#2096E0' };
@@ -246,7 +300,6 @@ const HeaderWithData = (): ReactElement => {
       scrollBehavior: 'smooth',
       msOverflowStyle: 'none' as any,
       borderBottom: '1px solid var(--stroke-default, #343F46)',
-      
     },
     item: {
       display: 'inline-flex',
@@ -264,7 +317,7 @@ const HeaderWithData = (): ReactElement => {
       borderBottomColor: 'transparent',
       transition: 'background .12s, color .12s, border-color .12s',
     },
-    itemActive: { color: palette.tabActive, borderBottomColor: palette.borderBottom },
+    itemActive: { borderBottomColor: palette.borderBottom },
     itemNotActive: { borderBottomColor: 'transparent' },
     badge: {
       minWidth: 22,
@@ -277,6 +330,7 @@ const HeaderWithData = (): ReactElement => {
       color: '#fff',
       background: '#2f7dff',
       marginInlineStart: 0,
+      display: 'inline-block',
     },
     arrowLeft: {
       position: 'absolute',
@@ -366,6 +420,7 @@ const HeaderWithData = (): ReactElement => {
         <Box width="full" pi="x12" pb="x8">
           <TextInput
             ref={inputRef}
+            className="gg-search-input"
             style={{
               ...S.wrap,
               backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`,
@@ -388,9 +443,9 @@ const HeaderWithData = (): ReactElement => {
 
       <Sidebar.TopBar.Section>
         <div style={S.wrap}>
-          <div style={{ ...isRtl?S.arrowLeft:S.arrowRight, ...(canLeft ? S.arrowBtnEnable : {}) }}>
+          <div className={canLeft ?  'arrowBtnEnable' : ''} style={{ ...isRtl?S.arrowLeft:S.arrowRight }}>
             <button
-              className="gg-arrow-btn"
+              className={`gg-arrow-btn ${canLeft ? 'is-enabled' : ''}`}
               style={{ ...S.arrowBtn, ...(canLeft ? {} : S.arrowBtnDisabled) }}
               onClick={() => scrollVisual('left')}
               disabled={!canLeft}
@@ -408,7 +463,7 @@ const HeaderWithData = (): ReactElement => {
           >
             {TABS.map((tb) => {
               const active = tb.id === tab;
-              const count = counts[tb.id] ?? 0;
+              const unread = unreadCounts[tb.id] ?? 0;
               return (
                 <button
                   key={tb.id}
@@ -416,17 +471,20 @@ const HeaderWithData = (): ReactElement => {
                   style={{ ...S.item, ...(active ? S.itemActive : S.itemNotActive) }}
                   onClick={() => setTab(tb.id)}
                   type="button"
+                  aria-label={`${t(tb.label as any)}${unread > 0 ? ` (${unread} ${t('Unread' as any)})` : ''}`}
                 >
                   <span>{t(tb.label as any)}</span>
-                  <span style={S.badge}>{count}</span>
+                  {unread > 0 && (
+                    <span className="gg-badge" style={S.badge}>{unread}</span>
+                  )}
                 </button>
               );
             })}
           </div>
 
-          <div style={{ ...isRtl ?S.arrowRight:S.arrowLeft, ...(canRight ? S.arrowBtnEnable : {}) }}>
+          <div className={canRight ?  'arrowBtnEnable' : ''} style={{ ...isRtl ?S.arrowRight:S.arrowLeft }}>
             <button
-              className="gg-arrow-btn"
+              className={`gg-arrow-btn ${canRight ? 'is-enabled' : ''}`}
               style={{ ...S.arrowBtn, ...(canRight ? {} : S.arrowBtnDisabled) }}
               onClick={() => scrollVisual('right')}
               disabled={!canRight}

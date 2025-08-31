@@ -60,9 +60,9 @@ const StartChat = () => {
 
   return (
     <div className="start-chat-container">
-      <Box fontScale="h2" style={{ marginBottom: '10px' }}>
+      {/* <Box fontScale="h2" style={{ marginBottom: '10px' }}>
         {t('start_chat_heading')}
-      </Box>
+      </Box> */}
       <Button primary size="lg" className="start-chat-button" onClick={openStartChatModal}>
         {t('start_chat_cta')}
       </Button>
