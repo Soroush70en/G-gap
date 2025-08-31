@@ -276,7 +276,7 @@ const HeaderWithData = (): ReactElement => {
       textAlign: 'center',
       color: '#fff',
       background: '#2f7dff',
-      marginInlineStart: 8,
+      marginInlineStart: 0,
     },
     arrowLeft: {
       position: 'absolute',

@@ -30,20 +30,21 @@ const StartChatModal: FC<{ onClose: () => void }> = ({ onClose }) => {
 
       <Modal.Content>
         <Box is="ul" m={0} p={0} style={{ listStyle: 'none' }}>
-          <Option onClick={openCreateChannel}>
-            <OptionIcon name="hash" />
-            <OptionContent>{t('start_chat_modal_channel')}</OptionContent>
+        <Option onClick={openCreateDM}>
+            <OptionIcon name="balloon" />
+            <OptionContent>{t('start_chat_modal_direct_messages')}</OptionContent>
           </Option>
 
-          <Option onClick={openCreateTeam}>
+         <Option onClick={openCreateTeam}>
             <OptionIcon name="list" />
             <OptionContent>{t('start_chat_modal_team')}</OptionContent>
           </Option>
 
-          <Option onClick={openCreateDM}>
-            <OptionIcon name="balloon" />
-            <OptionContent>{t('start_chat_modal_direct_messages')}</OptionContent>
+          <Option onClick={openCreateChannel}>
+            <OptionIcon name="hash" />
+            <OptionContent>{t('start_chat_modal_channel')}</OptionContent>
           </Option>
+         
         </Box>
       </Modal.Content>
     </Modal>
