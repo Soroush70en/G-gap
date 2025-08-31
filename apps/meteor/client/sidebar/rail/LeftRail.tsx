@@ -71,13 +71,49 @@ export default function LeftRail() {
   const t = useTranslation();
   const isMobile = () => window.matchMedia('(max-width:768px)').matches;
 
+  // const closeMobileRail = () => {
+  //   if (!isMobile()) return;
+  
+  //   // کلاس‌هایی که ریل رو باز نگه میدارن
+  //   document.documentElement.classList.remove('rail-open', 'gg-rail-open', 'menu-open');
+  
+  //   // پاک کردن استایل‌های احتمالی
+  //   document.body.style.overflow = '';
+  //   document.body.style.filter = '';
+  //   (document.body.style as any).backdropFilter = '';
+  //   document.body.style.pointerEvents = '';
+  
+  //   const app = document.getElementById('rocket-chat');
+  //   if (app) {
+  //     app.style.filter = '';
+  //     (app.style as any).backdropFilter = '';
+  //     app.style.pointerEvents = '';
+  //   }
+  
+  //   // حذف بک‌دراپ‌های تزریق‌شده
+  //   document.querySelectorAll(
+  //     [
+  //       '.gg-backdrop',
+  //       '.rcx-backdrop',
+  //       '.rcx-sidebar-overlay',
+  //       '.rcx-sidebar__overlay',
+  //       '[data-overlay="sidebar"]',
+  //       '.rcx-portal .rcx-backdrop',
+  //       '.rcx-css-hy65ai.opened',   
+  //     ].join(','),
+  //   ).forEach((el) => el.parentElement?.removeChild(el));
+  
+  //   // ری‌فلو برای محو شدن pseudo-elementها
+  //   void document.documentElement.offsetHeight;
+  // };
+  
   const closeMobileRail = () => {
     if (!isMobile()) return;
   
-    // کلاس‌هایی که ریل رو باز نگه میدارن
+    // کلاس‌هایی که خودت اضافه می‌کنی
     document.documentElement.classList.remove('rail-open', 'gg-rail-open', 'menu-open');
   
-    // پاک کردن استایل‌های احتمالی
+    // پاک کردن استایل‌های تزریقی خودت
     document.body.style.overflow = '';
     document.body.style.filter = '';
     (document.body.style as any).backdropFilter = '';
@@ -90,18 +126,29 @@ export default function LeftRail() {
       app.style.pointerEvents = '';
     }
   
-    // حذف بک‌دراپ‌های تزریق‌شده
-    document.querySelectorAll(
-      [
-        '.gg-backdrop',
-        '.rcx-backdrop',
-        '.rcx-sidebar-overlay',
-        '.rcx-sidebar__overlay',
-        '[data-overlay="sidebar"]',
-        '.rcx-portal .rcx-backdrop',
-        '.rcx-css-hy65ai.opened',   
-      ].join(','),
-    ).forEach((el) => el.parentElement?.removeChild(el));
+    // فقط نودهایی که خودت ساختی رو حذف کن
+    // حتماً برای آیتم‌های تزریقی خودت یک data-attr بگذار (مثلاً data-gg-injected="1")
+    const safeRemove = (el: Element) => {
+      try {
+        // اگر remove وجود داشته باشه، امن‌ترین راه همینه
+        if (typeof (el as any).remove === 'function') {
+          (el as any).remove();
+        } else if (el.parentNode) {
+          el.parentNode.removeChild(el);
+        }
+      } catch {
+        // نادیده بگیر؛ هدف جلوگیری از throw هست
+      }
+    };
+  
+    document.querySelectorAll('[data-gg-injected="1"], .gg-backdrop').forEach(safeRemove);
+  
+    // 🚫 این‌ها را حذف نکن؛ متعلق به Rocket.Chat هستند و React خودش مدیریت می‌کند:
+    // '.rcx-backdrop', '.rcx-sidebar-overlay', '.rcx-sidebar__overlay', '[data-overlay="sidebar"]', '.rcx-portal .rcx-backdrop', '.rcx-css-hy65ai.opened'
+  
+    // اگر مجبور شدی نمایشی مخفی‌شون کنی، فقط display رو تغییر بده، حذف نکن:
+    // document.querySelectorAll('.rcx-backdrop, .rcx-sidebar-overlay, ...')
+    //   .forEach(el => (el as HTMLElement).style.display = 'none');
   
     // ری‌فلو برای محو شدن pseudo-elementها
     void document.documentElement.offsetHeight;
@@ -137,7 +184,7 @@ export default function LeftRail() {
         isActive: () => location.pathname.startsWith('/directory'),
         disabled:false,
       },
-      {
+     /* {
         id: 'meet',
         label: t('gg_rail_meet'),
         renderIcon: () => <MeetIcon />,
@@ -146,15 +193,15 @@ export default function LeftRail() {
         },
         isActive: () => location.pathname.includes('video') || location.pathname.startsWith('/meet'),
         disabled: true,
-      },
+      },*/
       {
         id: 'ai',
         label: t('gg_rail_ai'),
         renderIcon: () => <AiIcon />,
         click: () => {
-          go('/direct/AIBot');
+          go('/direct/HooshyarAI');
         },
-        isActive: () => location.pathname.startsWith('/direct/D9NtG'), // مسیر ربات هوش
+        isActive: () => location.pathname.startsWith('/direct/PXRyQ'), // مسیر ربات هوش
         disabled:false,
       },
     ],

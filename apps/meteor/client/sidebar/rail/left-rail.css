@@ -128,6 +128,79 @@ hr.rcx-box.rcx-box--full.rcx-sidebar--divider.rcx-divider.rcx-css-oz39hi
 {
   display: none ;
 }
+
+/* ---- متغیرهای پایه متصل به توکن‌های Fuselage ---- */
+:root {
+  --gg-tab: var(--rcx-color-foreground-hint, #8D9FAA);
+  --gg-tab-active: var(--rcx-color-foreground, #161B1D);
+  --gg-tab-active-dark: var(--rcx-color-foreground, #fff);
+  --gg-tab-border: var(--rcx-color-primary, #50ADE7);
+  --gg-stroke: var(--rcx-color-stroke, #343F46);
+  --gg-badge-bg: var(--rcx-color-primary, #2f7dff);
+  --gg-badge-fg: var(--rcx-color-button-primary-contrast, #fff);
+  --gg-arrow-fg: var(--rcx-color-foreground, #fff);
+  --gg-arrow-bg: var(--rcx-color-surface-hover, rgb(52 63 70));
+  --gg-search-fg: var(--rcx-color-foreground-hint, #8D9FAA);
+}
+.arrowBtnEnable { background: var(--gg-arrow-bg) !important }
+/* اگر تم با کلاس/اتریبیوت ست می‌شود، همین‌ها کافی‌ست چون توکن‌ها خودشان عوض می‌شوند */
+
+/* ---- تب‌ها ---- */
+.gg-tabs-track {
+  border-bottom: 1px solid var(--gg-stroke);
+}
+.gg-tab {
+  color: var(--gg-tab);
+  border-bottom-color: transparent !important;
+}
+.gg-tab.is-active {
+  color: var(--gg-tab-active) !important;
+  border-bottom-color: var(--gg-tab-border) !important;
+}
+
+/* ---- بج‌ها ---- */
+.gg-badge {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+  color: var(--gg-badge-fg);
+  background: var(--gg-badge-bg);
+  margin-inline-start: 0;
+}
+
+/* ---- فلش‌ها ---- */
+.gg-arrow-btn {
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--gg-arrow-fg);
+}
+.gg-arrow-btn.is-enabled {
+  background: var(--gg-arrow-bg);
+}
+.gg-arrow-btn[disabled] {
+  opacity: .35;
+  cursor: default;
+}
+
+/* ---- سرچ ---- */
+.gg-search {
+  color: var(--gg-search-fg);
+}
+.gg-search .rcx-input__addon {
+  color: var(--gg-search-fg); /* آیکن magnifier هم‌رنگ شود */
+}
+
 body.theme-dark {
   /* هاور */
   #gg-left-rail .gg-rail-btn:hover {
@@ -135,7 +208,10 @@ body.theme-dark {
     color: var(--rcx-color-font-default, #2f343d);
     transform: translateY(-1px);
   }
-
+  .gg-tab.is-active {
+    color: var(--gg-tab-active-dark) !important;
+    border-bottom-color: var(--gg-tab-border) !important;
+  }
   /* فعال */
   #gg-left-rail .gg-rail-btn.active {
     /* background: var(--rcx-color-surface-selected, rgba(29, 116, 245, .12)); */

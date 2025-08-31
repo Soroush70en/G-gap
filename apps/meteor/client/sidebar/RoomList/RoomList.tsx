@@ -20,12 +20,21 @@ type RoomTab = 'all' | 'direct' | 'groups' | 'channels' | 'teams';
 const computeItemKey = (index: number, room: ISubscription & IRoom): IRoom['_id'] | number => room._id || index;
 
 /* ---------------- helpers ---------------- */
-
+const getUnread = (r: ISubscription & IRoom): number => {
+  const any = r as any;
+  // رایج‌ترین فیلد راکت‌چت
+  if (typeof any.unread === 'number') return Math.max(0, any.unread);
+  // اگر فقط بولین alert داشت، یعنی unread>0 اما عدد نداریم → 1 حساب کن (یا 0 بگذار اگر عدد دقیق می‌خواهی)
+  if (any.unreadAlert === true || any.alert === true) return 1;
+  // در برخی تنظیمات thread-unread به‌صورت آرایه می‌آید
+  if (Array.isArray(any.tunread)) return any.tunread.length | 0;
+  return 0;
+};
 // یک دسته‌بندی «منحصر به فرد» برای هر اتاق برمی‌گرداند تا دابل کانت نشود
 const exclusiveCategoryOf = (r: ISubscription & IRoom): RoomTab | null => {
   // فقط همین انواع را لحاظ کنیم؛ سایر انواع (مثل livechat و ...) کنار گذاشته شوند
   if (r.t === 'd') return 'direct';
-  if (r.teamMain) return 'teams'; // تیم‌ها اولویت دارند تا توی groups/channels دوباره شمرده نشوند
+  if (r.teamMain) return 'teams'; // گروه‌ها اولویت دارند تا توی groups/channels دوباره شمرده نشوند
   if (r.t === 'c') return 'channels';
   if (r.t === 'p') return 'groups';
   return null;
@@ -42,25 +51,49 @@ const applyQuery = (items: Array<ISubscription & IRoom>, query: string) => {
   return items.filter((room) => room.name?.toLowerCase().includes(q));
 };
 
-const computeCountsExclusive = (items: Array<ISubscription & IRoom>, query: string) => {
-  // اول سرچ، بعد دسته‌بندی انحصاری
+// const computeCountsExclusive = (items: Array<ISubscription & IRoom>, query: string) => {
+
+//   // اول سرچ، بعد دسته‌بندی انحصاری
+//   const filteredByQuery = applyQuery(items, query);
+//   const base = filteredByQuery.filter((r) => exclusiveCategoryOf(r) !== null);
+
+//   const direct = base.filter((r) => exclusiveCategoryOf(r) === 'direct').length;
+//   const teams = base.filter((r) => exclusiveCategoryOf(r) === 'teams').length;
+//   const channels = base.filter((r) => exclusiveCategoryOf(r) === 'channels').length;
+//   const groups = base.filter((r) => exclusiveCategoryOf(r) === 'groups').length;
+
+//   return {
+//     all: base.length,
+//     direct,
+//     groups,
+//     channels,
+//     teams,
+//   } as Partial<Record<RoomTab, number>>;
+// };
+/* ----------------------------------------- */
+
+// این تابع قبلی را حذف/کامنت کن:
+// const computeCountsExclusive = (...)
+
+const computeUnreadCountsExclusive = (items: Array<ISubscription & IRoom>, query: string) => {
+  // اول سرچ، بعد دسته‌بندی انحصاری (مانند قبل)
   const filteredByQuery = applyQuery(items, query);
   const base = filteredByQuery.filter((r) => exclusiveCategoryOf(r) !== null);
 
-  const direct = base.filter((r) => exclusiveCategoryOf(r) === 'direct').length;
-  const teams = base.filter((r) => exclusiveCategoryOf(r) === 'teams').length;
-  const channels = base.filter((r) => exclusiveCategoryOf(r) === 'channels').length;
-  const groups = base.filter((r) => exclusiveCategoryOf(r) === 'groups').length;
+  const sum = (arr: Array<ISubscription & IRoom>, tab?: RoomTab) =>
+    arr
+      .filter((r) => (tab ? exclusiveCategoryOf(r) === tab : true))
+      .reduce((acc, r) => acc + getUnread(r), 0);
 
-  return {
-    all: base.length,
-    direct,
-    groups,
-    channels,
-    teams,
-  } as Partial<Record<RoomTab, number>>;
+  const all = sum(base);
+  const direct = sum(base, 'direct');
+  const teams = sum(base, 'teams');
+  const channels = sum(base, 'channels');
+  const groups = sum(base, 'groups');
+
+  // خروجی اعدادِ unread هر تب است
+  return { all, direct, groups, channels, teams } as Partial<Record<RoomTab, number>>;
 };
-/* ----------------------------------------- */
 
 const RoomList = (): ReactElement => {
   const t = useTranslation();
@@ -93,7 +126,7 @@ const RoomList = (): ReactElement => {
     const byQuery = applyQuery(byTab, query);
     setFilteredRooms(byQuery);
 
-    const c = computeCountsExclusive(base, query);
+    const c = computeUnreadCountsExclusive(base, query);
     setCounts(c);
     window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
   }, [roomsList]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -109,7 +142,7 @@ const RoomList = (): ReactElement => {
       const byQuery = applyQuery(byTab, query);
       setFilteredRooms(byQuery);
 
-      const c = computeCountsExclusive(base, query);
+      const c = computeUnreadCountsExclusive(base, query);
       setCounts(c);
       window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
     };
@@ -126,7 +159,7 @@ const RoomList = (): ReactElement => {
     const byQuery = applyQuery(byTab, query);
     setFilteredRooms(byQuery);
 
-    const c = computeCountsExclusive(base, query);
+    const c = computeUnreadCountsExclusive(base, query);
     setCounts(c);
     window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
   }, [filterState.query]); // eslint-disable-line react-hooks/exhaustive-deps
