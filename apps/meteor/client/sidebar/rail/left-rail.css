@@ -38,7 +38,7 @@
 
 
 /* بخش‌ها داخل ریل */
-#gg-left-rail .gg-rail-top{ padding: 12px 0 8px; }
+#gg-left-rail .gg-rail-top{ padding: 28px 0 8px; }
 #gg-left-rail .gg-rail-nav{
   display: flex; flex-direction: column; gap: 8px;
   width: 100%; padding: 8px 0;
@@ -78,14 +78,14 @@
 /* آیکن و لیبل */
 #gg-left-rail .gg-rail-btn svg{ width:24px; height:24px; fill: currentColor; }
 #gg-left-rail .gg-rail-label{
-  width:100%; text-align:center; font-size:11px; line-height:1; white-space:nowrap; direction:rtl;text-wrap: auto;
+  width:100%; text-align:center; font-size:12px; line-height:1; white-space:nowrap; direction:rtl;text-wrap: auto;
 }
 
 /* آیکون‌ها یکدست و وسط‌چین */
 #gg-left-rail .gg-rail-btn .gg-rail-icon{
   display: inline-flex; align-items: center; justify-content: center;
   width: 24px; height: 24px;
-  margin-inline-end: 8px;
+  margin-inline-end: 0px;
 }
 #gg-left-rail .gg-rail-btn .gg-rail-icon svg{
   width: 24px; height: 24px; display: block; color: currentColor;

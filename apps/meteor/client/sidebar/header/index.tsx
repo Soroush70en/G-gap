@@ -288,26 +288,161 @@ const HeaderWithData = (): ReactElement => {
   const palette = isDark
     ? { tab: '#8D9FAA', tabActive: '#FFFFFF', borderBottom: '#50ADE7' }
     : { tab: '#596C78', tabActive: '#161B1D', borderBottom: '#2096E0' };
-
-  const S: Record<string, React.CSSProperties> = {
-    wrap: { position: 'relative', width: '100%' },
-    track: {
-      direction: (isRtl ? 'rtl' : 'ltr') as any,
-      display: 'flex',
-      gap: 16,
-      overflowX: 'auto',
-      padding: '0px 0',
-      scrollBehavior: 'smooth',
-      msOverflowStyle: 'none' as any,
-      borderBottom: '1px solid var(--stroke-default, #343F46)',
-    },
+   // ثابت‌ها
+    const MIN_TAB_GAP = 16;     // حداقل فاصله بین تب‌ها
+    const ARROW_GUTTER = 28;    // فاصله ثابت از فلش‌ها
+    const PAD_X_MIN = 14;       // حداقل padding-inline هر تب (px)
+    const PAD_X_MAX = 32;       // حداکثر padding-inline هر تب (px)
+    // داخل HeaderWithData
+    const [padX, setPadX] = useState(PAD_X_MIN);
+    const [gapPx, setGapPx] = useState(MIN_TAB_GAP);
+    const [spreadEvenly, setSpreadEvenly] = useState(false);
+    
+    const recomputeGap = useCallback(() => {
+      const track = trackRef.current;
+      if (!track) return;
+    
+      const items = Array.from(track.children) as HTMLElement[];
+      if (!items.length) return;
+    
+      const itemsTotal = items.reduce((s, el) => s + el.offsetWidth, 0);
+    
+      const cs = getComputedStyle(track);
+      const padL = parseFloat(cs.paddingLeft) || 0;
+      const padR = parseFloat(cs.paddingRight) || 0;
+      const containerInner = track.clientWidth - padL - padR;
+    
+      const nGaps = Math.max(0, items.length - 1);
+      const minNeeded = itemsTotal + nGaps * MIN_TAB_GAP;
+    
+      if (containerInner >= minNeeded && nGaps > 0) {
+        // حداقل گپ ثابت بماند، پخش یکنواخت را به Flex بسپار
+        setGapPx(MIN_TAB_GAP);
+        setSpreadEvenly(true);
+      } else {
+        setGapPx(MIN_TAB_GAP);
+        setSpreadEvenly(false);
+      }
+    
+      requestAnimationFrame(updateArrows);
+    }, [updateArrows]);
+    
+    const recomputeLayout = useCallback(() => {
+      const track = trackRef.current;
+      if (!track) return;
+    
+      const items = Array.from(track.children) as HTMLElement[];
+      if (!items.length) return;
+    
+      // پهنای قابل مصرف بدون padding ترک
+      const cs = getComputedStyle(track);
+      const padL = parseFloat(cs.paddingLeft) || 0;
+      const padR = parseFloat(cs.paddingRight) || 0;
+      const containerInner = track.clientWidth - padL - padR;
+    
+      // محاسبه‌ی عرض «محتوای خالص» هر تب (بدون padding فعلی)
+      let contentTotal = 0;
+      for (const el of items) {
+        const c = getComputedStyle(el);
+        const pl = parseFloat(c.paddingLeft) || 0;
+        const pr = parseFloat(c.paddingRight) || 0;
+        contentTotal += Math.max(0, el.offsetWidth - pl - pr);
+      }
+    
+      const n = items.length;
+      const nGaps = Math.max(0, n - 1);
+    
+      // حداقل عرض لازم با حداقل padding و حداقل gap
+      const minNeeded = contentTotal + (2 * PAD_X_MIN * n) + (MIN_TAB_GAP * nGaps);
+    
+      if (containerInner <= minNeeded || nGaps === 0) {
+        // جا نداریم: برگرد به حداقل‌ها
+        setPadX(PAD_X_MIN);
+        setGapPx(MIN_TAB_GAP);
+        setSpreadEvenly(false);
+        requestAnimationFrame(updateArrows);
+        return;
+      }
+    
+      // اضافه‌فضا
+      let extra = containerInner - minNeeded;
+    
+      // 1) اول padding تب‌ها را زیاد می‌کنیم تا سقف PAD_X_MAX
+      const maxExtraPadTotal = (PAD_X_MAX - PAD_X_MIN) * 2 * n; // دو طرف هر تب
+      const addToPadTotal = Math.min(extra, maxExtraPadTotal);
+      const addToPadEachSide = addToPadTotal / (2 * n);
+      const nextPadX = Math.min(PAD_X_MAX, PAD_X_MIN + addToPadEachSide);
+      setPadX(nextPadX);
+      extra -= addToPadTotal;
+    
+      // 2) اگر هنوز فضا داریم، فاصله‌ها را به‌صورت یکنواخت پخش کنیم
+      if (extra > 0) {
+        setGapPx(MIN_TAB_GAP);       // حداقل گپ حفظ می‌شود
+        setSpreadEvenly(true);       // Flex فضای باقی‌مانده را پخش می‌کند
+      } else {
+        setGapPx(MIN_TAB_GAP);
+        setSpreadEvenly(false);
+      }
+    
+      requestAnimationFrame(updateArrows);
+    }, [updateArrows]);
+    
+    useEffect(() => {
+      const raf = requestAnimationFrame(() => recomputeLayout());
+      const onResize = () => recomputeLayout();
+      window.addEventListener('resize', onResize);
+      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
+    }, [recomputeLayout]);
+    
+    useEffect(() => {
+      requestAnimationFrame(recomputeLayout);
+    }, [isRtl, rtlMode, isDark, query, t, recomputeLayout]);
+    
+    // هرجا اندازه عوض می‌شود، گپ را دوباره محاسبه کن
+    useEffect(() => {
+      recomputeGap();
+      const onResize = () => recomputeGap();
+      window.addEventListener('resize', onResize);
+      return () => window.removeEventListener('resize', onResize);
+    }, [recomputeGap]);
+    
+    // وقتی تب/ترجمه/فونت/تم عوض شد هم یکبار محاسبه کن
+    useEffect(() => {
+      // یک‌بار بعد از اولین پینت و یک‌بار بعد از load
+      const raf1 = requestAnimationFrame(() => {
+        const raf2 = requestAnimationFrame(recomputeGap);
+      });
+      const onLoad = () => recomputeGap();
+      window.addEventListener('load', onLoad);
+    
+      return () => {
+        cancelAnimationFrame(raf1);
+        window.removeEventListener('load', onLoad);
+      };
+    }, [recomputeGap]);
+    
+    const S: Record<string, React.CSSProperties> = {
+      wrap: { position: 'relative', width: '100%' },
+      track: {
+        direction: (isRtl ? 'rtl' : 'ltr') as any,
+        display: 'flex',
+        gap: gapPx,
+        overflowX: 'auto',
+        paddingInline: ARROW_GUTTER,
+        scrollBehavior: 'smooth',
+        msOverflowStyle: 'none' as any,
+        borderBottom: '1px solid var(--stroke-default, #343F46)',
+        justifyContent: spreadEvenly ? 'space-between' : 'flex-start',
+        flexWrap: 'nowrap',
+      },
     item: {
+      flex: '0 0 auto',
       display: 'inline-flex',
       alignItems: 'center',
       gap: 8,
-      padding: '8px 14px',
+      padding: `8px ${padX}px`,   // ← پدینگ افقی اکنون داینامیک است
       borderRadius: 0,
-      fontSize: 12,
+      fontSize: 14,
       color: palette.tab,
       whiteSpace: 'nowrap',
       cursor: 'pointer',
