@@ -460,7 +460,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 	private notifyUserAfterAdd(
 		userId: IUser['_id'],
 		action: string,
-		params: { uid: IUser['_id']; callId: VideoConference['_id']; type: string; name: IUser['name']; callerId: IUser['_id'] },
+		params: { uid: IUser['_id']; callId: VideoConference['_id']; type: string; name: IUser['name']; callerId: IUser['_id']; rid: string },
 	): void {
 		api.broadcast('user.video-conference', { userId, action, params });
 	}
@@ -1008,6 +1008,7 @@ export class VideoConfService extends ServiceClassInternal implements IVideoConf
 			username: currentUser.username,
 			name: currentUser.name,
 			callerId: currentUser._id,
+			rid: call.rid,
 		};
 		this.notifyUserAfterAdd(_id, 'join', params);
 		this.notifyVideoConfUpdate(call.rid, call._id);

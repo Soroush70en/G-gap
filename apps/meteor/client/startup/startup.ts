@@ -17,11 +17,11 @@ import { clearIncomingCall, setIncomingCall } from '../lib/incomingCallStore';
 import { dispatchToastMessage } from '../lib/toast';
 import { removeLocalUserData, synchronizeUserData } from '../lib/userData';
 import { fireGlobalEvent } from '../lib/utils/fireGlobalEvent';
+import { KonchatNotification } from '../../app/ui/client';
 
 const originalLivedataHandler = Meteor.connection._livedata_data;
 
 Meteor.connection._livedata_data = function (message) {
-
 	try {
 		if ((message as any)?.fields?.args?.length > 0) {
 			if (
@@ -37,22 +37,34 @@ Meteor.connection._livedata_data = function (message) {
 				});
 			} else if (
 				(message as any)?.fields?.args[0]?.action === 'join' &&
-				(message as any)?.fields?.args[0]?.params.uid === Meteor.userId() &&
-				(message as any)?.fields?.args[0]?.params.type === 'videoconference.add'
+				(message as any)?.fields?.args[0]?.params?.uid === Meteor.userId() &&
+				(message as any)?.fields?.args[0]?.params?.type === 'videoconference.add'
 			) {
+				const params = (message as any)?.fields?.args[0]?.params;
 				setIncomingCall({
-					callerId: (message as any)?.fields?.args[0]?.params?.callerId ?? '',
-					callerName: (message as any)?.fields?.args[0]?.params?.name ?? 'ناشناس',
-					callId: (message as any)?.fields?.args[0]?.params.callId,
-					username: (message as any)?.fields?.args[0]?.params.username,
+					callerId: params?.callerId ?? '',
+					callerName: params?.name ?? 'ناشناس',
+					callId: params.callId,
+					username: params.username,
+				});
+				KonchatNotification.notify({
+					payload: {
+						sender: {
+							username: params?.username,
+							name: params?.name,
+							_id: params?.callerId,
+						},
+						rid: params?.rid,
+					},
+					title: params?.name,
+					text: '',
 				});
 			}
 
 			if ((message as any)?.fields?.args[0]?.action === 'videoConference/declined') {
 				if ((message as any)?.fields?.args[0]?.params?.calleeId === Meteor.userId()) {
-					clearIncomingCall()
-				}
-				else if ((message as any)?.fields?.args[0]?.params?.uid === Meteor.userId()) {
+					clearIncomingCall();
+				} else if ((message as any)?.fields?.args[0]?.params?.uid === Meteor.userId()) {
 					dispatchToastMessage({
 						type: 'error',
 						message: TAPi18n.__('User_Declined_Call', {
@@ -61,8 +73,6 @@ Meteor.connection._livedata_data = function (message) {
 					});
 				}
 			}
-
-
 
 			if ((message as any)?.fields?.args[0]?.action === 'videoConference/lost') {
 				dispatchToastMessage({
