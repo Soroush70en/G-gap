@@ -78,7 +78,7 @@
 /* آیکن و لیبل */
 #gg-left-rail .gg-rail-btn svg{ width:24px; height:24px; fill: currentColor; }
 #gg-left-rail .gg-rail-label{
-  width:100%; text-align:center; font-size:12px; line-height:1; white-space:nowrap; direction:rtl;text-wrap: auto;
+  width:100%; text-align:center; font-size:12px; line-height:1; white-space:pre-wrap; direction:rtl;text-wrap: auto;
 }
 
 /* آیکون‌ها یکدست و وسط‌چین */
@@ -238,6 +238,6 @@ body.theme-dark {
   }
 }
 @media (min-width: 600px) and (max-width: 768px){
-  :root{--sidebar-width:302px !important;
+  :root{--sidebar-width:100% !important;
   }
 }
