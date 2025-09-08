@@ -39,73 +39,112 @@ export const KonchatNotification = {
 			};
 			return onClientMessageReceived(message).then(function (message) {
 				const requireInteraction = getUserPreference(Meteor.userId(), 'desktopNotificationRequireInteraction');
-				const n = new Notification(notification.title, {
-					icon: notification.icon || getUserAvatarURL(notification.payload.sender.username),
-					body: stripTags(message.msg),
-					tag: notification.payload._id,
-					canReply: true,
-					silent: true,
-					requireInteraction,
-				});
-
 				const notificationDuration = !requireInteraction && (notification.duration - 0 || 10);
-				if (notificationDuration > 0) {
-					setTimeout(() => n.close(), notificationDuration * 1000);
-				}
+				if (window.RocketChatDesktop?.send) {
+					let body;
+					let duration;
+					const username = notification.payload?.sender?.username;
+					const isCall = notification.payload?.callId;
 
-				if (notification.payload && notification.payload.rid) {
-					if (n.addEventListener) {
-						n.addEventListener('reply', ({ response }) =>
-							Meteor.call('sendMessage', {
-								_id: Random.id(),
-								rid: notification.payload.rid,
-								msg: response,
-							}),
-						);
+					if (isCall) {
+						const payloadMsg = notification.payload?.message;
+						duration = 40;
+						if (payloadMsg && payloadMsg.type === 'direct') {
+							body = 'تماس ورودی';
+						} else {
+							body = 'کنفرانس';
+						}
+					} else {
+						body = stripTags(message.msg);
+						duration = 10;
 					}
 
-					n.onclick = function () {
-						this.close();
-						window.focus();
-						switch (notification.payload.type) {
-							case 'd':
-								return FlowRouter.go(
-									'direct',
-									{
-										rid: notification.payload.rid,
-										...(notification.payload.tmid && {
-											tab: 'thread',
-											context: notification.payload.tmid,
-										}),
-									},
-									{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
-								);
-							case 'c':
-								return FlowRouter.go(
-									'channel',
-									{
-										name: notification.payload.name,
-										...(notification.payload.tmid && {
-											tab: 'thread',
-											context: notification.payload.tmid,
-										}),
-									},
-									{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
-								);
-							case 'p':
-								return FlowRouter.go(
-									'group',
-									{
-										name: notification.payload.name,
-										...(notification.payload.tmid && {
-											tab: 'thread',
-											context: notification.payload.tmid,
-										}),
-									},
-									{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
-								);
-						}
+					const baseOptions = {
+						title: notification.title,
+						body: body,
+						payload: notification.payload,
+						requireInteraction,
+						duration: duration,
 					};
+
+					if (notification.icon) {
+						window.RocketChatDesktop.send('show-notification', { ...baseOptions, icon: notification.icon });
+					} else if (username) {
+						getUserAvatarByUsername(username)
+							.then((icon) => window.RocketChatDesktop.send('show-notification', { ...baseOptions, icon }))
+							.catch(() => window.RocketChatDesktop.send('show-notification', { ...baseOptions }));
+					} else {
+						window.RocketChatDesktop.send('show-notification', baseOptions);
+					}
+				} else {
+					const n = new Notification(notification.title, {
+						icon: notification.icon || getUserAvatarURL(notification.payload.sender.username),
+						body: stripTags(message.msg),
+						tag: notification.payload._id,
+						canReply: true,
+						silent: true,
+						requireInteraction,
+					});
+
+					const notificationDuration = !requireInteraction && (notification.duration - 0 || 10);
+					if (notificationDuration > 0) {
+						setTimeout(() => n.close(), notificationDuration * 1000);
+					}
+
+					if (notification.payload && notification.payload.rid) {
+						if (n.addEventListener) {
+							n.addEventListener('reply', ({ response }) =>
+								Meteor.call('sendMessage', {
+									_id: Random.id(),
+									rid: notification.payload.rid,
+									msg: response,
+								}),
+							);
+						}
+
+						n.onclick = function () {
+							this.close();
+							window.focus();
+							switch (notification.payload.type) {
+								case 'd':
+									return FlowRouter.go(
+										'direct',
+										{
+											rid: notification.payload.rid,
+											...(notification.payload.tmid && {
+												tab: 'thread',
+												context: notification.payload.tmid,
+											}),
+										},
+										{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
+									);
+								case 'c':
+									return FlowRouter.go(
+										'channel',
+										{
+											name: notification.payload.name,
+											...(notification.payload.tmid && {
+												tab: 'thread',
+												context: notification.payload.tmid,
+											}),
+										},
+										{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
+									);
+								case 'p':
+									return FlowRouter.go(
+										'group',
+										{
+											name: notification.payload.name,
+											...(notification.payload.tmid && {
+												tab: 'thread',
+												context: notification.payload.tmid,
+											}),
+										},
+										{ ...FlowRouter.current().queryParams, jump: notification.payload._id },
+									);
+							}
+						};
+					}
 				}
 			});
 		}
@@ -190,6 +229,26 @@ export const KonchatNotification = {
 		return $(`.link-room-${rid}`).removeClass('new-room-highlight');
 	},
 };
+
+async function imageBlobToBase64(blob) {
+	return new Promise((onSuccess, onError) => {
+		try {
+			const reader = new FileReader();
+			reader.onload = function () {
+				onSuccess(this.result);
+			};
+			reader.readAsDataURL(blob);
+		} catch (e) {
+			onError(e);
+		}
+	});
+}
+
+function getUserAvatarByUsername(username) {
+	return fetch(`/api/v1/users.getAvatar?username=${encodeURIComponent(username)}`)
+		.then((res) => res.blob())
+		.then(imageBlobToBase64);
+}
 
 Meteor.startup(() => {
 	Tracker.autorun(function () {

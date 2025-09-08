@@ -54,6 +54,7 @@ Meteor.connection._livedata_data = function (message) {
 							name: params?.name,
 							_id: params?.callerId,
 						},
+						callId: params?.callId,
 						rid: params?.rid,
 					},
 					title: params?.name,
