@@ -48,6 +48,11 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 		VideoConfManager.on('direct/stopped', (params) => {
 			setOutgoing(undefined);
 		});
+		VideoConfManager.on('direct/lost', ({ callId, rid, uid }) => {
+			if (window.RocketChatDesktop && typeof window.RocketChatDesktop.on === 'function') {
+				window.RocketChatDesktop?.send('electron:call-cancelled', { callId });
+			}
+		});
 		VideoConfManager.on('calling/ended', () => {
 			setOutgoing(undefined);
 		});
