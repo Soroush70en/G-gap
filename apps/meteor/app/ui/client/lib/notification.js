@@ -43,26 +43,26 @@ export const KonchatNotification = {
 				if (window.RocketChatDesktop?.send) {
 					let body;
 					let duration;
+					let payload;
 					const username = notification.payload?.sender?.username;
 					const isCall = notification.payload?.callId;
 
 					if (isCall) {
 						const payloadMsg = notification.payload?.message;
+						const isConference = !payloadMsg || !(payloadMsg && payloadMsg.type === 'direct');
 						duration = 40;
-						if (payloadMsg && payloadMsg.type === 'direct') {
-							body = 'تماس ورودی';
-						} else {
-							body = 'کنفرانس';
-						}
+						body = isConference ? 'کنفرانس' : 'تماس ورودی';
+						payload = { isConference, ...notification.payload };
 					} else {
 						body = stripTags(message.msg);
 						duration = 10;
+						payload = notification.payload;
 					}
 
 					const baseOptions = {
 						title: notification.title,
 						body: body,
-						payload: notification.payload,
+						payload: payload,
 						requireInteraction,
 						duration: duration,
 					};

@@ -69,7 +69,7 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 				title,
 				body,
 			}: {
-				action: 'answer' | 'decline' | 'lost' | 'click' | 'reply' | 'dismiss';
+				action: 'answer' | 'decline' | 'lost' | 'declineAndReply' | 'click' | 'reply' | 'dismiss';
 				kind: 'call' | 'message';
 				payload: Payload;
 				title?: string;
@@ -83,7 +83,7 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 							clearIncomingCall();
 						}
 						goToRoomById(rid);
-					} else if (action === 'decline') {
+					} else if (action === 'decline' || action === 'declineAndReply') {
 						if (message && message.type === 'direct') {
 							VideoConfManager.rejectIncomingCall(callId);
 						} else {
