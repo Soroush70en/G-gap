@@ -90,6 +90,7 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 							clearIncomingCall();
 							VideoConfManager.declineIncomingCall(sender._id);
 						}
+						goToRoomById(rid);
 					} else if (action === 'lost') {
 						if (!message || message?.type === 'videoconference') {
 							clearIncomingCall();
