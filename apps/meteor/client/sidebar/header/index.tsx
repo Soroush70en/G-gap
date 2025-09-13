@@ -2,11 +2,18 @@
 import { Sidebar, Box, TextInput, Icon } from '@rocket.chat/fuselage';
 import { useTranslation } from '@rocket.chat/ui-contexts';
 import type { ReactElement } from 'react';
-import React, { memo, useEffect, useRef, useState, useCallback } from 'react';
-import '../rail/left-rail.css'
+import React, {
+  memo,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  useLayoutEffect,
+} from 'react';
+import '../rail/left-rail.css';
 import SearchList from '../search/SearchList';
 
-type RoomTab = 'all' | 'direct' | 'channels' | 'teams';
+type RoomTab = 'all' | 'direct' | 'channels' | 'teams' | 'favorites';
 
 const svg = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
   <circle cx="11.5" cy="11.5" r="9.5" stroke="#596C78" stroke-width="1.5"/>
@@ -18,37 +25,12 @@ const TABS: { id: RoomTab; label: string }[] = [
   { id: 'direct', label: 'Direct_Messages' },
   { id: 'channels', label: 'Channels' },
   { id: 'teams', label: 'Teams' },
+  { id: 'favorites', label: 'Favorites' },
 ];
 
-/* ---------- helpers: RTL-safe scroll (بدون هوک بیرون کامپوننت) ---------- */
+/* ---------- RTL-safe scroll helpers ---------- */
 type RtlScrollType = 'default' | 'negative' | 'reverse';
 
-// function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
-//   if (!dirIsRtl) return 'default';
-//   const outer = document.createElement('div');
-//   outer.style.width = '100px';
-//   outer.style.height = '50px';
-//   outer.style.overflow = 'scroll';
-//   outer.style.direction = 'rtl';
-
-//   const inner = document.createElement('div');
-//   inner.style.width = '200px';
-//   inner.style.height = '1px';
-//   outer.appendChild(inner);
-//   document.body.appendChild(outer);
-
-//   let mode: RtlScrollType;
-//   outer.scrollLeft = 0;
-//   if (outer.scrollLeft > 0) {
-//     mode = 'default';
-//   } else {
-//     outer.scrollLeft = 1;
-//     mode = outer.scrollLeft === 0 ? 'negative' : 'reverse';
-//   }
-
-//   document.body.removeChild(outer);
-//   return mode;
-// }
 function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
   if (!dirIsRtl) return 'default';
 
@@ -76,15 +58,14 @@ function detectRtlScrollTypeFor(dirIsRtl: boolean): RtlScrollType {
     }
     return mode;
   } finally {
-    // حذف ایمن بدون وابستگی به parent
-    if ((outer as any).remove) {
-      (outer as any).remove();
-    } else if (outer.parentNode) {
-      try { outer.parentNode.removeChild(outer); } catch {}
+    if ((outer as any).remove) (outer as any).remove();
+    else if (outer.parentNode) {
+      try {
+        outer.parentNode.removeChild(outer);
+      } catch {}
     }
   }
 }
-
 
 function getNormalizedPos(el: HTMLDivElement, rtl: boolean, rtlMode: RtlScrollType) {
   const max = Math.max(0, el.scrollWidth - el.clientWidth);
@@ -111,14 +92,13 @@ function setNormalizedPos(el: HTMLDivElement, pos: number, rtl: boolean, rtlMode
   }
   el.scrollLeft = p;
 }
-/* ------------------------------------------------------------------------ */
 
+/* ---------- Component ---------- */
 const HeaderWithData = (): ReactElement => {
   const t = useTranslation();
 
-  /********* Get Direction *************/
+  /* Direction (LTR/RTL) */
   const [isRtl, setIsRtl] = useState<boolean>(false);
-
   useEffect(() => {
     const root = document.documentElement;
     const compute = () => root.getAttribute('dir') === 'rtl';
@@ -128,13 +108,12 @@ const HeaderWithData = (): ReactElement => {
     return () => observer.disconnect();
   }, []);
 
-  // کش نوع اسکرول RTL بر اساس وضعیت فعلی
   const [rtlMode, setRtlMode] = useState<RtlScrollType>('default');
   useEffect(() => {
     setRtlMode(detectRtlScrollTypeFor(isRtl));
   }, [isRtl]);
 
-  /********* Stateهای دیگر *************/
+  /* Search */
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState<RoomTab>('all');
 
@@ -146,7 +125,6 @@ const HeaderWithData = (): ReactElement => {
 
   useEffect(() => {
     if (!searchOpen) return;
-
     const onDown = (e: MouseEvent) => {
       const wrap = searchWrapRef.current;
       if (wrap && !wrap.contains(e.target as Node)) closeSearch();
@@ -154,7 +132,6 @@ const HeaderWithData = (): ReactElement => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeSearch();
     };
-
     document.addEventListener('mousedown', onDown, true);
     document.addEventListener('keydown', onKey);
     return () => {
@@ -167,20 +144,14 @@ const HeaderWithData = (): ReactElement => {
     if (!searchOpen && query.trim().length > 0) setSearchOpen(true);
   }, [query, searchOpen]);
 
-  // --- فقط unread هر تب را نگه می‌داریم ---
-  // ورودی می‌تواند:
-  //   counts = { tab: number }
-  //   یا counts = { tab: { total, unread } } / { unreadCount }
-  // در همه حالات، ما فقط unread را ذخیره می‌کنیم.
+  /* Unread counts (normalize to just unread) */
   const [unreadCounts, setUnreadCounts] = useState<Partial<Record<RoomTab, number>>>({});
-
   useEffect(() => {
     const normalizeUnread = (v: any): number => {
       if (typeof v === 'number') return Math.max(0, v | 0);
       if (v && typeof v === 'object') {
         if (typeof v.unread === 'number') return Math.max(0, v.unread | 0);
         if (typeof v.unreadCount === 'number') return Math.max(0, v.unreadCount | 0);
-        // اگر فقط total داشت، ما 0 در نظر می‌گیریم چون unread تعریف نشده
         return 0;
       }
       return 0;
@@ -199,59 +170,120 @@ const HeaderWithData = (): ReactElement => {
     return () => window.removeEventListener('sidebar:counts', onCounts as EventListener);
   }, []);
 
-  // ارسال query و tab به RoomList
+  /* propagate filter to RoomList */
   useEffect(() => {
-    window.dispatchEvent(
-      new CustomEvent('sidebar:filter', { detail: { query, tab } }),
-    );
+    window.dispatchEvent(new CustomEvent('sidebar:filter', { detail: { query, tab } }));
   }, [query, tab]);
 
+  /* Tabs track & arrows */
   const trackRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // نگاشت تب -> ref برای scrollIntoView
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const setTabRef = (id: string) => (el: HTMLButtonElement | null) => {
+    tabRefs.current[id] = el;
+  };
+
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(false);
+  const EPS = 2; // تحمل خطای پیکسلی
 
-  const updateArrows = useCallback(() => {
+  const computeArrows = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
     const max = Math.max(0, el.scrollWidth - el.clientWidth);
     const pos = getNormalizedPos(el, isRtl, rtlMode);
-    setCanLeft(pos < max - 2);
-    setCanRight(pos > 2);
+    // pos: 0 => ابتدای لیست، max => انتهای لیست
+    // canLeft: بتوانیم به سمت "جلو" برویم (pos افزایش یابد)
+    setCanLeft(pos < max - EPS);
+    // canRight: بتوانیم به سمت "عقب" برویم (pos کاهش یابد)
+    setCanRight(pos > EPS);
+  }, [isRtl, rtlMode]);
+
+  // دی‌بونس آپدیت‌ها در راف
+  const rafId = useRef<number | null>(null);
+  const requestUpdateArrows = useCallback(() => {
+    if (rafId.current != null) cancelAnimationFrame(rafId.current);
+    rafId.current = requestAnimationFrame(() => {
+      rafId.current = null;
+      computeArrows();
+    });
+  }, [computeArrows]);
+
+  // محاسبه‌ی اولیه قبل از پینت
+  useLayoutEffect(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    setNormalizedPos(el, 0, isRtl, rtlMode);
   }, [isRtl, rtlMode]);
 
   useEffect(() => {
-    const el = trackRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      setNormalizedPos(el, 0, isRtl, rtlMode);
-      updateArrows();
-    });
-  }, [isRtl, rtlMode, updateArrows]);
+    // پس از لود فونت‌ها (اگر موجود بود) محاسبه کن
+    if ((document as any).fonts?.ready) {
+      (document as any).fonts.ready.then(() => requestUpdateArrows());
+    }
+  }, [requestUpdateArrows]);
 
+  // وقتی تب عوض شد، مطمئن شو کامل در دید است
   useEffect(() => {
-    const onResize = () => updateArrows();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [updateArrows]);
+    const el = tabRefs.current[tab];
+    if (!el) return;
+    try {
+      el.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+    } catch {
+      // fallback: هیچ
+    }
+    requestUpdateArrows();
+  }, [tab, requestUpdateArrows]);
+
+  // وقتی شمارش‌ها (عرض تب‌ها) تغییر می‌کنند
+  useEffect(() => {
+    requestUpdateArrows();
+  }, [unreadCounts, requestUpdateArrows]);
+
+  // onScroll + onResize + ResizeObserver
+  useEffect(() => {
+    const onScroll = () => requestUpdateArrows();
+    const el = trackRef.current;
+    if (el) el.addEventListener('scroll', onScroll, { passive: true });
+
+    const onWinResize = () => requestUpdateArrows();
+    window.addEventListener('resize', onWinResize);
+
+    let ro: ResizeObserver | undefined;
+    if ('ResizeObserver' in window && el) {
+      ro = new ResizeObserver(() => requestUpdateArrows());
+      ro.observe(el);
+      // همچنین محتویات داخل ترک را هم اگر لازم دیدی رصد کن:
+      Array.from(el.children).forEach((c) => ro!.observe(c as Element));
+    }
+
+    // یک بار هم بعد از mount محاسبه کن (دو راف برای اطمینان از layout پایدار)
+    requestAnimationFrame(() => requestAnimationFrame(requestUpdateArrows));
+
+    return () => {
+      if (el) el.removeEventListener('scroll', onScroll as any);
+      window.removeEventListener('resize', onWinResize);
+      ro?.disconnect();
+    };
+  }, [requestUpdateArrows]);
 
   const scrollVisual = (dir: 'left' | 'right') => {
     const el = trackRef.current;
     if (!el) return;
-    const step = 200;
+    const step = 220; // کمی بزرگ‌تر تا حداقل یک تب کامل جابه‌جا شود
     const max = Math.max(0, el.scrollWidth - el.clientWidth);
     const pos = getNormalizedPos(el, isRtl, rtlMode);
     const next = dir === 'left' ? Math.min(max, pos + step) : Math.max(0, pos - step);
     setNormalizedPos(el, next, isRtl, rtlMode);
-    requestAnimationFrame(updateArrows);
+    requestUpdateArrows();
   };
 
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // --- تشخیص حالت تم (دارک/لایت) ---
+  /* Theme (dark/light) */
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     const root = document.documentElement;
-
     const computeIsDark = () => {
       const attr =
         (root.getAttribute('data-theme') ||
@@ -288,161 +320,34 @@ const HeaderWithData = (): ReactElement => {
   const palette = isDark
     ? { tab: '#8D9FAA', tabActive: '#FFFFFF', borderBottom: '#50ADE7' }
     : { tab: '#596C78', tabActive: '#161B1D', borderBottom: '#2096E0' };
-   // ثابت‌ها
-    const MIN_TAB_GAP = 16;     // حداقل فاصله بین تب‌ها
-    const ARROW_GUTTER = 28;    // فاصله ثابت از فلش‌ها
-    const PAD_X_MIN = 14;       // حداقل padding-inline هر تب (px)
-    const PAD_X_MAX = 32;       // حداکثر padding-inline هر تب (px)
-    // داخل HeaderWithData
-    const [padX, setPadX] = useState(PAD_X_MIN);
-    const [gapPx, setGapPx] = useState(MIN_TAB_GAP);
-    const [spreadEvenly, setSpreadEvenly] = useState(false);
-    
-    const recomputeGap = useCallback(() => {
-      const track = trackRef.current;
-      if (!track) return;
-    
-      const items = Array.from(track.children) as HTMLElement[];
-      if (!items.length) return;
-    
-      const itemsTotal = items.reduce((s, el) => s + el.offsetWidth, 0);
-    
-      const cs = getComputedStyle(track);
-      const padL = parseFloat(cs.paddingLeft) || 0;
-      const padR = parseFloat(cs.paddingRight) || 0;
-      const containerInner = track.clientWidth - padL - padR;
-    
-      const nGaps = Math.max(0, items.length - 1);
-      const minNeeded = itemsTotal + nGaps * MIN_TAB_GAP;
-    
-      if (containerInner >= minNeeded && nGaps > 0) {
-        // حداقل گپ ثابت بماند، پخش یکنواخت را به Flex بسپار
-        setGapPx(MIN_TAB_GAP);
-        setSpreadEvenly(true);
-      } else {
-        setGapPx(MIN_TAB_GAP);
-        setSpreadEvenly(false);
-      }
-    
-      requestAnimationFrame(updateArrows);
-    }, [updateArrows]);
-    
-    const recomputeLayout = useCallback(() => {
-      const track = trackRef.current;
-      if (!track) return;
-    
-      const items = Array.from(track.children) as HTMLElement[];
-      if (!items.length) return;
-    
-      // پهنای قابل مصرف بدون padding ترک
-      const cs = getComputedStyle(track);
-      const padL = parseFloat(cs.paddingLeft) || 0;
-      const padR = parseFloat(cs.paddingRight) || 0;
-      const containerInner = track.clientWidth - padL - padR;
-    
-      // محاسبه‌ی عرض «محتوای خالص» هر تب (بدون padding فعلی)
-      let contentTotal = 0;
-      for (const el of items) {
-        const c = getComputedStyle(el);
-        const pl = parseFloat(c.paddingLeft) || 0;
-        const pr = parseFloat(c.paddingRight) || 0;
-        contentTotal += Math.max(0, el.offsetWidth - pl - pr);
-      }
-    
-      const n = items.length;
-      const nGaps = Math.max(0, n - 1);
-    
-      // حداقل عرض لازم با حداقل padding و حداقل gap
-      const minNeeded = contentTotal + (2 * PAD_X_MIN * n) + (MIN_TAB_GAP * nGaps);
-    
-      if (containerInner <= minNeeded || nGaps === 0) {
-        // جا نداریم: برگرد به حداقل‌ها
-        setPadX(PAD_X_MIN);
-        setGapPx(MIN_TAB_GAP);
-        setSpreadEvenly(false);
-        requestAnimationFrame(updateArrows);
-        return;
-      }
-    
-      // اضافه‌فضا
-      let extra = containerInner - minNeeded;
-    
-      // 1) اول padding تب‌ها را زیاد می‌کنیم تا سقف PAD_X_MAX
-      const maxExtraPadTotal = (PAD_X_MAX - PAD_X_MIN) * 2 * n; // دو طرف هر تب
-      const addToPadTotal = Math.min(extra, maxExtraPadTotal);
-      const addToPadEachSide = addToPadTotal / (2 * n);
-      const nextPadX = Math.min(PAD_X_MAX, PAD_X_MIN + addToPadEachSide);
-      setPadX(nextPadX);
-      extra -= addToPadTotal;
-    
-      // 2) اگر هنوز فضا داریم، فاصله‌ها را به‌صورت یکنواخت پخش کنیم
-      if (extra > 0) {
-        setGapPx(MIN_TAB_GAP);       // حداقل گپ حفظ می‌شود
-        setSpreadEvenly(true);       // Flex فضای باقی‌مانده را پخش می‌کند
-      } else {
-        setGapPx(MIN_TAB_GAP);
-        setSpreadEvenly(false);
-      }
-    
-      requestAnimationFrame(updateArrows);
-    }, [updateArrows]);
-    
-    useEffect(() => {
-      const raf = requestAnimationFrame(() => recomputeLayout());
-      const onResize = () => recomputeLayout();
-      window.addEventListener('resize', onResize);
-      return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', onResize); };
-    }, [recomputeLayout]);
-    
-    useEffect(() => {
-      requestAnimationFrame(recomputeLayout);
-    }, [isRtl, rtlMode, isDark, query, t, recomputeLayout]);
-    
-    // هرجا اندازه عوض می‌شود، گپ را دوباره محاسبه کن
-    useEffect(() => {
-      recomputeGap();
-      const onResize = () => recomputeGap();
-      window.addEventListener('resize', onResize);
-      return () => window.removeEventListener('resize', onResize);
-    }, [recomputeGap]);
-    
-    // وقتی تب/ترجمه/فونت/تم عوض شد هم یکبار محاسبه کن
-    useEffect(() => {
-      // یک‌بار بعد از اولین پینت و یک‌بار بعد از load
-      const raf1 = requestAnimationFrame(() => {
-        const raf2 = requestAnimationFrame(recomputeGap);
-      });
-      const onLoad = () => recomputeGap();
-      window.addEventListener('load', onLoad);
-    
-      return () => {
-        cancelAnimationFrame(raf1);
-        window.removeEventListener('load', onLoad);
-      };
-    }, [recomputeGap]);
-    
-    const S: Record<string, React.CSSProperties> = {
-      wrap: { position: 'relative', width: '100%' },
-      track: {
-        direction: (isRtl ? 'rtl' : 'ltr') as any,
-        display: 'flex',
-        gap: gapPx,
-        overflowX: 'auto',
-        paddingInline: ARROW_GUTTER,
-        scrollBehavior: 'smooth',
-        msOverflowStyle: 'none' as any,
-        borderBottom: '1px solid var(--stroke-default, #343F46)',
-        justifyContent: spreadEvenly ? 'space-between' : 'flex-start',
-        flexWrap: 'nowrap',
-      },
+
+  const S: Record<string, React.CSSProperties> = {
+    wrap: { position: 'relative', width: '100%' },
+    track: {
+      direction: (isRtl ? 'rtl' : 'ltr') as any,
+      display: 'flex',
+      gap: 16,
+      overflowX: 'auto',
+      // فضای امن برای اسکرول‌بار تا پرش نداشته باشیم:
+      scrollbarGutter: 'stable both-edges' as any,
+      // پدینگ برای اینکه تب‌ها زیر فلش‌ها نیمه پنهان نشوند:
+      paddingInlineStart: 24,
+      paddingInlineEnd: 24,
+      paddingTop: 0,
+      paddingBottom: 0,
+      scrollBehavior: 'smooth',
+      msOverflowStyle: 'none' as any,
+      borderBottom: '1px solid var(--stroke-default, #343F46)',
+      // جلوگیری از overscroll در بعضی مرورگرها
+      overscrollBehavior: 'contain',
+    },
     item: {
-      flex: '0 0 auto',
       display: 'inline-flex',
       alignItems: 'center',
       gap: 8,
-      padding: `8px ${padX}px`,   // ← پدینگ افقی اکنون داینامیک است
+      padding: '8px 14px',
       borderRadius: 0,
-      fontSize: 14,
+      fontSize: 12,
       color: palette.tab,
       whiteSpace: 'nowrap',
       cursor: 'pointer',
@@ -452,7 +357,7 @@ const HeaderWithData = (): ReactElement => {
       borderBottomColor: 'transparent',
       transition: 'background .12s, color .12s, border-color .12s',
     },
-    itemActive: { borderBottomColor: palette.borderBottom },
+    itemActive: { borderBottomColor: palette.borderBottom, color: palette.tabActive },
     itemNotActive: { borderBottomColor: 'transparent' },
     badge: {
       minWidth: 22,
@@ -472,37 +377,40 @@ const HeaderWithData = (): ReactElement => {
       top: 0,
       bottom: 0,
       left: 0,
-      width: 20,
+     
       display: 'grid',
       placeItems: 'center',
-      zIndex: 0,
+      zIndex: 1,
       background: 'none',
+      pointerEvents: 'none', // کانتینر کلیک‌پذیر نباشد
     },
     arrowRight: {
       position: 'absolute',
       top: 0,
       bottom: 0,
       right: 0,
-      width: 20,
+      
       display: 'grid',
       placeItems: 'center',
-      zIndex: 0,
+      zIndex: 1,
       background: 'none',
+      pointerEvents: 'none',
     },
     arrowBtn: {
       padding: 0,
       width: 20,
-      height: 20,
-      borderRadius: 999,
+      height: 39.6,
+      borderRadius: 0,
       border: 0,
       display: 'grid',
       placeItems: 'center',
       cursor: 'pointer',
       fontWeight: 500,
-      color: ('#FFF'),
+      color: '#FFF',
+      pointerEvents: 'auto', // خود دکمه کلیک‌پذیر باشد
     },
     arrowBtnDisabled: { opacity: 0.35, cursor: 'default' },
-    arrowBtnEnable: { background: 'rgb(52 63 70)' },
+    arrowBtnEnable: { background: '#343f46d9' },
   };
 
   return (
@@ -549,6 +457,9 @@ const HeaderWithData = (): ReactElement => {
           color: #161B1D;
           border-bottom-color: #50ADE7;
         }
+
+        /* جلوگیری از انتخاب متن هنگام درگ اسکرول روی تب‌ها */
+        .gg-tabs-track, .gg-tabs-track * { user-select: none; -webkit-user-select: none; }
       `}</style>
 
       <Sidebar.TopBar.Section>
@@ -557,7 +468,8 @@ const HeaderWithData = (): ReactElement => {
             ref={inputRef}
             className="gg-search-input"
             style={{
-              ...S.wrap,
+              position: 'relative',
+              width: '100%',
               backgroundImage: `url('data:image/svg+xml;utf8,${encodeURIComponent(svg)}')`,
               backgroundPosition: 'right 10px center',
               backgroundRepeat: 'no-repeat',
@@ -578,10 +490,10 @@ const HeaderWithData = (): ReactElement => {
 
       <Sidebar.TopBar.Section>
         <div style={S.wrap}>
-          <div className={canLeft ?  'arrowBtnEnable' : ''} style={{ ...isRtl?S.arrowLeft:S.arrowRight }}>
+          <div style={{ ...(isRtl ? S.arrowLeft : S.arrowRight) }}>
             <button
               className={`gg-arrow-btn ${canLeft ? 'is-enabled' : ''}`}
-              style={{ ...S.arrowBtn, ...(canLeft ? {} : S.arrowBtnDisabled) }}
+              style={{ ...S.arrowBtn, ...(canLeft ? S.arrowBtnEnable : S.arrowBtnDisabled) }}
               onClick={() => scrollVisual('left')}
               disabled={!canLeft}
               aria-label="Left"
@@ -594,7 +506,8 @@ const HeaderWithData = (): ReactElement => {
             ref={trackRef}
             style={S.track}
             className="gg-tabs-track"
-            onScroll={updateArrows}
+            // onScroll را با دی‌بونس راف وصل کردیم
+            onScroll={requestUpdateArrows}
           >
             {TABS.map((tb) => {
               const active = tb.id === tab;
@@ -602,6 +515,7 @@ const HeaderWithData = (): ReactElement => {
               return (
                 <button
                   key={tb.id}
+                  ref={setTabRef(tb.id)}
                   className={`gg-tab ${active ? 'is-active' : ''}`}
                   style={{ ...S.item, ...(active ? S.itemActive : S.itemNotActive) }}
                   onClick={() => setTab(tb.id)}
@@ -609,18 +523,16 @@ const HeaderWithData = (): ReactElement => {
                   aria-label={`${t(tb.label as any)}${unread > 0 ? ` (${unread} ${t('Unread' as any)})` : ''}`}
                 >
                   <span>{t(tb.label as any)}</span>
-                  {unread > 0 && (
-                    <span className="gg-badge" style={S.badge}>{unread}</span>
-                  )}
+                  {unread > 0 && <span className="gg-badge" style={S.badge}>{unread}</span>}
                 </button>
               );
             })}
           </div>
 
-          <div className={canRight ?  'arrowBtnEnable' : ''} style={{ ...isRtl ?S.arrowRight:S.arrowLeft }}>
+          <div style={{ ...(isRtl ? S.arrowRight : S.arrowLeft) }}>
             <button
               className={`gg-arrow-btn ${canRight ? 'is-enabled' : ''}`}
-              style={{ ...S.arrowBtn, ...(canRight ? {} : S.arrowBtnDisabled) }}
+              style={{ ...S.arrowBtn, ...(canRight ? S.arrowBtnEnable : S.arrowBtnDisabled) }}
               onClick={() => scrollVisual('right')}
               disabled={!canRight}
               aria-label="Right"

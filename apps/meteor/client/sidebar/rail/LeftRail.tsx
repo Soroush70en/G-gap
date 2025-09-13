@@ -171,7 +171,7 @@ export default function LeftRail() {
             location.pathname.startsWith('/channel') ||
             location.pathname.startsWith('/group') ||
             location.pathname.startsWith('/direct/')) &&
-          !location.pathname.startsWith('/direct/D9NtG'),
+          !location.pathname.startsWith('/direct/PXRyQpEB5qwKP4GDx'),
           disabled:false,
       },
       {
@@ -201,7 +201,8 @@ export default function LeftRail() {
         click: () => {
           go('/direct/HooshyarAI');
         },
-        isActive: () => location.pathname.startsWith('/direct/PXRyQ'), // مسیر ربات هوش
+        isActive: () => location.pathname.startsWith('/direct/PXRyQpEB5qwKP4GDx'), // مسیر ربات هوش
+        //isActive: () => location.pathname.startsWith('/direct/PXRyQ'), // مسیر ربات هوش
         disabled:false,
       },
     ],

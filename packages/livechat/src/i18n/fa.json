@@ -86,6 +86,11 @@
         "unread_messages": "پیام های خوانده نشده",
         "user_added_by": "کاربر اضافه شد، توسط",
         "user_joined": "کابر ملحق شد",
+        "Joined_at": "تاریخ عضویت",
+        "Belongs_To": "متعلق به",
+        "Showing_results_of": "نتایج %s تا %s از %s",
+        "Layout_Description": "شخصی سازی محیط کاری.",
+        "No_Threads": "نتیجه‌ای پیدا نشد",
         "user_left": "کاربر خارج شد",
         "user_removed_by": "کاربر حذف شد، توسط",
         "waiting_queue": "صف انتظار ...",
@@ -96,6 +101,13 @@
         "you_browser_doesn_t_support_audio_element": "مرورگر شما صوت را پشتیبانی نمی کند",
         "you_browser_doesn_t_support_video_element": "مرورگر شما ویدئو را پشتیبانی نمی کند",
         "your_spot_is_spot": "نوبت شما #{{spot}}",
-        "your_spot_is_spot_estimated_wait_time_estimatedwai": "نوبت شما #{{spot}} است (مدت زمان تخمین زده شده: {{estimatedWaitTime}})"
+        "your_spot_is_spot_estimated_wait_time_estimatedwai": "نوبت شما #{{spot}} است (مدت زمان تخمین زده شده: {{estimatedWaitTime}})",
+        "Following": "پیگیری‌شده",
+        "No_files_found": "فایلی پیدا نشد",
+        "Images": "عکس‌ها",
+        "Videos": "ویدیوها",
+        "Texts": "متن‌ها",
+        "Audio": "صدا"
+
     }
 }

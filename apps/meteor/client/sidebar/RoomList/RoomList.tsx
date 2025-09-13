@@ -15,10 +15,11 @@ import { useTemplateByViewMode } from '../hooks/useTemplateByViewMode';
 import RoomListRow from './RoomListRow';
 import ScrollerWithCustomProps from './ScrollerWithCustomProps';
 
-// هم‌راستا با Header: تب‌ها فقط همین‌ها هستند
-type RoomTab = 'all' | 'direct' | 'channels' | 'teams';
+// هم‌راستا با Header: تب‌ها شامل favorites هم هستند
+type RoomTab = 'all' | 'direct' | 'channels' | 'teams' | 'favorites';
 
-const computeItemKey = (index: number, room: ISubscription & IRoom): IRoom['_id'] | number => room._id || index;
+const computeItemKey = (index: number, room: ISubscription & IRoom): IRoom['_id'] | number =>
+  room._id || index;
 
 /* ---------------- helpers ---------------- */
 
@@ -40,9 +41,16 @@ const exclusiveCategoryOf = (r: ISubscription & IRoom): RoomTab | null => {
   return null; // سایر انواع (مثلاً livechat) را نشان نده
 };
 
-const filterByTabExclusive = (items: Array<ISubscription & IRoom>, tab: RoomTab) => {
-  if (tab === 'all') return items.filter((r) => exclusiveCategoryOf(r) !== null);
-  return items.filter((r) => exclusiveCategoryOf(r) === tab);
+const isFavorite = (r: ISubscription & IRoom) => (r as any).f === true;
+
+// فیلتر اصلی برحسب تب
+const filterByTab = (items: Array<ISubscription & IRoom>, tab: RoomTab) => {
+  // ابتدا فقط روم‌های مجاز (direct/channels/teams) را نگه داریم
+  const allowed = items.filter((r) => exclusiveCategoryOf(r) !== null);
+  if (tab === 'all') return allowed;
+  if (tab === 'favorites') return allowed.filter((r) => isFavorite(r));
+  // سایر تب‌ها: بر اساس دسته‌بندی انحصاری
+  return allowed.filter((r) => exclusiveCategoryOf(r) === tab);
 };
 
 // جست‌وجو روی name/fname (برای DMها fname مهم است)
@@ -57,27 +65,31 @@ const applyQuery = (items: Array<ISubscription & IRoom>, query: string) => {
 };
 
 // محاسبه‌ی مجموع unread هر تب (بعد از اعمال query)
-const computeUnreadCountsExclusive = (items: Array<ISubscription & IRoom>, query: string) => {
+const computeUnreadCounts = (items: Array<ISubscription & IRoom>, query: string) => {
   const filteredByQuery = applyQuery(items, query);
   const base = filteredByQuery.filter((r) => exclusiveCategoryOf(r) !== null);
 
-  const sum = (tab?: RoomTab) =>
-    base
-      .filter((r) => (tab ? exclusiveCategoryOf(r) === tab : true))
-      .reduce((acc, r) => acc + getUnread(r), 0);
+  const sumBy = (predicate: (r: ISubscription & IRoom) => boolean) =>
+    base.filter(predicate).reduce((acc, r) => acc + getUnread(r), 0);
 
-  const all = sum();
-  const direct = sum('direct');
-  const teams = sum('teams');
-  const channels = sum('channels');
+  const all = sumBy(() => true);
+  const direct = sumBy((r) => exclusiveCategoryOf(r) === 'direct');
+  const teams = sumBy((r) => exclusiveCategoryOf(r) === 'teams');
+  const channels = sumBy((r) => exclusiveCategoryOf(r) === 'channels');
+  const favorites = sumBy((r) => isFavorite(r));
 
-  return { all, direct, channels, teams } as Partial<Record<RoomTab, number>>;
+  return { all, direct, channels, teams, favorites } as Partial<Record<RoomTab, number>>;
 };
 
 const shallowEqualCounts = (
   a: Partial<Record<RoomTab, number>>,
   b: Partial<Record<RoomTab, number>>,
-) => (a.all === b.all && a.direct === b.direct && a.channels === b.channels && a.teams === b.teams);
+) =>
+  a.all === b.all &&
+  a.direct === b.direct &&
+  a.channels === b.channels &&
+  a.teams === b.teams &&
+  a.favorites === b.favorites;
 
 /* ----------------------------------------- */
 
@@ -89,12 +101,16 @@ const RoomList = (): ReactElement => {
   const sideBarItemTemplate = useTemplateByViewMode();
   const { ref } = useResizeObserver({ debounceDelay: 100 });
   const openedRoom = (useSession('openedRoom') as string) || '';
-  const sidebarViewMode = useUserPreference<'extended' | 'medium' | 'condensed'>('sidebarViewMode') || 'extended';
+  const sidebarViewMode =
+    useUserPreference<'extended' | 'medium' | 'condensed'>('sidebarViewMode') || 'extended';
 
   const extended = sidebarViewMode === 'extended';
 
   // فیلتر جاری که از Header می‌آید
-  const [filterState, setFilterState] = useState<{ query: string; tab: RoomTab }>({ query: '', tab: 'all' });
+  const [filterState, setFilterState] = useState<{ query: string; tab: RoomTab }>({
+    query: '',
+    tab: 'all',
+  });
 
   // لیست نهایی برای نمایش
   const [filteredRooms, setFilteredRooms] = useState<Array<ISubscription & IRoom>>(
@@ -107,11 +123,11 @@ const RoomList = (): ReactElement => {
   // یک تابع واحد برای محاسبه و اعمال تغییرات
   const recalc = useCallback(
     (base = roomsList, f = filterState) => {
-      const byTab = filterByTabExclusive(base, f.tab);
+      const byTab = filterByTab(base, f.tab);
       const byQuery = applyQuery(byTab, f.query);
       setFilteredRooms(byQuery);
 
-      const c = computeUnreadCountsExclusive(base, f.query);
+      const c = computeUnreadCounts(base, f.query);
       setCounts((prev) => {
         if (!shallowEqualCounts(prev, c)) {
           window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
@@ -124,7 +140,9 @@ const RoomList = (): ReactElement => {
   );
 
   // تغییر لیست روم‌ها
-  useEffect(() => { recalc(); }, [roomsList, recalc]);
+  useEffect(() => {
+    recalc();
+  }, [roomsList, recalc]);
 
   // دریافت فیلترها از Header
   useEffect(() => {
@@ -137,7 +155,9 @@ const RoomList = (): ReactElement => {
   }, []);
 
   // اعمال تغییرات وقتی فیلتر عوض شد
-  useEffect(() => { recalc(); }, [filterState.query, filterState.tab, recalc]);
+  useEffect(() => {
+    recalc();
+  }, [filterState.query, filterState.tab, recalc]);
 
   const itemData = useMemo(
     () => ({
@@ -150,7 +170,16 @@ const RoomList = (): ReactElement => {
       isAnonymous,
       counts,
     }),
-    [avatarTemplate, extended, isAnonymous, openedRoom, sideBarItemTemplate, sidebarViewMode, t, counts],
+    [
+      avatarTemplate,
+      extended,
+      isAnonymous,
+      openedRoom,
+      sideBarItemTemplate,
+      sidebarViewMode,
+      t,
+      counts,
+    ],
   );
 
   usePreventDefault(ref);
@@ -170,7 +199,11 @@ const RoomList = (): ReactElement => {
   `;
 
   return (
-    <Box className={[roomsListStyle, 'sidebar--custom-colors'].filter(Boolean)} aria-label={t('Channels')} role="region">
+    <Box
+      className={[roomsListStyle, 'sidebar--custom-colors'].filter(Boolean)}
+      aria-label={t('Channels')}
+      role="region"
+    >
       <Box h="full" w="full" ref={ref}>
         <Virtuoso<ISubscription & IRoom>
           totalCount={filteredRooms.length}
@@ -178,10 +211,7 @@ const RoomList = (): ReactElement => {
           components={{ Scroller: ScrollerWithCustomProps }}
           computeItemKey={computeItemKey}
           itemContent={(index, room): ReactElement => (
-            <RoomListRow
-              data={{ ...itemData, tabCounts: counts }}
-              item={room}
-            />
+            <RoomListRow data={{ ...itemData, tabCounts: counts }} item={room} />
           )}
         />
       </Box>
