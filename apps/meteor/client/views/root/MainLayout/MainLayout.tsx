@@ -1,15 +1,17 @@
-import { ReactElement, ReactNode, useEffect, useCallback } from 'react';
+import { ReactElement, ReactNode, useEffect, useRef, useCallback, useState } from 'react';
 import React, { Suspense } from 'react';
-
 import AuthenticationCheck from './AuthenticationCheck';
 import Preload from './Preload';
 import { useCustomScript } from './useCustomScript';
 import IncomingCallBridge from '/client/lib/IncomingCallBridge';
 import AddParticipant from '/client/components/modal/AddParticipant';
+import DeprecationBannerModal from '/client/components/modal/DeprecationBannerModal';
 import { useSetModal } from '@rocket.chat/ui-contexts';
 import { VideoConfManager } from '/client/lib/VideoConfManager';
 import { clearIncomingCall } from '/client/lib/incomingCallStore';
 import { goToRoomById } from '/client/lib/utils/goToRoomById';
+import { useVersionCheck } from '../hooks/useVersionCheck';
+import { useDesktopVersionGate } from '../hooks/useDesktopVersionGate';
 
 type MainLayoutProps = {
 	children?: ReactNode;
@@ -35,13 +37,23 @@ type Payload = {
 const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 	useCustomScript();
 	const setModal = useSetModal();
-
+	const { data, error } = useVersionCheck();
+	const gate = useDesktopVersionGate(data);
+	const lastKeyRef = useRef<string>('');
 	const handleCloseModal = useCallback(() => {
-		if (window.RocketChatDesktop?.send) {
-			window.RocketChatDesktop.send('video-call-focus-requested');
-		}
 		setModal(null);
 	}, [setModal]);
+	const [isWarningVisible, setIsWarningVisible] = useState(true);
+
+	const handleDownload = () => {
+		const baseUrl = 'https://chat.golrang.com/download';
+		window.open(`${baseUrl}${gate?.download}`, '_blank');
+	};
+
+	useEffect(() => {
+		// after you’ve set up RocketChatDesktop.on(...) listeners
+		window.RocketChatDesktop?.send?.('webapp:ready', { ts: Date.now() });
+	}, []);
 
 	useEffect(() => {
 		if (window.RocketChatDesktop && typeof window.RocketChatDesktop.on === 'function') {
@@ -54,6 +66,18 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 			};
 		}
 	}, [setModal, handleCloseModal]);
+
+	useEffect(() => {
+		if (window.RocketChatDesktop && typeof window.RocketChatDesktop.on === 'function') {
+			const unsubscribe = window.RocketChatDesktop.on('webapp:hide-serverside-update-modal', () => {
+				setIsWarningVisible(false);
+			});
+
+			return () => {
+				unsubscribe();
+			};
+		}
+	}, []);
 
 	useEffect(() => {
 		if (!window.RocketChatDesktop || typeof window.RocketChatDesktop.on !== 'function') {
@@ -111,6 +135,34 @@ const MainLayout = ({ children = null }: MainLayoutProps): ReactElement => {
 			offAction && offAction();
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!gate) return;
+
+		if (gate.decision === 'ok') {
+			handleCloseModal();
+			return;
+		}
+
+		if (!isWarningVisible) {
+			handleCloseModal();
+			return;
+		}
+
+		// idempotency: only react when the decision meaningfully changes
+		if (lastKeyRef.current === gate.key) return;
+		lastKeyRef.current = gate.key;
+
+		setModal(
+			<DeprecationBannerModal
+				isVisible={isWarningVisible}
+				onDownload={handleDownload}
+				onClose={handleCloseModal}
+				isRTL={true}
+				isForced={gate.isForced}
+			/>,
+		);
+	}, [gate, setModal, handleCloseModal, isWarningVisible]);
 
 	return (
 		<>

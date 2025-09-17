@@ -7729,6 +7729,7 @@ __metadata:
     lodash.clonedeep: ^4.5.0
     lodash.debounce: ^4.0.8
     lodash.get: ^4.4.2
+    lucide-react: ^0.544.0
     mailparser: ^3.4.0
     marked: ^4.2.5
     mem: ^8.1.1
@@ -27750,6 +27751,15 @@ __metadata:
     lodash.clonedeep: ^4.5.0
     lru-cache: 6.0.0
   checksum: 3468a655b89295ddc0f069a5ebd574ff8565476efc49dfd2b666ed7bd5c6f090e6e3e35cc84714194cc154d5331007d6bbfd50b480ed3ea07303820f81ef7389
+  languageName: node
+  linkType: hard
+
+"lucide-react@npm:^0.544.0":
+  version: 0.544.0
+  resolution: "lucide-react@npm:0.544.0"
+  peerDependencies:
+    react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: d823339cb0d0bd4c038fef6223ffa9d81e337a86d09833e6b6ff54f936fc7a5e2e8e672e8c1fae55e6a835ddcf620f7fe4e1f564b4de31d12ae8895e3ab52ed3
   languageName: node
   linkType: hard
 

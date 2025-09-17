@@ -336,6 +336,7 @@
 		"lodash.clonedeep": "^4.5.0",
 		"lodash.debounce": "^4.0.8",
 		"lodash.get": "^4.4.2",
+		"lucide-react": "^0.544.0",
 		"mailparser": "^3.4.0",
 		"marked": "^4.2.5",
 		"mem": "^8.1.1",

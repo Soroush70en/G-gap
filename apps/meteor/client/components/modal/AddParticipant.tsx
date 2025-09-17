@@ -12,6 +12,7 @@ type Username = Exclude<IUser['username'], undefined>;
 
 type CreateDirectMessageProps = {
 	onClose: () => void;
+	callId: string;
 };
 
 const AddParticipant: FC<CreateDirectMessageProps> = ({ onClose, callId }) => {
