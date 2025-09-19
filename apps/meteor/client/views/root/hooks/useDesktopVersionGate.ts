@@ -39,12 +39,12 @@ export function useDesktopVersionGate(data?: VersionCheckResponse, opts: Options
 
 		return {
 			isElectron,
-			decision: 'warn',
+			decision: res.decision,
 			current: res.current,
 			normalizedCurrent,
 			latest: res.latest,
 			download: res.download,
-			isForced: false,
+			isForced: isForced,
 			key,
 			forceUpdate: res.forceUpdate,
 		};
