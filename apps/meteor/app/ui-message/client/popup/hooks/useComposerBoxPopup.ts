@@ -49,6 +49,9 @@ const keys = {
 	ARROW_DOWN: 40,
 };
 
+// ✅ کمکی: هر رشته‌ای رو برای استفاده داخل RegExp ایمن می‌کنه
+const escapeRegex = (s: string) => String(s ?? '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export const useComposerBoxPopup = <T extends { _id: string; sort?: number }>({
 	configurations,
 }: {
@@ -91,9 +94,16 @@ export const useComposerBoxPopup = <T extends { _id: string; sort?: number }>({
 			commandsRef.current.select(item);
 		} else {
 			const value = chat?.composer?.substring(0, chat?.composer?.selection.start);
+
+			// ⬇️ قبلی: trigger مستقیم داخل RegExp → خطای Nothing to repeat
+			// الان: trigger را escape می‌کنیم
+			const safeTrigger = escapeRegex(popup.trigger as unknown as string);
+
 			const selector =
 				popup.matchSelectorRegex ??
-				(popup.triggerAnywhere ? new RegExp(`(?:^| |\n)(${popup.trigger})([^\\s]*$)`) : new RegExp(`(?:^)(${popup.trigger})([^\\s]*$)`));
+				(popup.triggerAnywhere
+					? new RegExp(`(?:^| |\\n)(${safeTrigger})([^\\s]*$)`)
+					: new RegExp(`(?:^)(${safeTrigger})([^\\s]*$)`));
 
 			const result = value?.match(selector);
 			if (!result || !value) {
@@ -119,11 +129,18 @@ export const useComposerBoxPopup = <T extends { _id: string; sort?: number }>({
 			return;
 		}
 
+		// ⬇️ اینجا هم همه‌ی triggerها را قبل از ساخت RegExp ایمن می‌کنیم
 		const configuration = configurations.find(({ trigger, matchSelectorRegex, triggerAnywhere }) => {
-			const selector =
-				matchSelectorRegex ?? (triggerAnywhere ? new RegExp(`(?:^| |\n)(${trigger})[^\\s]*$`) : new RegExp(`(?:^)(${trigger})[^\\s]*$`));
-			const result = selector.test(value);
-			return result;
+			if (matchSelectorRegex) {
+				return matchSelectorRegex.test(value);
+			}
+
+			const safeTrigger = escapeRegex(trigger as unknown as string);
+			const selector = triggerAnywhere
+				? new RegExp(`(?:^| |\\n)(${safeTrigger})[^\\s]*$`)
+				: new RegExp(`(?:^)(${safeTrigger})[^\\s]*$`);
+
+			return selector.test(value);
 		});
 
 		setPopup(configuration);
@@ -134,11 +151,15 @@ export const useComposerBoxPopup = <T extends { _id: string; sort?: number }>({
 		if (configuration) {
 			const selector =
 				configuration.matchSelectorRegex ??
-				(configuration.triggerAnywhere
-					? new RegExp(`(?:^| |\n)(${configuration.trigger})([^\\s]*$)`)
-					: new RegExp(`(?:^)(${configuration.trigger})([^\\s]*$)`));
-			const result = value.match(selector);
-			setFilter(commandsRef.current?.getFilter?.() ?? (result ? result[2] : ''));
+				(() => {
+					const safeTrigger = escapeRegex(configuration.trigger as unknown as string);
+					return configuration.triggerAnywhere
+						? new RegExp(`(?:^| |\\n)(${safeTrigger})([^\\s]*$)`)
+						: new RegExp(`(?:^)(${safeTrigger})([^\\s]*$)`);
+				})();
+
+			const result = value.match(selector as RegExp);
+			setFilter(commandsRef.current?.getFilter?.() ?? (result ? (result as RegExpMatchArray)[2] : ''));
 		}
 		return configuration;
 	});

@@ -21,7 +21,7 @@ const ShareLocationAction = ({ room, tmid }: { room: IRoom; tmid?: string }) => 
 
 	return (
 		<>
-			<OptionTitle>{t('Share')}</OptionTitle>
+			{/* <OptionTitle>{t('Share')}</OptionTitle> */}
 			<Option {...(!allowGeolocation && { title: t('Not_Available') })} disabled={!allowGeolocation} onClick={handleShareLocation}>
 				<OptionIcon name='map-pin' />
 				<OptionContent>{t('Location')}</OptionContent>

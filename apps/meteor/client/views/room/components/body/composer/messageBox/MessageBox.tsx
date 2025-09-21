@@ -14,7 +14,6 @@ import {
 import { useTranslation, useUserPreference, useLayout } from '@rocket.chat/ui-contexts';
 import { useMutation } from '@tanstack/react-query';
 import type { MouseEventHandler, ReactElement, FormEvent, KeyboardEventHandler, KeyboardEvent, Ref, ClipboardEventHandler } from 'react';
-import React, { memo, useRef, useReducer, useCallback } from 'react';
 import { useSubscription } from 'use-subscription';
 
 import { EmojiPicker } from '../../../../../../../app/emoji/client';
@@ -41,7 +40,11 @@ import MessageBoxActionsToolbar from './MessageBoxActionsToolbar';
 import MessageBoxFormattingToolbar from './MessageBoxFormattingToolbar';
 import MessageBoxReplies from './MessageBoxReplies';
 import { useMessageBoxAutoFocus } from './hooks/useMessageBoxAutoFocus';
-
+// import AudioMessageAction from './MessageBoxActionsToolbar/actions/AudioMessageAction'
+import FileUploadAction from './MessageBoxActionsToolbar/actions/FileUploadAction';
+// import VideoMessageAction from './MessageBoxActionsToolbar/actions/VideoMessageAction';
+import AVToggleHoldAction from './MessageBoxActionsToolbar/actions/AVToggleHoldAction';
+import React, { memo, useRef, useReducer, useCallback, useState } from 'react';
 const reducer = (_: unknown, event: FormEvent<HTMLInputElement>): boolean => {
 	const target = event.target as HTMLInputElement;
 
@@ -108,8 +111,9 @@ const MessageBox = ({
 	readOnly,
 	tshow,
 }: MessageBoxProps): ReactElement => {
+	const [isAudioRecording, setIsAudioRecording] = useState(true); 
 	const [typing, setTyping] = useReducer(reducer, false);
-
+	const [moreOpen, setMoreOpen] = useState(false);
 	const { isMobile } = useLayout();
 	const sendOnEnterBehavior = useUserPreference<'normal' | 'alternative' | 'desktop'>('sendOnEnter') || isMobile;
 	const sendOnEnter = sendOnEnterBehavior == null || sendOnEnterBehavior === 'normal' || (sendOnEnterBehavior === 'desktop' && !isMobile);
@@ -345,17 +349,12 @@ const MessageBox = ({
 		<>
 			{chat?.composer?.quotedMessages && <MessageBoxReplies />}
 
-			{/* <BlazeTemplate w='full' name='messagePopupSlashCommandPreview' tmid={tmid} rid={rid} getInput={() => textareaRef.current} /> */}
+			
 
 			{popup && !popup.preview && (
 				<ComposerBoxPopup select={select} items={items} focused={focused} title={popup.title} renderItem={popup.renderItem} />
 			)}
-			{/*
-				SlashCommand Preview popup works in a weird way
-				There is only one trigger for all the commands: "/"
-				After that we need to the slashcommand list and check if the command exists and provide the preview
-				if not the query is `suspend` which means the slashcommand is not found or doesn't have a preview
-			*/}
+			
 			{popup?.preview && (
 				<ComposerBoxPopupPreview
 					select={select}
@@ -374,41 +373,101 @@ const MessageBox = ({
 					<Tag title={t('Only_people_with_permission_can_send_messages_here')}>{t('This_room_is_read_only')}</Tag>
 				</Box>
 			)}
-
+		 <ComposerUserActionIndicator rid={rid} tmid={tmid} />
 			{isRecordingVideo && <VideoMessageRecorder reference={messageComposerRef} rid={rid} tmid={tmid} />}
-			<MessageComposer ref={messageComposerRef} variant={isEditing ? 'editing' : undefined}>
-				{isRecordingAudio && <AudioMessageRecorder rid={rid} isMicrophoneDenied={isMicrophoneDenied} />}
-				<MessageComposerInput
-					ref={mergedRefs as unknown as Ref<HTMLInputElement>}
-					aria-label={t('Message')}
-					name='msg'
-					disabled={isRecording || !canSend}
-					onChange={setTyping}
-					style={textAreaStyle}
-					placeholder={t('Message')}
-					onKeyDown={handler}
-					onPaste={handlePaste}
-					aria-activedescendant={ariaActiveDescendant}
-				/>
-				<div ref={shadowRef} style={shadowStyle} />
-				<MessageComposerToolbar>
-					<MessageComposerToolbarActions aria-label={t('Message_composer_toolbox_primary_actions')}>
+			<Box display='flex' justifyContent='center' w='full'>
+				<Box w='full'>
+				
+				<MessageComposer
+					ref={messageComposerRef}
+					variant={isEditing ? 'editing' : undefined}
+					className='ggap-composer'
+					>
+					{isRecordingAudio && (
+						<AudioMessageRecorder rid={rid} isMicrophoneDenied={isMicrophoneDenied} />
+					)}
+
+					<div ref={shadowRef} style={shadowStyle} />
+
+					<MessageComposerToolbar>
+						<MessageComposerToolbarActions aria-label={t('Message_composer_toolbox_primary_actions')}>
 						<MessageComposerAction
 							icon='emoji'
 							disabled={!useEmojis || isRecording || !canSend}
 							onClick={handleOpenEmojiPicker}
 							title={t('Emoji')}
 						/>
-						<MessageComposerActionsDivider />
+
+						{/* ورودی + آیکن‌ها */}
+						<div className='ggap-input-wrap'>
+							<MessageComposerInput
+							ref={mergedRefs as unknown as Ref<HTMLInputElement>}
+							aria-label={t('Message')}
+							name='msg'
+							disabled={isRecording || !canSend}
+							onChange={setTyping}
+							style={textAreaStyle}
+							placeholder={t('Message')}
+							onKeyDown={handler}
+							onPaste={handlePaste}
+							aria-activedescendant={ariaActiveDescendant}
+							/>
+
+							{/* آیکن‌ها روی inline-end (RTL=چپ، LTR=راست) */}
+							<div className='ggap-affix-left'>
+							{canSend && (
+								<div className='ggap-composer-fileuploaded-margin'>
+								<FileUploadAction
+									key='file'
+									collapsed={true}
+									disabled={!canSend || isRecording}
+								/>
+								</div>
+							)}
+
+							{typing && (
+								<MessageComposerAction
+								key='more'
+								icon='kebab'
+								title={t('More')}
+								onClick={() => setMoreOpen((v) => !v)}
+								/>
+							)}
+							</div>
+						</div>
+						</MessageComposerToolbarActions>
+
+						<MessageComposerToolbarSubmit>
+						{/* <AudioMessageAction
+							key='audio'
+							disabled={!canSend || typing || isRecording || isMicrophoneDenied}
+							isMicrophoneDenied={isMicrophoneDenied}
+						/>
+						<VideoMessageAction key='video' collapsed={true} disabled={!canSend || typing || isRecording} />
+						 */}
+						 <AVToggleHoldAction
+							disabled={!canSend || typing || isRecording}
+							isRecording={isRecording}
+							isMicrophoneDenied={isMicrophoneDenied}
+							collapsed={true}
+							initialMode="audio"
+							longPressMs={1000}
+						/>
+						</MessageComposerToolbarSubmit>
+					</MessageComposerToolbar>
+
+					{/* ⬇️ پاپ‌اور: فرزند مستقیم MessageComposer (دیگر داخل Toolbar/Actions نیست) */}
+					{typing && moreOpen && (
+						<div className='ggap-composer-popover' role='dialog'>
 						{chat.composer && formatters.length > 0 && (
 							<MessageBoxFormattingToolbar
-								composer={chat.composer}
-								variant={sizes.inlineSize < 480 ? 'small' : 'large'}
-								items={formatters}
-								disabled={isRecording || !canSend}
+							composer={chat.composer}
+							variant={sizes.inlineSize < 480 ? 'small' : 'large'}
+							items={formatters}
+							disabled={isRecording || !canSend}
 							/>
 						)}
-						<MessageComposerActionsDivider />
+						{/* <div className='ggap-composer-popover-divider' /> */}
 						<MessageBoxActionsToolbar
 							variant={sizes.inlineSize < 480 ? 'small' : 'large'}
 							isRecording={isRecording}
@@ -418,27 +477,11 @@ const MessageBox = ({
 							tmid={tmid}
 							isMicrophoneDenied={isMicrophoneDenied}
 						/>
-					</MessageComposerToolbarActions>
-					<MessageComposerToolbarSubmit>
-						{!canSend && (
-							<Button small primary onClick={onJoin} disabled={joinMutation.isLoading}>
-								{t('Join')}
-							</Button>
-						)}
-						{canSend && (
-							<MessageComposerAction
-								aria-label={t('Send')}
-								icon='send'
-								disabled={!canSend || (!typing && !isEditing)}
-								onClick={handleSendMessage}
-								secondary={typing || isEditing}
-								info={typing || isEditing}
-							/>
-						)}
-					</MessageComposerToolbarSubmit>
-				</MessageComposerToolbar>
-			</MessageComposer>
-			<ComposerUserActionIndicator rid={rid} tmid={tmid} />
+						</div>
+					)}
+					</MessageComposer>
+				</Box>
+			</Box>
 		</>
 	);
 };

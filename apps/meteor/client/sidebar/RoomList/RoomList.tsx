@@ -1,10 +1,11 @@
+// client/sidebar/RoomList.tsx
 import type { IRoom, ISubscription } from '@rocket.chat/core-typings';
 import { css } from '@rocket.chat/css-in-js';
 import { Box } from '@rocket.chat/fuselage';
 import { useResizeObserver } from '@rocket.chat/fuselage-hooks';
 import { useSession, useUserPreference, useUserId, useTranslation } from '@rocket.chat/ui-contexts';
 import type { ReactElement } from 'react';
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { Virtuoso } from 'react-virtuoso';
 
 import { useAvatarTemplate } from '../hooks/useAvatarTemplate';
@@ -119,8 +120,9 @@ const RoomList = (): ReactElement => {
 
   // شمارنده‌های هر تب
   const [counts, setCounts] = useState<Partial<Record<RoomTab, number>>>({});
+  const lastSentRef = useRef<Partial<Record<RoomTab, number>>>({});
 
-  // یک تابع واحد برای محاسبه و اعمال تغییرات
+  // یک تابع واحد برای محاسبه و اعمال تغییرات (بدون dispatch ایونت داخل setState)
   const recalc = useCallback(
     (base = roomsList, f = filterState) => {
       const byTab = filterByTab(base, f.tab);
@@ -128,13 +130,7 @@ const RoomList = (): ReactElement => {
       setFilteredRooms(byQuery);
 
       const c = computeUnreadCounts(base, f.query);
-      setCounts((prev) => {
-        if (!shallowEqualCounts(prev, c)) {
-          window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: c }));
-          return c;
-        }
-        return prev;
-      });
+      setCounts((prev) => (shallowEqualCounts(prev, c) ? prev : c));
     },
     [roomsList, filterState],
   );
@@ -158,6 +154,16 @@ const RoomList = (): ReactElement => {
   useEffect(() => {
     recalc();
   }, [filterState.query, filterState.tab, recalc]);
+
+  // ارسال counts برای Header فقط بعد از commit (خارج از render)
+  useEffect(() => {
+    const prev = lastSentRef.current;
+    if (!shallowEqualCounts(prev, counts)) {
+      // اگر لازم بود می‌تونی این را داخل queueMicrotask هم بندازی
+      window.dispatchEvent(new CustomEvent('sidebar:counts', { detail: counts }));
+      lastSentRef.current = counts;
+    }
+  }, [counts]);
 
   const itemData = useMemo(
     () => ({

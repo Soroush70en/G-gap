@@ -1,9 +1,10 @@
 import type { IRoom, IMessage } from '@rocket.chat/core-typings';
 import React, { memo } from 'react';
-
-import ActionsToolbarDropdown from './ActionsToolbarDropdown';
-import AudioMessageAction from './actions/AudioMessageAction';
-import FileUploadAction from './actions/FileUploadAction';
+import { useUserRoom } from '@rocket.chat/ui-contexts';
+// import ActionsToolbarDropdown from './ActionsToolbarDropdown';
+// import AudioMessageAction from './actions/AudioMessageAction';
+// import FileUploadAction from './actions/FileUploadAction';
+import ShareLocationAction from './actions/ShareLocationAction';
 import VideoMessageAction from './actions/VideoMessageAction';
 
 type MessageBoxActionsToolbarProps = {
@@ -25,14 +26,16 @@ const MessageBoxActionsToolbar = ({
 	tmid,
 	isMicrophoneDenied,
 }: MessageBoxActionsToolbarProps) => {
+	const room = useUserRoom(rid);
 	const actions = [
+		
 		<VideoMessageAction key='video' collapsed={variant === 'small'} disabled={!canSend || typing || isRecording} />,
-		<AudioMessageAction
-			key='audio'
-			disabled={!canSend || typing || isRecording || isMicrophoneDenied}
-			isMicrophoneDenied={isMicrophoneDenied}
-		/>,
-		<FileUploadAction key='file' collapsed={variant === 'small'} disabled={!canSend || isRecording} />,
+		// <AudioMessageAction
+		// 	key='audio'
+		// 	disabled={!canSend || typing || isRecording || isMicrophoneDenied}
+		// 	isMicrophoneDenied={isMicrophoneDenied}
+		// />,
+		// <FileUploadAction key='file' collapsed={variant === 'small'} disabled={!canSend || isRecording} />,
 	];
 
 	let featuredAction;
@@ -42,9 +45,11 @@ const MessageBoxActionsToolbar = ({
 
 	return (
 		<>
-			{variant !== 'small' && actions}
-			{variant === 'small' && featuredAction}
-			<ActionsToolbarDropdown {...(variant === 'small' && { actions })} isRecording={isRecording} rid={rid} tmid={tmid} />
+			{/* {variant !== 'small' && actions}
+			{variant === 'small' && featuredAction} */}
+			{/* <ActionsToolbarDropdown {...(variant === 'small' && { actions })} isRecording={isRecording} rid={rid} tmid={tmid} />
+			 */}
+			{room && <ShareLocationAction room={room} tmid={tmid} />}
 		</>
 	);
 };
