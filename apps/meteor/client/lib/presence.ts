@@ -6,7 +6,14 @@ import { Meteor } from 'meteor/meteor';
 
 import { APIClient } from '../../app/utils/client';
 
-export const STATUS_MAP = [UserStatus.OFFLINE, UserStatus.ONLINE, UserStatus.AWAY, UserStatus.BUSY, UserStatus.DISABLED];
+export const STATUS_MAP = [
+	UserStatus.OFFLINE,
+	UserStatus.ONLINE,
+	UserStatus.AWAY,
+	UserStatus.BUSY,
+	UserStatus.DISABLED,
+	UserStatus.DO_NOT_DISTURB,
+];
 
 type InternalEvents = {
 	remove: IUser['_id'];

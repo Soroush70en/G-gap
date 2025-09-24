@@ -158,7 +158,7 @@ export const KonchatNotification = {
 			return;
 		}
 
-		if (Meteor.user().status === 'busy') {
+		if (Meteor.user().status === 'doNotDisturb') {
 			return;
 		}
 
@@ -176,7 +176,11 @@ export const KonchatNotification = {
 	},
 
 	newMessage(rid) {
-		if (Session.equals(`user_${Meteor.user().username}_status`, 'busy')) {
+		const current = Session.get(`user_${Meteor.user().username}_status`);
+		if (
+			Session.equals(`user_${Meteor.user().username}_status`, 'busy') ||
+			Session.equals(`user_${Meteor.user().username}_status`, 'doNotDisturb')
+		) {
 			return;
 		}
 

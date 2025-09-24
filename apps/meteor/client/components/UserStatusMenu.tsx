@@ -40,6 +40,7 @@ const UserStatusMenu = ({
 			[UserStatusType.ONLINE, renderOption(UserStatusType.ONLINE, t('Online'))],
 			[UserStatusType.AWAY, renderOption(UserStatusType.AWAY, t('Away'))],
 			[UserStatusType.BUSY, renderOption(UserStatusType.BUSY, t('Busy'))],
+			[UserStatusType.DO_NOT_DISTURB, renderOption(UserStatusType.DO_NOT_DISTURB, t('DoNotDisturb'))],
 		];
 
 		if (allowInvisibleStatus) {

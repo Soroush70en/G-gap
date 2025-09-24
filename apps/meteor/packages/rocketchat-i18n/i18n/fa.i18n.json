@@ -1441,7 +1441,7 @@
 	"Forgot_Password_Email": "روی <a href=\"[Forgot_Password_Url]\">اینجا</a>برای بازنشانی گذرواژه خود کلیک کنید.",
 	"Forgot_Password_Email_Subject": "[Site_Name] - بازیابی رمز عبور",
 	"Forgot_password_section": "رمز عبور را فراموش کرده اید",
-	"Forward": "رو به جلو",
+	"Forward": "فوروارد",
 	"Forward_chat": "چت رو به جلو",
 	"Forward_to_department": "به بخش بروید",
 	"Forward_to_user": "به طرف کاربر بروید",
@@ -3096,5 +3096,13 @@
 	"registration.component.form.divider": "یا",
 	"registration.component.form.submit": "ارسال",
 	"RegisterWorkspace_Features_Omnichannel_Title": "کانال همه‌کاره",
-	"Video_Conference_Info": "مشخصات تماس"
+	"Video_Conference_Info": "مشخصات تماس",
+	"Room_not_exist_or_not_permission": "اتاق وجود ندارد یا شما اجازه دسترسی به آن را ندارید",
+	"DoNotDisturb": "در حال تمرکز",
+	"doNotDisturb": "در حال تمرکز",
+	"Share_Message": "فوروارد پیام",
+	"Person_Or_Channel": "گیرنده",
+	"Select_atleast_one_channel_to_share_the_messsage": "حداقل یک گیرنده یا کانال برای فورواد پیام انتخاب کنید",
+	"Copy_Link": "کپی لینک",
+	"Message_has_been_shared": "پیام به اشتراک گذاشته شد"
 }

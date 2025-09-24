@@ -10,6 +10,9 @@ import { VideoConfManager } from '../lib/VideoConfManager';
 import VideoConfPopups from '../views/room/contextualBar/VideoConference/VideoConfPopups';
 import DraggableModal from '../components/modal/DraggableModal';
 import AddParticipant from '../components/modal/AddParticipant';
+import { useEndpoint } from '@rocket.chat/ui-contexts';
+import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
+
 type WindowMaybeDesktop = typeof window & {
 	RocketChatDesktop?: {
 		openInternalVideoChatWindow?: (url: string, options: undefined) => void;
@@ -24,16 +27,20 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 		onConfirm: () => void;
 		callId: string;
 	} | null>(null);
-
+	const setStatus = useEndpoint('POST', '/v1/users.setStatus');
+	const currentUserId = Meteor.userId();
 	useEffect(
 		() =>
-			VideoConfManager.on('call/join', (props) => {
-				const open = (): void => {
+			VideoConfManager.on('call/join', ({ callId, url, type }) => {
+				console.log({ callId, url, type });
+				const open = async (): void => {
+					const payload = { status: 'busy', message: type === 'direct' ? 'در تماس هستم' : 'در جلسه هستم', userId: currentUserId };
+					await setStatus(payload);
 					setVideoConf({
 						show: true,
-						url: props.url,
+						url: url,
 						onConfirm: open,
-						callId: props.callId,
+						callId: callId,
 					});
 				};
 				open();
@@ -43,6 +50,8 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 
 	useEffect(() => {
 		VideoConfManager.on('direct/end', () => {
+			const payload = { status: 'online', message: '', userId: currentUserId };
+			setStatus(payload);
 			setVideoConf(null);
 		});
 		VideoConfManager.on('direct/stopped', (params) => {
@@ -60,7 +69,8 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 
 	const handleVideoConfClose = () => {
 		VideoConfManager.leftCall(videoConf?.callId ?? '');
-
+		const payload = { status: 'online', message: '', userId: currentUserId };
+		setStatus(payload);
 		setVideoConf(null);
 	};
 

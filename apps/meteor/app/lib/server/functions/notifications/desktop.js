@@ -64,10 +64,9 @@ export function shouldNotifyDesktop({
 		return false;
 	}
 
-	if (statusConnection === 'offline' || status === 'busy' || desktopNotifications === 'nothing') {
+	if (statusConnection === 'offline' || status === 'doNotDisturb' || desktopNotifications === 'nothing') {
 		return false;
 	}
-
 	if (!desktopNotifications) {
 		if (settings.get('Accounts_Default_User_Preferences_desktopNotifications') === 'all' && (!isThread || hasReplyToThread)) {
 			return true;

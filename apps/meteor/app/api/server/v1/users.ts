@@ -1101,7 +1101,7 @@ API.v1.addRoute(
 					setStatusText(user._id, this.bodyParams.message);
 				}
 				if (this.bodyParams.status) {
-					const validStatus = ['online', 'away', 'offline', 'busy'];
+					const validStatus = ['online', 'away', 'offline', 'busy', 'doNotDisturb'];
 					if (validStatus.includes(this.bodyParams.status)) {
 						const { status } = this.bodyParams;
 

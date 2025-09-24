@@ -18,6 +18,8 @@ import { roomCoordinator } from '../../../../client/lib/rooms/roomCoordinator';
 import MainLayout from '../../../../client/views/root/MainLayout';
 import { omit } from '../../../../lib/utils/omit';
 import { RoomSkeleton, RoomProvider, Room, RoomNotFound } from '../../../../client/views/room';
+import { dispatchToastMessage } from '../../../../client/lib/toast';
+import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
 
 export async function openRoom(type: RoomType, name: string, render = true) {
 	setTimeout(() => {
@@ -89,12 +91,15 @@ export async function openRoom(type: RoomType, name: string, render = true) {
 						console.error(error);
 					}
 				}
-
-				appLayout.render(
-					<MainLayout>
-						<RoomNotFound />
-					</MainLayout>,
-				);
+				dispatchToastMessage({
+					type: 'error',
+					message: TAPi18n.__('Room_not_exist_or_not_permission'),
+				});
+				// appLayout.render(
+				// 	<MainLayout>
+				// 		<RoomNotFound />
+				// 	</MainLayout>,
+				// );
 			}
 		});
 	});

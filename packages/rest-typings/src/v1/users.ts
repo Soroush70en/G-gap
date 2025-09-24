@@ -291,8 +291,8 @@ export type UsersEndpoints = {
 						user: string;
 				  },
 		) => {
-			presence: 'online' | 'offline' | 'away' | 'busy';
-			connectionStatus?: 'online' | 'offline' | 'away' | 'busy';
+			presence: 'online' | 'offline' | 'away' | 'busy' | 'doNotDisturb';
+			connectionStatus?: 'online' | 'offline' | 'away' | 'busy' | 'doNotDisturb';
 			lastLogin?: string;
 		};
 	};
@@ -303,10 +303,10 @@ export type UsersEndpoints = {
 
 	'/v1/users.getStatus': {
 		GET: () => {
-			status: 'online' | 'offline' | 'away' | 'busy';
+			status: 'online' | 'offline' | 'away' | 'busy' | 'doNotDisturb';
 			message?: string;
 			_id: string;
-			connectionStatus?: 'online' | 'offline' | 'away' | 'busy';
+			connectionStatus?: 'online' | 'offline' | 'away' | 'busy' | 'doNotDisturb';
 		};
 	};
 
