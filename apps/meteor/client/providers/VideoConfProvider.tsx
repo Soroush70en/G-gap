@@ -32,7 +32,6 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 	useEffect(
 		() =>
 			VideoConfManager.on('call/join', ({ callId, url, type }) => {
-				console.log({ callId, url, type });
 				const open = async (): void => {
 					const payload = { status: 'busy', message: type === 'direct' ? 'در تماس هستم' : 'در جلسه هستم', userId: currentUserId };
 					await setStatus(payload);

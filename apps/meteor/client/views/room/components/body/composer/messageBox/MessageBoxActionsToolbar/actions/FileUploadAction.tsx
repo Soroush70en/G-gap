@@ -46,6 +46,8 @@ const FileUploadAction = ({ collapsed, chatContext, disabled, ...props }: FileUp
 					{...((!fileUploadEnabled || disabled) && { title: t('Not_Available') })}
 					disabled={!fileUploadEnabled || disabled}
 					onClick={handleUpload}
+					style={{ padding: '0px !important' }}
+					id='upload-file-option'
 				>
 					<OptionIcon name='clip' />
 					<OptionContent>{t('File')}</OptionContent>

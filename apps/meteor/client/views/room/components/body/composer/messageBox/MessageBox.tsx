@@ -45,6 +45,8 @@ import FileUploadAction from './MessageBoxActionsToolbar/actions/FileUploadActio
 // import VideoMessageAction from './MessageBoxActionsToolbar/actions/VideoMessageAction';
 import AVToggleHoldAction from './MessageBoxActionsToolbar/actions/AVToggleHoldAction';
 import React, { memo, useRef, useReducer, useCallback, useState } from 'react';
+import { SendHorizonal } from 'lucide-react';
+
 const reducer = (_: unknown, event: FormEvent<HTMLInputElement>): boolean => {
 	const target = event.target as HTMLInputElement;
 
@@ -111,7 +113,7 @@ const MessageBox = ({
 	readOnly,
 	tshow,
 }: MessageBoxProps): ReactElement => {
-	const [isAudioRecording, setIsAudioRecording] = useState(true); 
+	const [isAudioRecording, setIsAudioRecording] = useState(true);
 	const [typing, setTyping] = useReducer(reducer, false);
 	const [moreOpen, setMoreOpen] = useState(false);
 	const { isMobile } = useLayout();
@@ -281,7 +283,6 @@ const MessageBox = ({
 	const { textAreaStyle, shadowStyle } = useAutoGrow(textareaRef, shadowRef, isRecordingAudio);
 
 	const canSend = useReactiveValue(useCallback(() => roomCoordinator.verifyCanSendMessage(rid), [rid]));
-
 	const sizes = useContentBoxSize(textareaRef);
 
 	const format = useFormatDateAndTime();
@@ -349,12 +350,10 @@ const MessageBox = ({
 		<>
 			{chat?.composer?.quotedMessages && <MessageBoxReplies />}
 
-			
-
 			{popup && !popup.preview && (
 				<ComposerBoxPopup select={select} items={items} focused={focused} title={popup.title} renderItem={popup.renderItem} />
 			)}
-			
+
 			{popup?.preview && (
 				<ComposerBoxPopupPreview
 					select={select}
@@ -373,112 +372,113 @@ const MessageBox = ({
 					<Tag title={t('Only_people_with_permission_can_send_messages_here')}>{t('This_room_is_read_only')}</Tag>
 				</Box>
 			)}
-		 <ComposerUserActionIndicator rid={rid} tmid={tmid} />
+			<ComposerUserActionIndicator rid={rid} tmid={tmid} />
 			{isRecordingVideo && <VideoMessageRecorder reference={messageComposerRef} rid={rid} tmid={tmid} />}
 			<Box display='flex' justifyContent='center' w='full'>
 				<Box w='full'>
-				
-				<MessageComposer
-					ref={messageComposerRef}
-					variant={isEditing ? 'editing' : undefined}
-					className='ggap-composer'
-					>
-					{isRecordingAudio && (
-						<AudioMessageRecorder rid={rid} isMicrophoneDenied={isMicrophoneDenied} />
-					)}
+					<MessageComposer ref={messageComposerRef} variant={isEditing ? 'editing' : undefined} className='ggap-composer'>
+						{isRecordingAudio && <AudioMessageRecorder rid={rid} isMicrophoneDenied={isMicrophoneDenied} />}
 
-					<div ref={shadowRef} style={shadowStyle} />
+						<div ref={shadowRef} style={shadowStyle} />
 
-					<MessageComposerToolbar>
-						<MessageComposerToolbarActions aria-label={t('Message_composer_toolbox_primary_actions')}>
-						<MessageComposerAction
-							icon='emoji'
-							disabled={!useEmojis || isRecording || !canSend}
-							onClick={handleOpenEmojiPicker}
-							title={t('Emoji')}
-						/>
-
-						{/* ورودی + آیکن‌ها */}
-						<div className='ggap-input-wrap'>
-							<MessageComposerInput
-							ref={mergedRefs as unknown as Ref<HTMLInputElement>}
-							aria-label={t('Message')}
-							name='msg'
-							disabled={isRecording || !canSend}
-							onChange={setTyping}
-							style={textAreaStyle}
-							placeholder={t('Message')}
-							onKeyDown={handler}
-							onPaste={handlePaste}
-							aria-activedescendant={ariaActiveDescendant}
-							/>
-
-							{/* آیکن‌ها روی inline-end (RTL=چپ، LTR=راست) */}
-							<div className='ggap-affix-left'>
-							{canSend && (
-								<div className='ggap-composer-fileuploaded-margin'>
-								<FileUploadAction
-									key='file'
-									collapsed={true}
-									disabled={!canSend || isRecording}
-								/>
-								</div>
-							)}
-
-							{typing && (
+						<MessageComposerToolbar>
+							<MessageComposerToolbarActions aria-label={t('Message_composer_toolbox_primary_actions')}>
 								<MessageComposerAction
-								key='more'
-								icon='kebab'
-								title={t('More')}
-								onClick={() => setMoreOpen((v) => !v)}
+									icon='emoji'
+									disabled={!useEmojis || isRecording || !canSend}
+									onClick={handleOpenEmojiPicker}
+									title={t('Emoji')}
 								/>
-							)}
-							</div>
-						</div>
-						</MessageComposerToolbarActions>
 
-						<MessageComposerToolbarSubmit>
-						{/* <AudioMessageAction
+								{/* ورودی + آیکن‌ها */}
+								<div className='ggap-input-wrap'>
+									<MessageComposerInput
+										ref={mergedRefs as unknown as Ref<HTMLInputElement>}
+										aria-label={t('Message')}
+										name='msg'
+										disabled={isRecording || !canSend}
+										onChange={setTyping}
+										style={textAreaStyle}
+										placeholder={t('Message')}
+										onKeyDown={handler}
+										onPaste={handlePaste}
+										aria-activedescendant={ariaActiveDescendant}
+									/>
+
+									{/* آیکن‌ها روی inline-end (RTL=چپ، LTR=راست) */}
+									<div className='ggap-affix-left'>
+										{canSend && (
+											<div className='ggap-composer-fileuploaded-margin'>
+												<FileUploadAction key='file' collapsed={true} disabled={!canSend || isRecording} />
+											</div>
+										)}
+
+										{typing && <MessageComposerAction key='more' icon='kebab' title={t('More')} onClick={() => setMoreOpen((v) => !v)} />}
+									</div>
+								</div>
+							</MessageComposerToolbarActions>
+
+							<MessageComposerToolbarSubmit>
+								{/* <AudioMessageAction
 							key='audio'
 							disabled={!canSend || typing || isRecording || isMicrophoneDenied}
 							isMicrophoneDenied={isMicrophoneDenied}
 						/>
 						<VideoMessageAction key='video' collapsed={true} disabled={!canSend || typing || isRecording} />
 						 */}
-						 <AVToggleHoldAction
-							disabled={!canSend || typing || isRecording}
-							isRecording={isRecording}
-							isMicrophoneDenied={isMicrophoneDenied}
-							collapsed={true}
-							initialMode="audio"
-							longPressMs={1000}
-						/>
-						</MessageComposerToolbarSubmit>
-					</MessageComposerToolbar>
+								{!canSend && (
+									<Button small primary onClick={onJoin} disabled={joinMutation.isLoading}>
+										{t('Join')}
+									</Button>
+								)}
+								{canSend && !typing && !isEditing && (
+									<AVToggleHoldAction
+										disabled={!canSend || typing || isRecording}
+										isRecording={isRecording}
+										isMicrophoneDenied={isMicrophoneDenied}
+										collapsed={true}
+										initialMode='audio'
+										longPressMs={1000}
+									/>
+								)}
+								{canSend && (typing || isEditing) && (
+									<MessageComposerAction
+										id={'send-button'}
+										aria-label={t('Send')}
+										icon='send'
+										disabled={!canSend || (!typing && !isEditing)}
+										onClick={handleSendMessage}
+										secondary={typing || isEditing}
+										info={typing || isEditing}
+										style={{ backgroundColor: '#2096E0 !important', color: 'white !important' }}
+									/>
+								)}
+							</MessageComposerToolbarSubmit>
+						</MessageComposerToolbar>
 
-					{/* ⬇️ پاپ‌اور: فرزند مستقیم MessageComposer (دیگر داخل Toolbar/Actions نیست) */}
-					{typing && moreOpen && (
-						<div className='ggap-composer-popover' role='dialog'>
-						{chat.composer && formatters.length > 0 && (
-							<MessageBoxFormattingToolbar
-							composer={chat.composer}
-							variant={sizes.inlineSize < 480 ? 'small' : 'large'}
-							items={formatters}
-							disabled={isRecording || !canSend}
-							/>
+						{/* ⬇️ پاپ‌اور: فرزند مستقیم MessageComposer (دیگر داخل Toolbar/Actions نیست) */}
+						{typing && moreOpen && (
+							<div className='ggap-composer-popover' role='dialog'>
+								{chat.composer && formatters.length > 0 && (
+									<MessageBoxFormattingToolbar
+										composer={chat.composer}
+										variant={sizes.inlineSize < 480 ? 'small' : 'large'}
+										items={formatters}
+										disabled={isRecording || !canSend}
+									/>
+								)}
+								{/* <div className='ggap-composer-popover-divider' /> */}
+								<MessageBoxActionsToolbar
+									variant={sizes.inlineSize < 480 ? 'small' : 'large'}
+									isRecording={isRecording}
+									typing={typing}
+									canSend={canSend}
+									rid={rid}
+									tmid={tmid}
+									isMicrophoneDenied={isMicrophoneDenied}
+								/>
+							</div>
 						)}
-						{/* <div className='ggap-composer-popover-divider' /> */}
-						<MessageBoxActionsToolbar
-							variant={sizes.inlineSize < 480 ? 'small' : 'large'}
-							isRecording={isRecording}
-							typing={typing}
-							canSend={canSend}
-							rid={rid}
-							tmid={tmid}
-							isMicrophoneDenied={isMicrophoneDenied}
-						/>
-						</div>
-					)}
 					</MessageComposer>
 				</Box>
 			</Box>
