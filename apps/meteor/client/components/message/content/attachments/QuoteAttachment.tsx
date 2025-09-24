@@ -66,11 +66,11 @@ export const QuoteAttachment = ({ attachment }: QuoteAttachmentProps): ReactElem
 						)}
 					</AttachmentAuthor>
 					{attachment.md ? <MessageContentBody md={attachment.md} /> : attachment.text}
-					{attachment.attachments && (
+					{/* {attachment.attachments && (
 						<AttachmentInner>
 							<Attachments attachments={attachment.attachments} />
 						</AttachmentInner>
-					)}
+					)} */}
 				</AttachmentDetails>
 			</AttachmentContent>
 		</>

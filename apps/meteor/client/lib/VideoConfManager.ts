@@ -56,6 +56,7 @@ export type ProviderCapabilities = {
 export type CurrentCallParams = {
 	callId: string;
 	url: string;
+	type: string;
 };
 
 type VideoConfEvents = {
@@ -76,7 +77,7 @@ type VideoConfEvents = {
 
 	// We stopped calling a remote user
 	'direct/stopped': DirectCallParams;
-	
+
 	'direct/end': void;
 
 	'preference/changed': { key: keyof CallPreferences; value: boolean };
@@ -104,8 +105,8 @@ type VideoConfEvents = {
 	// A remote user accepted our call
 	'videoConference/accepted': VideoConferenceCallParams;
 	'videoConference/left': void;
-	'videoConference/decline':void;
-	'videoConference/lost':void;
+	'videoConference/decline': void;
+	'videoConference/lost': void;
 };
 export const VideoConfManager = new (class VideoConfManager extends Emitter<VideoConfEvents> {
 	private userId: string | undefined;
@@ -316,15 +317,15 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 	}
 
 	public async declineIncomingCall(callerId: string): Promise<void> {
-		await APIClient.post('/v1/video-conference.decline',  { callerId }).catch((e: any) => {
+		await APIClient.post('/v1/video-conference.decline', { callerId }).catch((e: any) => {
 			return Promise.reject(e);
 		});
 
 		return;
 	}
 
-	public async lostIncomingCall(callerId: string): Promise<void> {	
-		await APIClient.post('/v1/video-conference.lost',  { callerId }).catch((e: any) => {
+	public async lostIncomingCall(callerId: string): Promise<void> {
+		await APIClient.post('/v1/video-conference.lost', { callerId }).catch((e: any) => {
 			return Promise.reject(e);
 		});
 
@@ -384,7 +385,7 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 			},
 		};
 
-		const { url } = await APIClient.post('/v1/video-conference.join', params).catch((e) => {
+		const { url, type } = await APIClient.post('/v1/video-conference.join', params).catch((e) => {
 			debug && console.error(`[VideoConf] Failed to join call ${callId}`);
 			this.emit('join/error', { error: e?.xhr?.responseJSON?.error || 'unknown-error' });
 
@@ -396,7 +397,7 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 		}
 
 		debug && console.log(`[VideoConf] Opening ${url}.`);
-		this.emit('call/join', { url, callId });
+		this.emit('call/join', { url, type, callId });
 	}
 
 	public abortCall(): void {
@@ -469,8 +470,8 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 		APIClient.post('/v1/video-conference.cancel', { callId });
 	}
 
-	async leftCall( callId: string): Promise<void> {		
-		await APIClient.post('/v1/video-conference.leftCall',  { callId });
+	async leftCall(callId: string): Promise<void> {
+		await APIClient.post('/v1/video-conference.leftCall', { callId });
 	}
 
 	private disconnect(): void {
@@ -527,16 +528,14 @@ export const VideoConfManager = new (class VideoConfManager extends Emitter<Vide
 			case 'end':
 				return this.onDirectCallEnded(params);
 			case 'left':
-				if(params.callType === 'videoconference'){
+				if (params.callType === 'videoconference') {
 					this.emit('videoConference/left');
-				}
-				else{
+				} else {
 					this.emit('direct/end');
 				}
 				break;
 			case 'videoConference/accepted':
-				if(params.uid === this.userId)
-					clearIncomingCall();
+				if (params.uid === this.userId) clearIncomingCall();
 				break;
 		}
 	}

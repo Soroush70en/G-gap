@@ -44,7 +44,7 @@ Meteor.methods({
 			});
 		}
 
-		const validStatusTypes = ['online', 'away', 'busy', 'offline'];
+		const validStatusTypes = ['online', 'away', 'busy', 'offline', 'doNotDisturb'];
 		if (userStatusData.statusType && validStatusTypes.indexOf(userStatusData.statusType) < 0) {
 			throw new Meteor.Error('error-input-is-not-a-valid-field', `${userStatusData.statusType} is not a valid status type`, {
 				method: 'insertOrUpdateUserStatus',

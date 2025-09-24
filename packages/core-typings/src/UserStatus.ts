@@ -4,4 +4,5 @@ export enum UserStatus {
 	OFFLINE = 'offline',
 	BUSY = 'busy',
 	DISABLED = 'disabled',
+	DO_NOT_DISTURB = 'doNotDisturb',
 }

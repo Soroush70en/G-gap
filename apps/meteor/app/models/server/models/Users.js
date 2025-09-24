@@ -769,7 +769,7 @@ export class Users extends Base {
 		const query = {
 			_id: { $in: users },
 			status: {
-				$in: ['online', 'away', 'busy'],
+				$in: ['online', 'away', 'busy', 'doNotDisturb'],
 			},
 		};
 		return this.find(query, options);
@@ -781,7 +781,7 @@ export class Users extends Base {
 				$exists: 1,
 			},
 			status: {
-				$in: ['online', 'away', 'busy'],
+				$in: ['online', 'away', 'busy', 'doNotDisturb'],
 			},
 		};
 
@@ -959,7 +959,7 @@ export class Users extends Base {
 				$exists: 1,
 			},
 			status: {
-				$in: ['online', 'away', 'busy'],
+				$in: ['online', 'away', 'busy', 'doNotDisturb'],
 			},
 		};
 

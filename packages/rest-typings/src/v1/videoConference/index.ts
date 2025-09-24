@@ -20,7 +20,7 @@ export type VideoConferenceEndpoints = {
 	};
 
 	'/v1/video-conference.join': {
-		POST: (params: VideoConfJoinProps) => { url: string; providerName: string };
+		POST: (params: VideoConfJoinProps) => { url: string; type: string; providerName: string };
 	};
 
 	'/v1/video-conference.cancel': {

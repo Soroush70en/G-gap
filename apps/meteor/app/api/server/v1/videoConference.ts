@@ -89,6 +89,7 @@ API.v1.addRoute(
 
 			return API.v1.success({
 				url,
+				type: call.type,
 				providerName: call.providerName,
 			});
 		},

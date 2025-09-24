@@ -48,5 +48,11 @@ export const userStatus: UserStatusTypes = {
 			id: UserStatus.OFFLINE,
 			statusType: UserStatus.OFFLINE,
 		},
+		doNotDisturb: {
+			name: UserStatus.DO_NOT_DISTURB,
+			localizeName: true,
+			id: UserStatus.DO_NOT_DISTURB,
+			statusType: UserStatus.DO_NOT_DISTURB,
+		},
 	},
 } as const;

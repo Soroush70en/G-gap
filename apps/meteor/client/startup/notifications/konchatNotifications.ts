@@ -13,7 +13,7 @@ import { fireGlobalEvent } from '../../lib/utils/fireGlobalEvent';
 import { isLayoutEmbedded } from '../../lib/utils/isLayoutEmbedded';
 
 const notifyNewRoom = (sub: ISubscription): void => {
-	if (Session.equals(`user_${Meteor.userId()}_status`, 'busy')) {
+	if (Session.equals(`user_${Meteor.userId()}_status`, 'doNotDisturb')) {
 		return;
 	}
 
