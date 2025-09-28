@@ -35,9 +35,29 @@ type QuoteAttachmentProps = {
 	attachment: MessageQuoteAttachment;
 };
 
+type AttachmentLike = {
+	type?: string;
+	attachments?: AttachmentLike[];
+};
+
+export function hasFileAttachment(root?: { attachments?: AttachmentLike[] } | AttachmentLike): boolean {
+	if (!root) return false;
+
+	// Normalize to a stack so we handle arbitrary nesting without recursion limits
+	const stack: AttachmentLike[] = [...('attachments' in root && root.attachments ? root.attachments! : [])];
+
+	while (stack.length) {
+		const current = stack.pop()!;
+		if (current.type === 'file') return true;
+		if (current.attachments?.length) stack.push(...current.attachments);
+	}
+
+	return false;
+}
+
 export const QuoteAttachment = ({ attachment }: QuoteAttachmentProps): ReactElement => {
 	const format = useTimeAgo();
-
+	const isFile = hasFileAttachment(attachment);
 	return (
 		<>
 			<AttachmentContent className={quoteStyles} width='full'>
@@ -66,11 +86,11 @@ export const QuoteAttachment = ({ attachment }: QuoteAttachmentProps): ReactElem
 						)}
 					</AttachmentAuthor>
 					{attachment.md ? <MessageContentBody md={attachment.md} /> : attachment.text}
-					{/* {attachment.attachments && (
+					{isFile && (
 						<AttachmentInner>
 							<Attachments attachments={attachment.attachments} />
 						</AttachmentInner>
-					)} */}
+					)}
 				</AttachmentDetails>
 			</AttachmentContent>
 		</>

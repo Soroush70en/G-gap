@@ -1,25 +1,31 @@
-import type { AllHTMLAttributes } from 'react';
-
-export type StatusBulletProps = {
-	status?: 'loading' | 'online' | 'busy' | 'away' | 'offline' | 'disabled' | 'doNotDisturb';
-	size?: 'small' | 'large';
-} & Omit<AllHTMLAttributes<SVGElement>, 'size'>;
+import type { SVGProps } from 'react';
 
 type DoNotDisturbProps = {
 	title: string;
-};
+	size?: 'small' | 'large';
+} & Omit<SVGProps<SVGSVGElement>, 'size' | 'title'>;
 
-const DoNotDisturbIcon = ({ title }: DoNotDisturbProps) => (
-	<span title={title}>
-		<svg width='0.625rem' height='0.625rem' viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg' fill='' stroke=''>
-			<g id='SVGRepo_bgCarrier' stroke-width='0'></g>
-			<g id='SVGRepo_tracerCarrier' stroke-linecap='round' stroke-linejoin='round'></g>
-			<g id='SVGRepo_iconCarrier'>
-				{' '}
-				<circle cx='6' cy='6' r='6' fill='#f5455c'></circle>{' '}
-			</g>
+// Match Fuselage's small/large sizing
+const pxFor = (size?: 'small' | 'large') => (size === 'small' ? 10 : 14);
+
+const DoNotDisturbIcon = ({ title, size = 'large', className = '', ...rest }: DoNotDisturbProps) => {
+	const px = pxFor(size);
+	return (
+		<svg
+			{...rest}
+			width={px}
+			height={px}
+			viewBox='0 0 12 12'
+			role='img'
+			aria-label={title}
+			// @ts-expect-error
+			title={title}
+			className={`rcx-status-bullet rcx-status-bullet--busy ${className} ${size === 'small' ? 'rcx-status-bullet--small' : ''}`}
+			xmlns='http://www.w3.org/2000/svg'
+		>
+			<circle cx='6' cy='6' r='6' fill='#f5455c' />
 		</svg>
-	</span>
-);
+	);
+};
 
 export default DoNotDisturbIcon;
