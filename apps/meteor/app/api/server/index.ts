@@ -52,5 +52,4 @@ import './v1/voip/extensions';
 import './v1/voip/queues';
 import './v1/voip/omnichannel';
 import './v1/voip';
-
 export { API, APIClass, defaultRateLimiterOptions } from './api';
