@@ -4,6 +4,7 @@ import Uploads from './models/Uploads';
 import UserDataFiles from './models/UserDataFiles';
 import { Roles } from './models/Roles';
 import { Users } from './models/Users';
+import { Partners } from './models/Partners';
 import { CachedChannelList } from './models/CachedChannelList';
 import { CachedChatRoom } from './models/CachedChatRoom';
 import { CachedChatSubscription } from './models/CachedChatSubscription';
@@ -49,6 +50,7 @@ export {
 	CustomSounds,
 	EmojiCustom,
 	WebdavAccounts,
+	Partners,
 	/** @deprecated */
 	Users,
 	/** @deprecated */

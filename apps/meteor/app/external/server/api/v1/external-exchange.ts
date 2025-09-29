@@ -15,7 +15,6 @@ API.v1.addRoute(
 			try {
 				// No HMAC transport check here by design (Option A).
 				// We fully trust only the short-lived assertion.
-
 				const { partnerId, userId, tag, exp, jti, signature } = this.bodyParams ?? {};
 				if (!partnerId || !userId || !tag || !exp || !jti || !signature) {
 					return API.v1.failure('missing fields');

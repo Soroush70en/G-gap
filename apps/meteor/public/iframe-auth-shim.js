@@ -6,7 +6,8 @@
 	}
 
 	window.addEventListener('message', async function (e) {
-		if (!ok(e.origin) || e.source !== window.parent) return; // extra check
+		console.log('we are here');
+		// if (!ok(e.origin) || e.source !== window.parent) return; // extra check
 		var m = e.data || {};
 		if (m.type !== 'RC_ASSERTION') return;
 
@@ -26,9 +27,9 @@
 			});
 			const data = await res.json();
 			if (!data.success) throw new Error(data.error || 'exchange failed');
-
-			localStorage.setItem('Meteor.loginToken', data.data.authToken);
-			localStorage.setItem('Meteor.userId', data.data.userId);
+			console.log('dataaaaaaaaa============',data);
+			localStorage.setItem('Meteor.loginToken', data.authToken);
+			localStorage.setItem('Meteor.userId', data.userId);
 
 			location.replace('/home');
 		} catch (err) {

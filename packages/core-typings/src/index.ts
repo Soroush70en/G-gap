@@ -63,6 +63,7 @@ export * from './MessageReads';
 export * from './IUpload';
 export * from './IOEmbedCache';
 export * from './IOembed';
+export * from './IPartner';
 // TODO: not sure if this is the right place to put this
 
 export * from './IEmailInbox';

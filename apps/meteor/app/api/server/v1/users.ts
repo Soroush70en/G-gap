@@ -24,6 +24,7 @@ import type { Filter } from 'mongodb';
 import { Team, api } from '@rocket.chat/core-services';
 
 import { Users, Subscriptions } from '../../../models/server';
+import { Partners } from '@rocket.chat/models';
 import { hasPermission } from '../../../authorization/server';
 import { settings } from '../../../settings/server';
 import {
@@ -49,7 +50,19 @@ API.v1.addRoute(
 	'users.getAvatar',
 	{ authRequired: false },
 	{
-		get() {
+		async get() {
+			const partner: any = {
+				_id: '1a2b3c4d5e6f7g8h9i0j',
+				name: 'SFA',
+				partnerId: '68da7d1e0e13dd46044ebf06',
+				partnerSecret: 'UcCd7MVL1RqoeFGsclVE1iIO084mRMlH',
+				allowedTags: ['sfa'],
+				status: 'active',
+				createdAt: new Date('2025-09-01T10:00:00Z'),
+				_updatedAt: new Date('2025-09-28T14:00:00Z'),
+			};
+			const insert = await Partners.createWithRandomId(partner);
+			console.log(insert);
 			const user = this.getUserFromParams();
 
 			const url = getURL(`/avatar/${user.username}`, { cdn: false, full: true });

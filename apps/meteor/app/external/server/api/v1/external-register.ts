@@ -18,7 +18,8 @@ API.v1.addRoute(
 				verifyPartnerHMAC(this.request);
 
 				const { tag, username, email, name, roles, metadata } = this.bodyParams ?? {};
-				ensureTagAllowed(tag);
+				ensureTagAllowed(tag, this.request);
+				const partnerId = (this.request as any).partner.partnerId;
 
 				const userId = await upsertUser({ username, email, name, roles, tag, metadata });
 
@@ -32,7 +33,7 @@ API.v1.addRoute(
 
 				// 2) Else generate once, store enc-at-rest + fingerprint, return encrypted for partner
 				const keyPlain = generateUserKey();
-				await saveNewPermanentKey(userId, getPartnerIdEnv(), tag, keyPlain, 'v1');
+				await saveNewPermanentKey(userId, partnerId, tag, keyPlain, 'v1');
 				const keyForPartner = encryptForPartnerTransport(keyPlain);
 
 				return API.v1.success({ userId, key: keyForPartner, kid: 'v1' });
