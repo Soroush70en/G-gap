@@ -11,6 +11,7 @@ import VideoConfPopups from '../views/room/contextualBar/VideoConference/VideoCo
 import DraggableModal from '../components/modal/DraggableModal';
 import AddParticipant from '../components/modal/AddParticipant';
 import { TAPi18n } from 'meteor/rocketchat:tap-i18n';
+import { useEndpoint } from '@rocket.chat/ui-contexts';
 
 type WindowMaybeDesktop = typeof window & {
 	RocketChatDesktop?: {
@@ -26,6 +27,7 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 		onConfirm: () => void;
 		callId: string;
 	} | null>(null);
+	const setStatus = useEndpoint('POST', '/v1/users.setStatus');
 	const currentUserId = Meteor.userId();
 	useEffect(
 		() =>
@@ -62,6 +64,11 @@ const VideoConfContextProvider = ({ children }: { children: ReactNode }): ReactE
 
 	const handleVideoConfClose = () => {
 		VideoConfManager.leftCall(videoConf?.callId ?? '');
+		const payload = { status: 'online', message: '', userId: currentUserId };
+		setStatus(payload);
+		setTimeout(() => {
+			setStatus(payload);
+		}, 500)
 		setVideoConf(null);
 	};
 
