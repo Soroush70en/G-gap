@@ -1,6 +1,5 @@
 import crypto from 'crypto';
 import { API } from '../../../../api/server';
-import { ensureTagAllowed } from '../../lib/partnerAuth';
 import { loadExistingKeyRecord, decryptUserKeyFromRecord } from '../../lib/keyStore';
 import { createLoginToken } from '../../lib/token';
 
@@ -19,9 +18,6 @@ API.v1.addRoute(
 				if (!partnerId || !userId || !tag || !exp || !jti || !signature) {
 					return API.v1.failure('missing fields');
 				}
-
-				// Tag allowlist (optional but recommended)
-				ensureTagAllowed(String(tag));
 
 				// Freshness + replay
 				const now = Math.floor(Date.now() / 1000);

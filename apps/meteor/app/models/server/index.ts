@@ -1,6 +1,7 @@
 import { Base } from './models/_Base';
 import { BaseDb } from './models/_BaseDb';
 import Messages from './models/Messages';
+import Partners from './models/Partners';
 import Rooms from './models/Rooms';
 import Subscriptions from './models/Subscriptions';
 import Users from './models/Users';
@@ -21,6 +22,7 @@ export {
 	Base,
 	BaseDb,
 	Messages,
+	Partners,
 	Rooms,
 	Subscriptions,
 	Users,

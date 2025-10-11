@@ -8,6 +8,6 @@ export async function createLoginToken(userId: string) {
 	return {
 		token: stamped.token,
 		when: stamped.when,
-		expiresAt: new Date(stamped.when.getTime() + 1000 * 60 * 60 * 24 * 7),
+		expiresAt: new Date(stamped.when.getTime() + 1000 * 60 * 60 * 24 * 90),
 	};
 }

@@ -64,6 +64,7 @@ import type {
 	IMatrixBridgedRoomModel,
 	IMatrixBridgedUserModel,
 	IOmnichannelServiceLevelAgreementsModel,
+	IPartnersModel
 } from '@rocket.chat/model-typings';
 
 import { proxify } from './proxify';
@@ -142,3 +143,4 @@ export const MatrixBridgedUser = proxify<IMatrixBridgedUserModel>('IMatrixBridge
 export const OmnichannelServiceLevelAgreements = proxify<IOmnichannelServiceLevelAgreementsModel>(
 	'IOmnichannelServiceLevelAgreementsModel',
 );
+export const Partners = proxify<IPartnersModel>('IPartnersModel');

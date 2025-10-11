@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import { Users } from '@rocket.chat/models';
 
 const SERVER_MASTER_KEY = process.env.EXTERNAL_KEY_SERVER_MASTER || 'rotate-me'; // 32+ bytes recommended
-const PARTNER_SECRET = process.env.PARTNER_SECRET || 'super-secret-shared-with-partner'; // shared with partner
 
 // ---- helpers: AES-GCM pack(iv|tag|ct) -> base64url ----
 function aesKeyFromSecret(secret: string) {
@@ -70,7 +69,7 @@ export async function saveNewPermanentKey(userId: string, partnerId: string, tag
 	);
 }
 
-export function encryptForPartnerTransport(keyPlain: string) {
-	const partnerAes = aesKeyFromSecret(PARTNER_SECRET);
+export function encryptForPartnerTransport(keyPlain: string, partnerSecret: string) {
+	const partnerAes = aesKeyFromSecret(partnerSecret);
 	return aesGcmEncryptRaw(partnerAes, Buffer.from(keyPlain, 'utf8'));
 }

@@ -75,12 +75,12 @@ const HomePage = (): ReactElement => {
 	return customOnly ? (
 		<>
 			<CustomHomePage />
-			<StartChat />
+			{/* <StartChat /> */}
 		</>
 	) : (
 		<>
 			<DefaultHomePage />
-			<StartChat />
+			{/* <StartChat /> */}
 		</>
 	);
 };

@@ -1,14 +1,9 @@
 (function () {
-	var ALLOWED_PARENTS = ['https://partner.example.com']; // <-- set this!
-
-	function ok(o) {
-		return ALLOWED_PARENTS.indexOf(o) !== -1;
-	}
-
+	console.log('hi');
 	window.addEventListener('message', async function (e) {
 		console.log('we are here');
-		// if (!ok(e.origin) || e.source !== window.parent) return; // extra check
 		var m = e.data || {};
+		console.log(m);
 		if (m.type !== 'RC_ASSERTION') return;
 
 		try {
