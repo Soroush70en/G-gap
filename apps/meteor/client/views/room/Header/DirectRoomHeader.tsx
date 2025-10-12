@@ -27,7 +27,7 @@ const DirectRoomHeader = ({ room, slots }: DirectRoomHeaderProps): ReactElement 
 	const directUserId = room.uids?.filter((uid) => uid !== userId).shift();
 	const directUserData = usePresence(directUserId);
 
-	return <RoomHeader slots={slots} room={room} topic={directUserData?.statusText} />;
+	return <RoomHeader slots={slots} room={room} topic={''} />;
 };
 
 export default DirectRoomHeader;
