@@ -845,6 +845,7 @@ export class TeamService extends ServiceClassInternal implements ITeamService {
 		});
 
 		if (isAlreadyAMember) {
+			console.log(`${userId} isAlreadyAMember`);
 			return false;
 		}
 

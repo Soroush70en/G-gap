@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { Users } from '@rocket.chat/models';
 
-const SERVER_MASTER_KEY = process.env.EXTERNAL_KEY_SERVER_MASTER || 'rotate-me'; // 32+ bytes recommended
+const SERVER_MASTER_KEY = process.env.EXTERNAL_KEY_SERVER_MASTER || 'cvNpyoa2tUVqaIyDLYtjHx9RSuZ99Qh7';
 
 // ---- helpers: AES-GCM pack(iv|tag|ct) -> base64url ----
 function aesKeyFromSecret(secret: string) {
@@ -43,8 +43,6 @@ export async function loadExistingKeyRecord(userId: string) {
 		| undefined
 		| {
 				partnerId: string;
-				tag: string;
-				kid: string;
 				enc: string;
 				fp: string;
 				status: string;
@@ -59,13 +57,13 @@ export function decryptUserKeyFromRecord(rec: { enc: string }) {
 	return plain.toString('utf8');
 }
 
-export async function saveNewPermanentKey(userId: string, partnerId: string, tag: string, keyPlain: string, kid = 'v1') {
+export async function saveNewPermanentKey(userId: string, partnerId: string, keyPlain: string) {
 	const key = aesKeyFromSecret(SERVER_MASTER_KEY);
 	const enc = aesGcmEncryptRaw(key, Buffer.from(keyPlain, 'utf8'));
 	const fp = hashForLookup(keyPlain);
 	await Users.updateOne(
 		{ _id: userId },
-		{ $set: { 'customFields.externalAuth': { partnerId, tag, kid, enc, fp, status: 'active', updatedAt: new Date() } } },
+		{ $set: { 'customFields.externalAuth': { partnerId, enc, fp, status: 'active', updatedAt: new Date() } } },
 	);
 }
 

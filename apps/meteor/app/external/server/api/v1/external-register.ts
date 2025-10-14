@@ -2,14 +2,9 @@
 import { API } from '../../../../api/server';
 import { verifyPartnerHMAC } from '../../lib/partnerAuth';
 import { upsertUser } from '../../lib/userUpsert';
-import {
-  loadExistingKeyRecord,
-  decryptUserKeyFromRecord,
-  generateUserKey,
-  saveNewPermanentKey,
-  encryptForPartnerTransport,
-} from '../../lib/keyStore';
+import { loadExistingKeyRecord, decryptUserKeyFromRecord, generateUserKey, saveNewPermanentKey, encryptForPartnerTransport } from '../../lib/keyStore';
 import { linkSalesTeamRelations } from '../../lib/linkSalesTeam';
+import { reconcileParentGroup } from '../../lib/grouping';
 
 type RegisterItem = {
   tag: string;
@@ -18,7 +13,7 @@ type RegisterItem = {
   name?: string;
   roles?: string[];
   salesTeamId?: string;
-  organizationId?: string;   // <-- NEW
+  organizationId?: string;
   parentId?: string;
   childrenIds?: string[];
 };
@@ -31,21 +26,26 @@ API.v1.addRoute('external.register', { authRequired: false }, {
       const partnerId = (this.request as any).partner.partnerId;
       const partnerSecret = (this.request as any).partner.partnerSecret;
 
-      const payload = this.bodyParams ?? [];
-	  const isBulk = Array.isArray(payload.users);
+      const raw = this.bodyParams ?? {};
+      const items: RegisterItem[] =
+        Array.isArray(raw) ? raw :
+        Array.isArray(raw.users) ? raw.users :
+        [raw];
+      const isBulk = items.length > 1;
+
       const results: Array<{
         index: number;
         username?: string;
         email?: string;
         userId?: string;
         key?: string;
-        salesTeamId?: string;     // <-- included in response
-        organizationId?: string;  // <-- included in response
+        salesTeamId?: string;
+        organizationId?: string;
         error?: string;
       }> = [];
 
       let index = 0;
-      for (const item of payload) {
+      for (const item of items) {
         const {
           tag,
           username,
@@ -53,7 +53,7 @@ API.v1.addRoute('external.register', { authRequired: false }, {
           name,
           roles,
           salesTeamId,
-          organizationId,     // <-- NEW
+          organizationId,
           parentId,
           childrenIds,
         } = item ?? {};
@@ -66,38 +66,69 @@ API.v1.addRoute('external.register', { authRequired: false }, {
               ? String(email).trim()
               : `${username}@${tag}.ir`;
 
-          // Upsert + store Sales/Org IDs
-          const userId = await upsertUser({
+          // Upsert (+ capture previous parent)
+          const { userId, prevParentSalesTeamId } = await upsertUser({
             username,
             email: finalEmail,
             name,
             roles,
             tag,
             salesTeamId: salesTeamId ? String(salesTeamId) : undefined,
-            organizationId: organizationId ? String(organizationId) : undefined, // <-- pass through
+            organizationId: organizationId ? String(organizationId) : undefined,
+            parentSalesTeamId: parentId ? String(parentId) : undefined, // NEW
           });
 
-          // Permanent key: reuse if exists, else create once
+          // Permanent key: reuse or create once
           const existing = await loadExistingKeyRecord(userId);
           let keyPlain: string;
-
           if (existing && existing.status === 'active') {
             keyPlain = decryptUserKeyFromRecord(existing);
           } else {
             keyPlain = generateUserKey();
-            await saveNewPermanentKey(userId, partnerId, tag, keyPlain, 'v1');
+            await saveNewPermanentKey(userId, partnerId, keyPlain);
           }
 
-          // Best-effort DM linking by SalesTeam relations
+          // Best effort DM linking
           try {
             await linkSalesTeamRelations(
               userId,
               parentId ? String(parentId) : undefined,
               Array.isArray(childrenIds) ? childrenIds.map(String) : undefined,
               organizationId ? String(organizationId) : undefined,
+              tag,
             );
-          } catch {
-            // ignore linking errors
+          } catch {}
+
+          // === NEW: reconcile groups/rooms ==========================
+          try {
+            // If this user is a parent (has childrenIds), reconcile their own group
+            if (childrenIds?.length && salesTeamId && organizationId) {
+              await reconcileParentGroup({
+                tag,
+                organizationId: String(organizationId),
+                parentId: String(salesTeamId), // parent’s own salesTeamId
+              });
+            }
+          
+            // If this user has a parent, reconcile the parent's group
+            if (parentId && organizationId) {
+              await reconcileParentGroup({
+                tag,
+                organizationId: String(organizationId),
+                parentId: String(parentId),
+              });
+            }
+          
+            // If parent changed, also reconcile the old parent's group
+            if (prevParentSalesTeamId && prevParentSalesTeamId !== parentId && organizationId) {
+              await reconcileParentGroup({
+                tag,
+                organizationId: String(organizationId),
+                parentId: String(prevParentSalesTeamId),
+              });
+            }
+          } catch (e) {
+            console.error('reconcileParentGroup failed', e);
           }
 
           const keyForPartner = encryptForPartnerTransport(keyPlain, partnerSecret);
@@ -136,8 +167,8 @@ API.v1.addRoute('external.register', { authRequired: false }, {
       return API.v1.success({
         userId: first.userId,
         key: first.key,
-        salesTeamId: first.salesTeamId,         // <-- echo back
-        organizationId: first.organizationId,   // <-- echo back
+        salesTeamId: first.salesTeamId,
+        organizationId: first.organizationId,
       });
     } catch (e: any) {
       return API.v1.failure(e?.message || 'registration failed');

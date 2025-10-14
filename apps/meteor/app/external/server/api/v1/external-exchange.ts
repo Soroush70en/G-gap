@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import { API } from '../../../../api/server';
 import { loadExistingKeyRecord, decryptUserKeyFromRecord } from '../../lib/keyStore';
 import { createLoginToken } from '../../lib/token';
+import { Users } from '@rocket.chat/models';
 
 // Simple in-memory replay cache. Use Redis in production.
 const usedJTI = new Map<string, number>(); // jti -> exp (unix seconds)
@@ -32,9 +33,15 @@ API.v1.addRoute(
 
 				// Load user’s permanent key record and authorize partner/tag
 				const rec = await loadExistingKeyRecord(String(userId));
-				if (!rec || rec.status !== 'active' || rec.partnerId !== partnerId || rec.tag !== tag) {
+				if (!rec || rec.status !== 'active' || rec.partnerId !== partnerId) {
 					return API.v1.failure('key not active/authorized');
-				}
+				  }
+
+				  const user = await Users.findOneById(String(userId), { projection: { 'customFields.tag': 1 } });
+				  const userTag = user?.customFields?.tag;
+				  if (!userTag || String(userTag) !== String(tag)) {
+					return API.v1.failure('tag mismatch');
+				  }
 
 				// Verify assertion signature with K_user
 				const K_user = decryptUserKeyFromRecord(rec); // plaintext in memory only

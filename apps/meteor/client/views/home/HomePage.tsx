@@ -80,7 +80,7 @@ const HomePage = (): ReactElement => {
 	) : (
 		<>
 			<DefaultHomePage />
-			{/* <StartChat /> */}
+			<StartChat />
 		</>
 	);
 };
