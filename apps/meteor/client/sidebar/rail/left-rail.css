@@ -11,7 +11,8 @@
 
 /* محتوای اصلی کنار ریل بره (start = راست در RTL) */
 #sidebar-region.gg-has-rail .gg-sidebar-main{
-  padding-inline-start: calc(var(--gg-rail-w) + var(--gg-rail-gap)) !important;
+  /* padding-inline-start: calc(var(--gg-rail-w) + var(--gg-rail-gap)) !important; */
+  padding-inline-start: 0 !important;
   padding-inline-end: 0 !important;
 }
 

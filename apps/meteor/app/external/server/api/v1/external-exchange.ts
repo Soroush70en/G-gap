@@ -15,8 +15,8 @@ API.v1.addRoute(
 			try {
 				// No HMAC transport check here by design (Option A).
 				// We fully trust only the short-lived assertion.
-				const { partnerId, userId, tag, exp, jti, signature } = this.bodyParams ?? {};
-				if (!partnerId || !userId || !tag || !exp || !jti || !signature) {
+				const { partnerId, userId, tag, exp, /*jti,*/ signature } = this.bodyParams ?? {};
+				if (!partnerId || !userId || !tag || !exp || /*!jti ||*/ !signature) {
 					return API.v1.failure('missing fields');
 				}
 
@@ -26,10 +26,11 @@ API.v1.addRoute(
 				if (!Number.isFinite(expNum) || expNum < now) {
 					return API.v1.failure('assertion expired');
 				}
-				if (usedJTI.has(jti)) {
-					return API.v1.failure('replay detected');
-				}
-				usedJTI.set(jti, expNum);
+
+				// if (usedJTI.has(jti)) {
+				// 	return API.v1.failure('replay detected');
+				// }
+				// usedJTI.set(jti, expNum);
 
 				// Load user’s permanent key record and authorize partner/tag
 				const rec = await loadExistingKeyRecord(String(userId));
@@ -45,7 +46,8 @@ API.v1.addRoute(
 
 				// Verify assertion signature with K_user
 				const K_user = decryptUserKeyFromRecord(rec); // plaintext in memory only
-				const toSign = `${partnerId}|${userId}|${tag}|${exp}|${jti}`;
+				//const toSign = `${partnerId}|${userId}|${tag}|${exp}|${jti}`;
+				const toSign = `${partnerId}|${userId}|${tag}|${exp}`;
 				const mac = crypto.createHmac('sha256', K_user).update(toSign, 'utf8').digest('hex');
 
 				if (!crypto.timingSafeEqual(Buffer.from(mac, 'hex'), Buffer.from(String(signature), 'hex'))) {

@@ -6,12 +6,20 @@ import React from 'react';
 
 import SidebarRoomList from './RoomList';
 import SidebarFooter from './footer';
+import SidebarHeader from './header';
 import StatusDisabledSection from './sections/StatusDisabledSection';
+import LeftRail from './rail/LeftRail';
 
 const Sidebar = () => {
+	const sidebarViewMode = useUserPreference('sidebarViewMode');
+	const sidebarHideAvatar = !useUserPreference('sidebarDisplayAvatar');
 	const { isMobile, sidebar } = useLayout();
 	const [bannerDismissed, setBannerDismissed] = useSessionStorage('presence_cap_notifier', false);
 	const presenceDisabled = useSetting<boolean>('Presence_broadcast_disabled');
+
+	const sideBarBackground = css`
+		background-color: ${Palette.surface['surface-tint']};
+	`;
 
 	const sideBarStyle = css`
 		position: relative;
@@ -82,9 +90,29 @@ const Sidebar = () => {
 				id='sidebar-region'
 				className={['rcx-sidebar', !sidebar.isCollapsed && isMobile && 'opened', sideBarStyle, 'gg-has-rail'].filter(Boolean)}
 			>
-				{presenceDisabled && !bannerDismissed && <StatusDisabledSection onDismiss={() => setBannerDismissed(true)} />}
-				<SidebarRoomList />
-				<SidebarFooter />
+				{/* nav اصلی */}
+				<Box
+					display='flex'
+					flexDirection='column'
+					height='100%'
+					is='nav'
+					className={[
+						'rcx-sidebar--main',
+						`rcx-sidebar rcx-sidebar--${sidebarViewMode}`,
+						sidebarHideAvatar && 'rcx-sidebar--hide-avatar',
+						sideBarBackground,
+						'gg-sidebar-main',
+					].filter(Boolean)}
+					role='navigation'
+					data-qa='sidebar'
+					data-qa-opened={sidebar.isCollapsed ? 'false' : 'true'}
+				>
+					{/* <SidebarHeader /> */}
+					{presenceDisabled && !bannerDismissed && <StatusDisabledSection onDismiss={() => setBannerDismissed(true)} />}
+					<SidebarRoomList />
+					<SidebarFooter />
+				</Box>
+
 				{/* ریل عمودی سمت راست – خارج از nav */}
 				{/* <LeftRail /> */}
 			</Box>

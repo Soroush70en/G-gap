@@ -1537,12 +1537,24 @@ settingsRegistry.addGroup('Push', function () {
 			enableQuery: [],
 			secret: true,
 		});
-		return this.add('Firebase_config', '', {
+		this.add('Firebase_config', '', {
 			type: 'code',
 			public: true,
 			enableQuery: [],
 			secret: true,
 			multiline: true,
+		});
+		this.add('SFA_Notify_Token', '', {
+			type: 'string',
+			public: true,
+			enableQuery: [],
+			secret: true,
+		});
+		return this.add('SFA_Notify_Endpoint', '', {
+			type: 'string',
+			public: true,
+			enableQuery: [],
+			secret: true,
 		});
 	});
 	return this.section('Privacy', function () {

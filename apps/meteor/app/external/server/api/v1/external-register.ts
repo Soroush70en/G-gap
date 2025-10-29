@@ -11,7 +11,6 @@ type RegisterItem = {
   username?: string;
   email?: string;
   name?: string;
-  roles?: string[];
   salesTeamId?: string;
   organizationId?: string;
   parentId?: string;
@@ -51,7 +50,6 @@ API.v1.addRoute('external.register', { authRequired: false }, {
           username,
           email,
           name,
-          roles,
           salesTeamId,
           organizationId,
           parentId,
@@ -71,7 +69,7 @@ API.v1.addRoute('external.register', { authRequired: false }, {
             username,
             email: finalEmail,
             name,
-            roles,
+            roles: ['sfa'],
             tag,
             salesTeamId: salesTeamId ? String(salesTeamId) : undefined,
             organizationId: organizationId ? String(organizationId) : undefined,
@@ -96,6 +94,7 @@ API.v1.addRoute('external.register', { authRequired: false }, {
               Array.isArray(childrenIds) ? childrenIds.map(String) : undefined,
               organizationId ? String(organizationId) : undefined,
               tag,
+              prevParentSalesTeamId ? String(prevParentSalesTeamId) : undefined,
             );
           } catch {}
 
@@ -160,16 +159,7 @@ API.v1.addRoute('external.register', { authRequired: false }, {
         return API.v1.success({ results });
       }
 
-      const first = results[0];
-      if (first.error) {
-        return API.v1.failure(first.error);
-      }
-      return API.v1.success({
-        userId: first.userId,
-        key: first.key,
-        salesTeamId: first.salesTeamId,
-        organizationId: first.organizationId,
-      });
+      return API.v1.success({ results });
     } catch (e: any) {
       return API.v1.failure(e?.message || 'registration failed');
     }

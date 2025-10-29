@@ -14,6 +14,7 @@ import {
 	replaceMentionedUsernamesWithFullNames,
 } from '../functions/notifications';
 import { notifyDesktopUser, shouldNotifyDesktop } from '../functions/notifications/desktop';
+import { notifySfaUser } from '../functions/notifications/sfa';
 import { getEmailData, shouldNotifyEmail } from '../functions/notifications/email';
 import { getPushData, shouldNotifyMobile } from '../functions/notifications/mobile';
 import { getMentions } from './notifyUsersOnMessage';
@@ -32,6 +33,7 @@ export const sendNotification = async ({
 	mentionIds,
 	disableAllMessageNotifications,
 }) => {
+	console.log('sendNotification');
 	if (TroubleshootDisableNotifications === true) {
 		return;
 	}
@@ -64,10 +66,13 @@ export const sendNotification = async ({
 	}
 
 	const [receiver] = subscription.receiver;
+	console.log('receiver');
+	console.log(subscription.receiver);
 
 	const roomType = room.t;
 	// If the user doesn't have permission to view direct messages, don't send notification of direct messages.
 	if (roomType === 'd' && !hasPermission(subscription.u._id, 'view-d-room')) {
+		console.log('no access');
 		return;
 	}
 
@@ -80,6 +85,14 @@ export const sendNotification = async ({
 	const { desktopNotifications, mobilePushNotifications, emailNotifications } = subscription;
 
 	// busy users don't receive desktop notification
+	await notifySfaUser({
+		userId: subscription.u._id,
+		user: sender,
+		message,
+		room,
+		notificationMessage,
+		receiver,
+	});
 	if (
 		shouldNotifyDesktop({
 			disableAllMessageNotifications,
