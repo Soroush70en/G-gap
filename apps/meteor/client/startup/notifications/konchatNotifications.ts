@@ -101,5 +101,18 @@ Meteor.startup(() => {
 		Notifications.onUser('subscriptions-changed', (_action: 'changed' | 'removed', sub: ISubscription) => {
 			notifyNewRoom(sub);
 		});
+
+		Notifications.onUser('request-reviewed', (payload: any) => {
+			if (window.RCBridge) window.RCBridge?.postMessage({
+				type: 'RC_REQUEST_REVIEWED',
+				payload: payload
+			});
+			window.postMessage({
+				type: 'RC_REQUEST_REVIEWED',
+				payload: payload,
+			}, '*');
+			console.error('RCBridge not found');
+
+		});
 	});
 });

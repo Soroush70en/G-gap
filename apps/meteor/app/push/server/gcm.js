@@ -128,13 +128,13 @@ export const sendGCM = function ({ userTokens, notification, _replaceToken, _rem
 };
 
 // Initialize Firebase Admin SDK
-const serviceAccount = (await getValidServiceAccount()) || require('./firebase-service-account.json');
-
-if (!admin.apps.length) {
-	admin.initializeApp({
-		credential: admin.credential.cert(serviceAccount),
-	});
-}
+// const serviceAccount = (await getValidServiceAccount());
+//
+// if (!admin.apps.length) {
+// 	admin.initializeApp({
+// 		credential: admin.credential.cert(serviceAccount),
+// 	});
+// }
 
 export const sendFCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
 	if (typeof notification.gcm === 'object') {
