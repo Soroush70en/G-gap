@@ -103,15 +103,10 @@ Meteor.startup(() => {
 		});
 
 		Notifications.onUser('request-reviewed', (payload: any) => {
-			if (window.RCBridge) window.RCBridge?.postMessage({
-				type: 'RC_REQUEST_REVIEWED',
-				payload: payload
-			});
 			window.postMessage({
 				type: 'RC_REQUEST_REVIEWED',
 				payload: payload,
 			}, '*');
-			console.error('RCBridge not found');
 
 		});
 	});

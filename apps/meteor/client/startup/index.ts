@@ -39,3 +39,4 @@ import './UserDeleted';
 import './userRoles';
 import './usersObserve';
 import './userStatusManuallySet';
+import './rcbridge';
