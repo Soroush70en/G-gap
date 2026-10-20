@@ -17,14 +17,14 @@ API.v1.addRoute(
 				// We fully trust only the short-lived assertion.
 				const { partnerId, userId, tag, exp, /*jti,*/ signature } = this.bodyParams ?? {};
 				if (!partnerId || !userId || !tag || !exp || /*!jti ||*/ !signature) {
-					return API.v1.failure('missing fields');
+					return API.v1.failure('missing fields', 'missing-fields');
 				}
 
 				// Freshness + replay
 				const now = Math.floor(Date.now() / 1000);
 				const expNum = Number(exp);
 				if (!Number.isFinite(expNum) || expNum < now) {
-					return API.v1.failure('assertion expired');
+					return API.v1.failure('assertion expired', 'assertion-expired');
 				}
 
 				// if (usedJTI.has(jti)) {
@@ -35,13 +35,13 @@ API.v1.addRoute(
 				// Load user’s permanent key record and authorize partner/tag
 				const rec = await loadExistingKeyRecord(String(userId));
 				if (!rec || rec.status !== 'active' || rec.partnerId !== partnerId) {
-					return API.v1.failure('key not active/authorized');
+					return API.v1.failure('key not active/authorized', 'key-not-authorized');
 				  }
 
-				  const user = await Users.findOneById(String(userId), { projection: { 'customFields.tag': 1 } });
+				  const user = await Users.findOneById(String(userId), { projection: { 'customFields.tag': 1, 'active': 1, 'roles': 1 } });
 				  const userTag = user?.customFields?.tag;
 				  if (!userTag || String(userTag) !== String(tag)) {
-					return API.v1.failure('tag mismatch');
+					return API.v1.failure('tag mismatch', 'tag-mismatch');
 				  }
 
 				// Verify assertion signature with K_user
@@ -51,14 +51,23 @@ API.v1.addRoute(
 				const mac = crypto.createHmac('sha256', K_user).update(toSign, 'utf8').digest('hex');
 
 				if (!crypto.timingSafeEqual(Buffer.from(mac, 'hex'), Buffer.from(String(signature), 'hex'))) {
-					return API.v1.failure('bad signature');
+					return API.v1.failure('bad signature', 'bad-signature');
+				}
+
+				// Same rules as Accounts.validateLoginAttempt: a token for a user who cannot log in would end on the login page.
+				// Checked after the signature so unauthenticated callers learn nothing about the user.
+				if (!user?.active) {
+					return API.v1.failure('user is not active', 'user-inactive');
+				}
+				if (!Array.isArray(user.roles)) {
+					return API.v1.failure('user has no roles', 'user-has-no-roles');
 				}
 
 				// Mint Rocket.Chat login token
 				const { token, expiresAt } = await createLoginToken(String(userId));
 				return API.v1.success({ userId, authToken: token, expiresAt });
 			} catch (e: any) {
-				return API.v1.failure(e?.message || 'exchange failed');
+				return API.v1.failure(e?.message || 'exchange failed', 'exchange-failed');
 			}
 		},
 	},
