@@ -11,7 +11,8 @@ export async function verifyPartnerHMAC(req: IHttpRequest & { body?: any }) {
 	
 	const partner = await Partners.findOneByPartnerId(pid);
 	console.log(partner);
-	if (!partner) {
+	// Only an explicit 'inactive' blocks: partners created before external.partners.create may have no status field.
+	if (!partner || partner.status === 'inactive') {
 		throw new Meteor.Error('partner-not-found', 'bad or inactive partner');
 	}
 	req.partner = partner;

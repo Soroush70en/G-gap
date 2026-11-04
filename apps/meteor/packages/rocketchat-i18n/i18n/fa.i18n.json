@@ -1896,6 +1896,8 @@
 	"manage-livechat-managers_description": "مجوز مدیریت مدیران کانال همه‌کاره",
 	"manage-oauth-apps": "مدیریت برنامه های Oauth",
 	"manage-oauth-apps_description": "مجوز مدیریت برنامه های Oauth سرور",
+	"manage-external-partners": "مدیریت شرکای خارجی",
+	"manage-external-partners_description": "مجوز صدور، مشاهده و بازنشسته کردن کلیدهای ورود شرکای خارجی",
 	"manage-own-integrations": "مدیریت یکپارچگی خود",
 	"manage-own-integrations_description": "Permition اجازه می دهد تا کاربران را به ایجاد و ویرایش خود یکپارچه سازی و یا webhooks",
 	"manage-sounds": "مدیریت صداها",

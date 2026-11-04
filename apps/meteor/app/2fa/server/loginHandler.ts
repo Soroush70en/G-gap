@@ -37,6 +37,10 @@ callbacks.add(
 		if (login.type === 'cas') {
 			return login;
 		}
+		// Partner logins come from a signed partner assertion and the user has no way to enter a code.
+		if (login.type === 'partner') {
+			return login;
+		}
 
 		if (!login.user) {
 			return login;

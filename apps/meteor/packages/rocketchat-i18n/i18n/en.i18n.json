@@ -3161,6 +3161,8 @@
 	"manage-livechat-units_description": "Permission to manage omnichannel units",
 	"manage-oauth-apps": "Manage OAuth Apps",
 	"manage-oauth-apps_description": "Permission to manage the server OAuth apps",
+	"manage-external-partners": "Manage External Partners",
+	"manage-external-partners_description": "Permission to issue, list and retire login keys of external partners",
 	"manage-outgoing-integrations": "Manage Outgoing Integrations",
 	"manage-outgoing-integrations_description": "Permission to manage the server outgoing integrations",
 	"manage-own-incoming-integrations": "Manage Own Incoming Integrations",

@@ -66,6 +66,7 @@ API.v1.addRoute('external.register', { authRequired: false }, {
 
           // Upsert (+ capture previous parent)
           const { userId, prevParentSalesTeamId } = await upsertUser({
+            partnerId,
             username,
             email: finalEmail,
             name,
@@ -79,7 +80,8 @@ API.v1.addRoute('external.register', { authRequired: false }, {
           // Permanent key: reuse or create once
           const existing = await loadExistingKeyRecord(userId);
           let keyPlain: string;
-          if (existing && existing.status === 'active') {
+          // Only hand back a key this partner owns (upsertUser already rejects other partners' users).
+          if (existing && existing.status === 'active' && existing.partnerId === partnerId) {
             keyPlain = decryptUserKeyFromRecord(existing);
           } else {
             keyPlain = generateUserKey();

@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import { API } from '../../../../api/server';
 import { loadExistingKeyRecord, decryptUserKeyFromRecord } from '../../lib/keyStore';
 import { createLoginToken } from '../../lib/token';
-import { Users } from '@rocket.chat/models';
+import { Partners, Users } from '@rocket.chat/models';
 
 // Simple in-memory replay cache. Use Redis in production.
 const usedJTI = new Map<string, number>(); // jti -> exp (unix seconds)
@@ -37,6 +37,11 @@ API.v1.addRoute(
 				if (!rec || rec.status !== 'active' || rec.partnerId !== partnerId) {
 					return API.v1.failure('key not active/authorized', 'key-not-authorized');
 				  }
+
+				// An inactive partner (external.partners.setStatus) cannot log its users in. A missing status counts as active.
+				if (!(await Partners.findOne({ partnerId: String(partnerId), status: { $ne: 'inactive' } }, { projection: { _id: 1 } }))) {
+					return API.v1.failure('key not active/authorized', 'key-not-authorized');
+				}
 
 				  const user = await Users.findOneById(String(userId), { projection: { 'customFields.tag': 1, 'active': 1, 'roles': 1 } });
 				  const userTag = user?.customFields?.tag;
