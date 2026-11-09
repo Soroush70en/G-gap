@@ -1539,7 +1539,6 @@ settingsRegistry.addGroup('Push', function () {
 		});
 		this.add('Firebase_config', '', {
 			type: 'code',
-			public: true,
 			enableQuery: [],
 			secret: true,
 			multiline: true,

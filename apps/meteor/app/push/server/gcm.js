@@ -1,7 +1,8 @@
 import admin from 'firebase-admin';
 import { EJSON } from 'meteor/ejson';
-import { logger } from './logger';
 import gcm from 'node-gcm';
+
+import { logger } from './logger';
 import { settings } from '../../settings/server';
 
 export const sendGCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
@@ -127,16 +128,89 @@ export const sendGCM = function ({ userTokens, notification, _replaceToken, _rem
 	});
 };
 
-// Initialize Firebase Admin SDK
-// const serviceAccount = (await getValidServiceAccount());
-//
-// if (!admin.apps.length) {
-// 	admin.initializeApp({
-// 		credential: admin.credential.cert(serviceAccount),
-// 	});
-// }
+// Firebase Admin SDK app, (re)initialized from the `Firebase_config` setting (service account JSON)
+let firebaseApp = null;
 
-export const sendFCM = function ({ userTokens, notification, _replaceToken, _removeToken, options }) {
+// FCM error codes meaning the device token is dead and should be dropped
+const INVALID_TOKEN_ERRORS = ['messaging/registration-token-not-registered', 'messaging/invalid-registration-token'];
+
+function parseServiceAccount(serviceAccountString) {
+	if (!serviceAccountString || !String(serviceAccountString).trim()) {
+		return null;
+	}
+
+	let parsed;
+	try {
+		parsed = JSON.parse(serviceAccountString);
+	} catch (err) {
+		logger.error({ msg: '[Firebase] Invalid JSON in Firebase_config setting', err: err.message });
+		return null;
+	}
+
+	if (typeof parsed !== 'object' || parsed === null) {
+		logger.error('[Firebase] Firebase_config must be a JSON object');
+		return null;
+	}
+
+	const requiredKeys = ['project_id', 'client_email', 'private_key'];
+	const missingKeys = requiredKeys.filter((key) => !parsed[key]);
+	if (missingKeys.length) {
+		logger.error(`[Firebase] Missing required keys in Firebase_config: ${missingKeys.join(', ')}`);
+		return null;
+	}
+
+	// Keys pasted through some UIs keep "\n" escaped
+	parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+
+	return parsed;
+}
+
+async function configureFirebase(serviceAccountString) {
+	if (firebaseApp) {
+		const previous = firebaseApp;
+		firebaseApp = null;
+		try {
+			await previous.delete();
+		} catch (err) {
+			logger.error({ msg: '[Firebase] Error deleting previous app', err: err.message });
+		}
+	}
+
+	const serviceAccount = parseServiceAccount(serviceAccountString);
+	if (!serviceAccount) {
+		logger.warn('[Firebase] Firebase_config is not set or invalid; Android push (FCM) is disabled');
+		return;
+	}
+
+	try {
+		firebaseApp = admin.initializeApp({ credential: admin.credential.cert(serviceAccount) }, `rocketchat-push-${Date.now()}`);
+		logger.info(`[Firebase] Initialized for project ${serviceAccount.project_id}`);
+	} catch (err) {
+		firebaseApp = null;
+		logger.error({ msg: '[Firebase] Error initializing app', err: err.message });
+	}
+}
+
+function convertToStrings(obj) {
+	const result = {};
+	for (const [key, value] of Object.entries(obj)) {
+		result[key] = typeof value === 'string' ? value : String(value);
+	}
+	return result;
+}
+
+// Serialize reconfigurations so rapid setting changes can't race each other
+let configuring = Promise.resolve();
+settings.watch('Firebase_config', (value) => {
+	configuring = configuring.then(() => configureFirebase(value));
+});
+
+export const sendFCM = function ({ userTokens, notification, _removeToken }) {
+	if (!firebaseApp) {
+		logger.warn('[Firebase] Not initialized, skipping FCM push. Check the Firebase_config setting.');
+		return;
+	}
+
 	if (typeof notification.gcm === 'object') {
 		notification = Object.assign({}, notification, notification.gcm);
 	}
@@ -197,81 +271,30 @@ export const sendFCM = function ({ userTokens, notification, _replaceToken, _rem
 		dataObj['content-available'] = notification.contentAvailable;
 	}
 
-	const notifObject = {
-		title: notification.title,
-		body: notification.text,
-	};
-
 	const data = convertToStrings(dataObj);
 
 	userTokens.forEach((userToken) => {
 		const message = {
 			token: userToken,
-			data: data,
+			data,
 		};
-		try {
-			admin
-				.messaging()
-				.send(message)
-				.then((response) => {
-					console.log('FCM message sent successfully:', response);
-				})
-				.catch((error) => {
-					console.error('Error sending FCM message:', error);
-				});
-		} catch (e) {
-			console.error('[FCM CATCH] Error sending FCM message:', e);
-		}
+		firebaseApp
+			.messaging()
+			.send(message)
+			.then((response) => {
+				logger.debug({ msg: 'FCM message sent', response });
+			})
+			.catch((error) => {
+				if (INVALID_TOKEN_ERRORS.includes(error?.code)) {
+					logger.debug({ msg: 'FCM token is no longer valid, removing it', code: error.code });
+					try {
+						_removeToken({ gcm: userToken });
+					} catch (err) {
+						logger.error({ msg: 'Error removing token', err });
+					}
+					return;
+				}
+				logger.error({ msg: 'Error sending FCM message', code: error?.code, err: error?.message });
+			});
 	});
 };
-
-function convertToStrings(obj) {
-	const result = {};
-	for (const [key, value] of Object.entries(obj)) {
-		result[key] = typeof value === 'string' ? value : String(value);
-	}
-	return result;
-}
-
-function isValidJSON(jsonString) {
-	try {
-		const parsed = JSON.parse(jsonString);
-		return typeof parsed === 'object' && parsed !== null;
-	} catch (error) {
-		return false;
-	}
-}
-
-async function getValidServiceAccount() {
-	const serviceAccountString = await settings.get('Firebase_config');
-
-	if (!isValidJSON(serviceAccountString)) {
-		console.warn('[Firebase] Invalid JSON in Firebase_config setting.');
-		return null;
-	}
-
-	const parsed = JSON.parse(serviceAccountString);
-
-	const requiredKeys = [
-		'type',
-		'project_id',
-		'private_key_id',
-		'private_key',
-		'client_email',
-		'client_id',
-		'auth_uri',
-		'token_uri',
-		'auth_provider_x509_cert_url',
-		'client_x509_cert_url',
-		'universe_domain',
-	];
-
-	const missingKeys = requiredKeys.filter((key) => !(key in parsed));
-
-	if (missingKeys.length) {
-		console.warn(`[Firebase] Missing required keys in Firebase_config: ${missingKeys.join(', ')}`);
-		return null;
-	}
-
-	return parsed;
-}
