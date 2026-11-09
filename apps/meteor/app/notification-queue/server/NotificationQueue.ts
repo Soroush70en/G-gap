@@ -1,8 +1,16 @@
 import { Meteor } from 'meteor/meteor';
-import type { INotification, INotificationItemPush, INotificationItemEmail, NotificationItem, IUser } from '@rocket.chat/core-typings';
+import type {
+	INotification,
+	INotificationItemPush,
+	INotificationItemEmail,
+	INotificationItemSfa,
+	NotificationItem,
+	IUser,
+} from '@rocket.chat/core-typings';
 import { NotificationQueue, Users } from '@rocket.chat/models';
 
 import { sendEmailFromData } from '../../lib/server/functions/notifications/email';
+import { sendSfaNotification } from '../../lib/server/functions/notifications/sfa';
 import { PushNotification } from '../../push-notifications/server';
 import { SystemLogger } from '../../../server/lib/logger/system';
 
@@ -76,6 +84,9 @@ class NotificationClass {
 					case 'email':
 						this.email(item);
 						break;
+					case 'sfa':
+						this.sfa(item);
+						break;
 				}
 			}
 
@@ -109,6 +120,11 @@ class NotificationClass {
 
 	email(item: INotificationItemEmail): void {
 		sendEmailFromData(item.data);
+	}
+
+	sfa(item: INotificationItemSfa): void {
+		// fire-and-forget: sendSfaNotification never throws and must not block the queue
+		sendSfaNotification(item.data);
 	}
 
 	async scheduleItem({

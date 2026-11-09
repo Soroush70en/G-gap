@@ -1,129 +1,99 @@
 import { fetch } from 'meteor/fetch';
-import { roomCoordinator } from '../../../../../server/lib/rooms/roomCoordinator';
-import { metrics } from '../../../../metrics/server';
-import { settings } from '../../../../settings/server';
+
 import { Logger } from '../../../../logger/server';
+import { metrics } from '../../../../metrics/server';
 import { Users } from '../../../../models/server';
+import { settings } from '../../../../settings/server';
+
+const logger = new Logger('SFA-Notifier');
+
+const getEndpoint = () => settings.get('SFA_Notify_Endpoint') || process.env.SFA_NOTIFY_URL;
+
+const userFields = {
+	fields: {
+		_id: 1,
+		customFields: 1,
+	},
+};
 
 /**
- * Notify external SFA handler (non-blocking).
+ * Builds the SFA queue item data for a receiver, or returns null when SFA should not be notified.
+ * Both the sender and the receiver must be tagged as SFA users (customFields.tag === 'sfa').
  *
- * Reads the receiver's customFields.tag and, if tag === 'sfa', posts a payload
- * to an external endpoint. Uses the same per-room notification text logic as desktop
- * so titles/text are consistent. Honors server privacy (pass in notificationMessage
- * already computed for the receiver).
+ * Runs when the message is sent; the actual HTTP call happens later from the notification queue,
+ * so it is delayed for online users and cancelled if the receiver reads the room in the meantime.
  *
- * @param {string} userId The receiver's userId (target of the notification)
- * @param {object} user The sender user object
- * @param {object} room The room the message was sent in
- * @param {object} message The message object
- * @param {string} notificationMessage The text prepared for this receiver (per RC rules)
- * @param {object} [receiver] Optional receiver object (to avoid reloading)
+ * @param {object} params
+ * @param {string} params.senderId The sender's userId
+ * @param {string} params.receiverId The receiver's userId
+ * @param {object} params.message The message object
+ * @returns {Promise<object|null>}
  */
-export async function notifySfaUser({ userId, user, message, room, notificationMessage, receiver }) {
-	const log = new Logger('SFA-Notifier');
-	console.log('heeey');
+export async function getSfaData({ senderId, receiverId, message }) {
+	if (!getEndpoint()) {
+		return null;
+	}
 
-	const endpoint = (settings.get && settings.get('SFA_Notify_Endpoint')) || process.env.SFA_NOTIFY_URL;
-	const token = (settings.get && settings.get('SFA_Notify_Token')) || process.env.SFA_NOTIFY_TOKEN;
+	const fromUser = await Users.findOneById(senderId, userFields);
+	if (fromUser?.customFields?.tag !== 'sfa') {
+		return null;
+	}
 
-	// If not configured, no-op
+	const toUser = await Users.findOneById(receiverId, userFields);
+	if (toUser?.customFields?.tag !== 'sfa') {
+		return null;
+	}
+
+	return {
+		payload: {
+			senderSalesTeamId: fromUser.customFields.salesTeamId,
+			senderOrganizationId: fromUser.customFields.organizationId,
+			receiverSalesTeamId: toUser.customFields.salesTeamId,
+			receiverOrganizationId: toUser.customFields.organizationId,
+			body: message?.msg,
+		},
+	};
+}
+
+/**
+ * Sends a queued SFA notification to the external endpoint.
+ * Never throws: external failures must not impact the notification queue.
+ *
+ * @param {object} data The data produced by getSfaData
+ */
+export async function sendSfaNotification(data) {
+	const endpoint = getEndpoint();
 	if (!endpoint) {
 		return;
 	}
 
 	try {
-		const fromUser = await Users.findOneById(message?.u?._id, {
-			fields: {
-				_id: 1,
-				username: 1,
-				name: 1,
-				customFields: 1,
-			},
-		});
-
-		const toUser = await Users.findOneById(userId, {
-			fields: {
-				_id: 1,
-				username: 1,
-				name: 1,
-				customFields: 1,
-			},
-		});
-
-		if (!fromUser || fromUser.customFields.tag != 'sfa' || (!toUser && !toUser.customFields.tag != 'sfa')) {
-			return;
-		}
-
-		const fromUserSalesTeamId = fromUser.customFields?.salesTeamId;
-		const fromUserOrganizationId = fromUser.customFields?.organizationId;
-
-		const toUserSalesTeamId = toUser.customFields?.salesTeamId;
-		const toUserOrganizationId = toUser.customFields?.organizationId;
-
-		// Generate title/text consistent with desktop notifications
-		const { title, text } = roomCoordinator.getRoomDirectives(room.t)?.getNotificationDetails(room, user, notificationMessage, userId) || {
-			title: '',
-			text: '',
-		};
-
-		const payload = {
-			payload: {
-				senderSalesTeamId: fromUserSalesTeamId,
-				senderOrganizationId: fromUserOrganizationId,
-				receiverSalesTeamId: toUserSalesTeamId,
-				receiverOrganizationId: toUserOrganizationId,
-				body: message?.msg,
-			},
-			// message: {
-			// 	id: message?._id,
-			// 	ts: message?.ts,
-			// 	tmid: message?.tmid,
-			// 	rid: message?.rid,
-			// 	msg: message?.msg,
-			// 	t: message?.t,
-			// },
-		};
-
-		console.log('=========PAYLOAD============');
-		console.log(JSON.stringify(payload));
-		console.log(endpoint);
-		// Fire-and-forget with a short timeout so we never block RC's pipeline
-		// const AbortCtl = globalThis.AbortController || AbortController;
-		// const controller = new AbortCtl();
-		// const timeout = setTimeout(() => controller.abort(), 2000);
-
 		const res = await fetch(endpoint, {
 			method: 'POST',
 			headers: {
 				'content-type': 'application/json',
-				//...(token ? { authorization: `Bearer ${token}` } : {}),
 			},
-			body: JSON.stringify(payload),
-		}).catch((err) => {
-			console.log({ msg: 'SFA external notify failed', err: String(err?.message || err) });
-			log.warn({ msg: 'SFA external notify failed', err: String(err?.message || err) });
+			body: JSON.stringify(data),
 		});
 
-		console.log('RES', res);
-		var data = await res.json();
-		console.log('DATA', data);
+		if (!res.ok) {
+			logger.warn({ msg: 'SFA external notify failed', status: res.status });
+			return;
+		}
+
 		metrics.notificationsSent.inc({ notification_type: 'external_sfa' });
 	} catch (err) {
-		// Never throw — external failures must not impact core notifications
-		const log = new Logger('SFA-Notifier');
-		log.warn({ msg: 'SFA external notify threw', err: String(err?.message || err) });
+		logger.warn({ msg: 'SFA external notify threw', err: String(err?.message || err) });
 	}
 }
 
 /**
  * Decide if we should attempt an SFA external notify for this receiver.
- * Mirrors the desktop/mobile shape so you can slot it into the same call sites.
+ * Follows the receiver's mobile push preferences, since SFA acts as their mobile channel.
  *
  * @param {object} params
  * @param {boolean} params.disableAllMessageNotifications
- * @param {'online'|'away'|'busy'|'offline'} [params.status]         // optional
- * @param {'online'|'away'|'busy'|'offline'} [params.statusConnection] // optional
+ * @param {string} [params.status]
  * @param {'all'|'mentions'|'nothing'|null|undefined} params.mobilePushNotifications
  * @param {boolean} params.hasMentionToAll
  * @param {boolean} params.hasMentionToHere
@@ -137,7 +107,6 @@ export async function notifySfaUser({ userId, user, message, room, notificationM
 export function shouldNotifyExternalSfa({
 	disableAllMessageNotifications,
 	status,
-	statusConnection,
 	mobilePushNotifications,
 	hasMentionToAll,
 	hasMentionToHere,
@@ -152,13 +121,12 @@ export function shouldNotifyExternalSfa({
 		return false;
 	}
 
-	// Treat DND/offline the same way as desktop/mobile blocks
-	if (statusConnection === 'offline' || status === 'doNotDisturb' || mobilePushNotifications === 'nothing') {
+	if (status === 'doNotDisturb' || mobilePushNotifications === 'nothing') {
 		return false;
 	}
 
 	if (!mobilePushNotifications) {
-		const serverDefault = settings.get('Accounts_Default_User_Preferences_mobilePushNotifications');
+		const serverDefault = settings.get('Accounts_Default_User_Preferences_pushNotifications');
 		if (serverDefault === 'all' && (!isThread || hasReplyToThread)) {
 			return true;
 		}

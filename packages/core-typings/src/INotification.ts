@@ -33,7 +33,20 @@ export interface INotificationItemEmail {
 	};
 }
 
-export type NotificationItem = INotificationItemPush | INotificationItemEmail;
+export interface INotificationItemSfa {
+	type: 'sfa';
+	data: {
+		payload: {
+			senderSalesTeamId?: string;
+			senderOrganizationId?: string;
+			receiverSalesTeamId?: string;
+			receiverOrganizationId?: string;
+			body?: string;
+		};
+	};
+}
+
+export type NotificationItem = INotificationItemPush | INotificationItemEmail | INotificationItemSfa;
 
 export interface INotification {
 	_id: string;

@@ -1546,13 +1546,11 @@ settingsRegistry.addGroup('Push', function () {
 		});
 		this.add('SFA_Notify_Token', '', {
 			type: 'string',
-			public: true,
 			enableQuery: [],
 			secret: true,
 		});
 		return this.add('SFA_Notify_Endpoint', '', {
 			type: 'string',
-			public: true,
 			enableQuery: [],
 			secret: true,
 		});

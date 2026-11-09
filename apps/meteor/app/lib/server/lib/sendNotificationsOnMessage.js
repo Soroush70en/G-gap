@@ -14,7 +14,7 @@ import {
 	replaceMentionedUsernamesWithFullNames,
 } from '../functions/notifications';
 import { notifyDesktopUser, shouldNotifyDesktop } from '../functions/notifications/desktop';
-import { notifySfaUser } from '../functions/notifications/sfa';
+import { getSfaData, shouldNotifyExternalSfa } from '../functions/notifications/sfa';
 import { getEmailData, shouldNotifyEmail } from '../functions/notifications/email';
 import { getPushData, shouldNotifyMobile } from '../functions/notifications/mobile';
 import { getMentions } from './notifyUsersOnMessage';
@@ -85,14 +85,6 @@ export const sendNotification = async ({
 	const { desktopNotifications, mobilePushNotifications, emailNotifications } = subscription;
 
 	// busy users don't receive desktop notification
-	await notifySfaUser({
-		userId: subscription.u._id,
-		user: sender,
-		message,
-		room,
-		notificationMessage,
-		receiver,
-	});
 	if (
 		shouldNotifyDesktop({
 			disableAllMessageNotifications,
@@ -143,6 +135,34 @@ export const sendNotification = async ({
 				receiver,
 			}),
 		});
+	}
+
+	if (
+		shouldNotifyExternalSfa({
+			disableAllMessageNotifications,
+			status: receiver.status,
+			mobilePushNotifications,
+			hasMentionToAll,
+			hasMentionToHere,
+			isHighlighted,
+			hasMentionToUser,
+			hasReplyToThread,
+			roomType,
+			isThread,
+		})
+	) {
+		const sfaData = await getSfaData({
+			senderId: sender._id,
+			receiverId: subscription.u._id,
+			message,
+		});
+
+		if (sfaData) {
+			queueItems.push({
+				type: 'sfa',
+				data: sfaData,
+			});
+		}
 	}
 
 	if (
